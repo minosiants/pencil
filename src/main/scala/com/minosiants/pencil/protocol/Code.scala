@@ -1,7 +1,9 @@
 package com.minosiants
 package pencil.protocol
 
-final case class Code(value: Int, description: String) {
+final private[protocol] case class Code(value: Int, description: String)
+    extends Product
+    with Serializable {
   def success: Boolean = value < 400
 }
 
