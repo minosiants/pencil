@@ -1,41 +1,30 @@
 package com.minosiants.pencil.protocol
 
 import org.specs2.mutable.Specification
-
+import scodec.Attempt
 import scodec.bits._
 import scodec.codecs._
 
-class ProtocolSpec extends Specification {
+import scala.io.Source
 
+class ProtocolSpec extends Specification {
   "Protocol" should {
     "decode response" in {
-      val resp =
-        """
-            |250-kaspar-air Hello test [127.0.0.1])
-            |250-PIPELINING
-            |250-ENHANCEDSTATUSCODES
-            |250 8BITMIME
-            |""".stripMargin
 
-      val resp2 = List(
-        "250-kaspar-air Hello test [127.0.0.1])",
-        "250-PIPELINING",
-        "250-ENHANCEDSTATUSCODES",
-        "250 8BITMIME"
-      )
+      val is       = getClass().getResourceAsStream("/output.txt")
+      val output   = Source.fromInputStream(is).mkString
+      val expected = output.split("\r\n").toList
 
-      val result = ascii.encode("EHLO test")
-      val result2 = ascii
-        .encode(resp2.mkString("\r\n"))
-        .fold(_ => BitVector.empty, identity)
-      println(result2)
-      val code =
-        ascii.encode("250-PIPELINING").fold(_ => BitVector.empty, identity)
-      val code2 = ascii.encode("250").fold(_ => BitVector.empty, identity)
+      val vec = ascii.encode(output).getOrElse(BitVector.empty)
 
-      val r = Reply.codecReplies.decode(result2)
-      println(r)
-      failure
+      Reply.codecReplies.decode(vec).map(_.value) match {
+        case Attempt.Successful(result) =>
+          result mustEqual expected
+        case Attempt.Failure(cause) =>
+          true mustEqual false
+
+      }
     }
+
   }
 }
