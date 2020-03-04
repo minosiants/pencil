@@ -1,6 +1,7 @@
 package com.minosiants
 package pencil.protocol
 
+import cats.Show
 import scodec.Attempt.Successful
 import scodec.bits._
 import scodec.codecs._
@@ -10,7 +11,20 @@ final case class Reply(code: Code, sep: String, text: String)
     extends Product
     with Serializable
 
+final case class Replies(replies: List[Reply])
+    extends Product
+    with Serializable {
+
+  def success: Boolean = replies.forall(_.code.success)
+}
+
+object Replies {
+  implicit lazy val RepliesShow: Show[Replies] = Show.fromToString
+}
+
 object Reply {
+
+  implicit lazy val ReplyShow: Show[Reply] = Show.fromToString
 
   implicit val codeCodec = Codec[Code](
     (value: Code) => ascii.encode(value.value.toString),
@@ -36,6 +50,7 @@ object Reply {
 
   val CRLF = ascii.encode("\r\n").getOrElse(BitVector.empty)
 
-  implicit val codecReplies: Codec[List[Reply]] =
-    DelimiterListCodec(CRLF, codecReply)
+  implicit val codecReplies: Codec[Replies] = (
+    ("replies" | DelimiterListCodec(CRLF, codecReply))
+  ).as[Replies]
 }

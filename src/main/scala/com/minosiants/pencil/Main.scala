@@ -55,8 +55,8 @@ object Main extends IOApp {
     SmtpSocket("127.0.0.1", 25, 10.seconds, 10.seconds, sg).use { socket =>
       for {
         greeting <- socket.read()
-        _    <- socket.write(Ehlo("hello"))
-        resp <- socket.read()
+        _        <- socket.write(Ehlo("hello"))
+        resp     <- socket.read()
       } yield ()
 
     }
