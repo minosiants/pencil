@@ -7,6 +7,9 @@ import cats.effect._
 import fs2.Chunk
 import fs2.Chunk.Bytes
 import fs2.io.tcp.SocketGroup
+import scala.concurrent.duration._
+
+import protocol._
 
 object Main extends IOApp {
 
@@ -15,7 +18,7 @@ object Main extends IOApp {
       .use { blocker =>
         SocketGroup[IO](blocker).use { socketGroup =>
           //client(socketGroup)
-          client3(socketGroup, blocker)
+          client2(socketGroup)
         }
       }
       .as(ExitCode.Success)
@@ -48,7 +51,17 @@ object Main extends IOApp {
           }
     }
 
-  def client3(socketGroup: SocketGroup, blocker: Blocker): IO[Unit] =
+  def client2(sg: SocketGroup): IO[Unit] = {
+    SmtpSocket("127.0.0.1", 25, 10.seconds, 10.seconds, sg).use { socket =>
+      for {
+        greeting <- socket.read()
+        _    <- socket.write(Ehlo("hello"))
+        resp <- socket.read()
+      } yield ()
+
+    }
+  }
+  def client3(socketGroup: SocketGroup): IO[Unit] =
     socketGroup.client[IO](new InetSocketAddress("127.0.0.1", 25)).use {
       socket =>
         for {
@@ -63,7 +76,12 @@ object Main extends IOApp {
           )
           r <- socket.read(8192).flatMap {
             case Some(Bytes(values, _, _)) =>
-              IO(println(s"Response: ${toString(values)}"))
+              IO {
+
+                val str = toString(values)
+                println(str.split("\r\n").toList)
+                println(s"Response: ${toString(values)}")
+              }
             case _ => IO(println(s"Response:"))
 
           }

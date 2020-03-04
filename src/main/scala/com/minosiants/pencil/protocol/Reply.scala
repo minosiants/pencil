@@ -34,7 +34,8 @@ object Reply {
       ("text" | ascii)
   ).as[Reply]
 
-  val del = ascii.encode("\r\n").getOrElse(BitVector.empty)
+  val CRLF = ascii.encode("\r\n").getOrElse(BitVector.empty)
 
-  implicit val codecReplies: Codec[List[Reply]] = listDelimited(del, codecReply)
+  implicit val codecReplies: Codec[List[Reply]] =
+    DelimiterListCodec(CRLF, codecReply)
 }
