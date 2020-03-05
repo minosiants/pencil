@@ -1,4 +1,4 @@
-package com.minosiants.pencil
+package com.minosiants.pencil.data
 
 import cats.effect.IO
 
