@@ -20,8 +20,8 @@ object Command {
 
   implicit lazy val CommandShow: Show[Command] = Show.show {
     case Ehlo(domain)       => s"EHLO $domain $end"
-    case Mail(Mailbox(box)) => s"MAIL FROM: $box $end"
-    case Rcpt(Mailbox(box)) => s"RCPT TO: $box $end"
+    case Mail(Mailbox(box)) => s"MAIL FROM: <$box> $end"
+    case Rcpt(Mailbox(box)) => s"RCPT TO: <$box> $end"
     case Data               => s"DATA $end"
     case Rset               => s"RSET $end"
     case Vrfy(str)          => s"VRFY $str $end"

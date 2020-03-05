@@ -26,7 +26,7 @@ object Reply {
 
   implicit lazy val ReplyShow: Show[Reply] = Show.fromToString
 
-  implicit val codeCodec = Codec[Code](
+  implicit val codeCodec: Codec[Code] = Codec[Code](
     (value: Code) => ascii.encode(value.value.toString),
     (bits: BitVector) => {
       limitedSizeBits(3 * 8, ascii).decode(bits) match {
@@ -42,15 +42,15 @@ object Reply {
     }
   )
 
-  implicit val codecReply = (
+  implicit val replyCodec: Codec[Reply] = (
     ("code" | codeCodec) ::
       ("sep" | limitedSizeBits(8, ascii)) ::
       ("text" | ascii)
   ).as[Reply]
 
-  val CRLF = ascii.encode("\r\n").getOrElse(BitVector.empty)
+  val CRLF: BitVector = ascii.encode("\r\n").getOrElse(BitVector.empty)
 
-  implicit val codecReplies: Codec[Replies] = (
-    ("replies" | DelimiterListCodec(CRLF, codecReply))
+  implicit val repliesCodec: Codec[Replies] = (
+    ("replies" | DelimiterListCodec(CRLF, replyCodec))
   ).as[Replies]
 }
