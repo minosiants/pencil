@@ -23,7 +23,7 @@ trait SmtpSocket {
 object SmtpSocket {
 
   def bytesToReply(bytes: Array[Byte]): IO[Replies] = {
-    Reply.codecReplies.decode(BitVector(bytes)) match {
+    Reply.repliesCodec.decode(BitVector(bytes)) match {
       case Attempt.Successful(DecodeResult(value, _)) => IO(value)
       case Attempt.Failure(cause) =>
         data.Error.smtpError(cause.messageWithContext)

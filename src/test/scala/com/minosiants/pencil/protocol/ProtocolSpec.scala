@@ -20,7 +20,7 @@ class ProtocolSpec extends Specification {
 
       val vec = ascii.encode(output).getOrElse(BitVector.empty)
 
-      Reply.codecReplies.decode(vec).map(_.value) match {
+      Reply.repliesCodec.decode(vec).map(_.value) match {
         case Attempt.Successful(result) =>
           result mustEqual expected
         case Attempt.Failure(cause) =>

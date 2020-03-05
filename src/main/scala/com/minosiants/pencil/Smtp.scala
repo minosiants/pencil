@@ -4,7 +4,6 @@ import cats.data.Kleisli
 import cats.effect.IO
 import protocol._
 import data._
-//import cats.syntax.show._
 import cats.implicits._
 
 import scala.Function._
@@ -19,7 +18,7 @@ object Smtp {
   def apply[A](run: Request => IO[A]): Smtp[A] =
     Kleisli(req => run(req))
 
-  def command(run: Email => Command): Smtp[Replies] = Smtp { req =>
+  def command1(run: Email => Command): Smtp[Replies] = Smtp { req =>
     val resp = for {
       _ <- req.socket.write(run(req.email))
       r <- req.socket.read()
@@ -28,7 +27,7 @@ object Smtp {
     resp.flatMap(r => if (r.success) IO(r) else Error.smtpError(r.show))
   }
 
-  def command(c: Command): Smtp[Replies] = command(const(c))
+  def command(c: Command): Smtp[Replies] = command1(const(c))
 
   def init(): Smtp[Replies] = Smtp { req =>
     req.socket
@@ -38,16 +37,16 @@ object Smtp {
   }
   def ehlo(): Smtp[Replies] = command(Ehlo("pencil"))
 
-  def mail(): Smtp[Replies] = command(m => Mail(m.from.value))
+  def mail(): Smtp[Replies] = command1(m => Mail(m.from.value))
 
   def rcpt(): Smtp[List[Replies]] = Smtp { req =>
     val rcptCommand = (m: Mailbox) => command(Rcpt(m)).run(req)
-    val cc          = req.email.cc.map(_.value).getOrElse(List.empty[Mailbox])
+    val ccValue     = req.email.cc.map(_.value).getOrElse(List.empty[Mailbox])
 
     for {
-      to  <- req.email.to.value.traverse(rcptCommand)
-      _cc <- cc.traverse(rcptCommand)
-    } yield to ++ _cc
+      to <- req.email.to.value.traverse(rcptCommand)
+      cc <- ccValue.traverse(rcptCommand)
+    } yield to ++ cc
 
   }
 
@@ -74,6 +73,6 @@ object Smtp {
       r <- rcpt()
       d <- data()
       b <- body()
-    } yield List(e, m) :: r ++ List(d, b)
+    } yield e :: m :: r ++ List(d, b)
 
 }
