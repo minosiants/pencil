@@ -25,7 +25,8 @@ object SmtpSocket {
   def bytesToReply(bytes: Array[Byte]): IO[Replies] = {
     Reply.codecReplies.decode(BitVector(bytes)) match {
       case Attempt.Successful(DecodeResult(value, _)) => IO(value)
-      case Attempt.Failure(cause)                     => Error.smtpError(cause.messageWithContext)
+      case Attempt.Failure(cause) =>
+        data.Error.smtpError(cause.messageWithContext)
     }
   }
 
@@ -38,19 +39,20 @@ object SmtpSocket {
     override def read(): IO[Replies] =
       s.read(8192, Some(readTimeout)).flatMap {
         case Some(chunk) => bytesToReply(chunk.toArray)
-        case None        => Error.smtpError("Nothing to read")
+        case None        => data.Error.smtpError("Nothing to read")
       }
 
     override def write(command: Command): IO[Unit] = {
       ascii.encode(command.show) match {
         case Attempt.Successful(value) =>
           s.write(Chunk.array(value.toByteArray), Some(writeTimeout))
-        case Attempt.Failure(cause) => Error.smtpError(cause.messageWithContext)
+        case Attempt.Failure(cause) =>
+          data.Error.smtpError(cause.messageWithContext)
       }
 
     }
   }
-
+// default timeout should be 5 min
   def apply(
       host: String,
       port: Int,
