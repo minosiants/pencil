@@ -11,7 +11,7 @@ final case class SmtpError(msg: String) extends Error
 
 object Error {
 
-  implicit lazy val errorShow:Show[Error] = Show.show {
+  implicit lazy val errorShow: Show[Error] = Show.show {
     case SmtpError(msg) => s"Smtp error: $msg "
   }
 
