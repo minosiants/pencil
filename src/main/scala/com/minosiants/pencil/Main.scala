@@ -12,24 +12,27 @@ object Main extends IOApp {
       .use { blocker =>
         SocketGroup[IO](blocker).use { sg =>
           val client = Client("127.0.0.1")(sg)
-          client.sendEmail(
-            Email(
-              From(Mailbox("kaspar@m.com")),
-              To(List(Mailbox("user1@mydomain.tld"))),
-              None,
-              "hello"
+          client
+            .sendEmail(
+              Email(
+                From(Mailbox("user1@mydomain.tld")),
+                To(List(Mailbox("user1@example.com"))),
+                Subject("first email"),
+                Body("hello")
+              )
             )
-          ).attempt.map{
-            case Right(value) =>
-              println(value.show)
-              ExitCode.Success
-            case Left(error) =>
-                  error match {
-                    case e:Error => println(e.show)
-                    case e:Throwable => e.printStackTrace()
-                  }
-              ExitCode.Error
-          }
+            .attempt
+            .map {
+              case Right(value) =>
+                println(value.show)
+                ExitCode.Success
+              case Left(error) =>
+                error match {
+                  case e: Error     => println(e.show)
+                  case e: Throwable => e.printStackTrace()
+                }
+                ExitCode.Error
+            }
         }
       }
 

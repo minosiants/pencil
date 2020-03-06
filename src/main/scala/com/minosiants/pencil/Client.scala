@@ -11,6 +11,17 @@ trait Client {
   def sendEmail(email: Email): IO[List[Replies]]
 }
 
+object Client {
+  def apply(
+      host: String,
+      port: Int = 25,
+      readTimeout: FiniteDuration = 5.minutes,
+      writeTimeout: FiniteDuration = 5.minutes
+  )(sg: SocketGroup)(implicit cs: ContextShift[IO]): Client =
+    EmailClient(host, port, readTimeout, writeTimeout, sg)
+
+}
+
 case class EmailClient(
     host: String,
     port: Int,
@@ -34,15 +45,4 @@ case class EmailClient(
 
     }
   }
-}
-
-object Client {
-  def apply(
-      host: String,
-      port: Int = 25,
-      readTimeout: FiniteDuration = 5.minutes,
-      writeTimeout: FiniteDuration = 5.minutes
-  )(sg: SocketGroup)(implicit cs: ContextShift[IO]): Client =
-    EmailClient(host, port, readTimeout, writeTimeout, sg)
-
 }

@@ -18,23 +18,21 @@ object Smtp {
   def apply[A](run: Request => IO[A]): Smtp[A] =
     Kleisli(req => run(req))
 
-  def command1(run: Email => Command): Smtp[Replies] = Smtp { req =>
-    val resp = for {
-      _ <- req.socket.write(run(req.email))
-      r <- req.socket.read()
-    } yield r
-
-    resp.flatMap(r => if (r.success) IO(r) else Error.smtpError(r.show))
+  def write(run: Email => Command): Smtp[Unit] = Smtp { req =>
+    req.socket.write(run(req.email))
   }
+
+  def read(): Smtp[Replies] = Smtp(_.socket.read()).flatMapF(processErrors)
+
+  def processErrors(replies: Replies): IO[Replies] =
+    if (replies.success) IO(replies) else Error.smtpError(replies.show)
+
+  def command1(run: Email => Command): Smtp[Replies] = write(run) >> read()
 
   def command(c: Command): Smtp[Replies] = command1(const(c))
 
-  def init(): Smtp[Replies] = Smtp { req =>
-    req.socket
-      .read()
-      .flatMap(r => if (r.success) IO(r) else Error.smtpError(r.show))
+  def init(): Smtp[Replies] = read
 
-  }
   def ehlo(): Smtp[Replies] = command(Ehlo("pencil"))
 
   def mail(): Smtp[Replies] = command1(m => Mail(m.from.value))
@@ -60,10 +58,23 @@ object Smtp {
 
   def quit(): Smtp[Replies] = command(Quit)
 
-  def text(txt: String): Smtp[Replies] = command(Text(txt))
+  def text(txt: String): Smtp[Unit] = write(const(Text(txt)))
 
-  def body(): Smtp[Replies] = Smtp { req =>
-    text(s"${req.email.body} ${Command.endEmail}").run(req)
+  def endEmail(): Smtp[Replies] = text(Command.endEmail) >> read
+
+  def body(): Smtp[Option[Replies]] = Smtp { req =>
+    req.email.body match {
+      case Some(Body(b)) => (text(s"$b") >> endEmail()).run(req).map(Some(_))
+      case None          => IO(None)
+    }
+  }
+
+  def subject(): Smtp[Option[Unit]] = Smtp { req =>
+    req.email.subject match {
+      case Some(Subject(s)) =>
+        text(s"Subject: $s ${Command.end}").run(req).map(Some(_))
+      case None => IO(None)
+    }
   }
 
   def sendMail(): Smtp[List[Replies]] =
@@ -72,7 +83,8 @@ object Smtp {
       m <- mail()
       r <- rcpt()
       d <- data()
+      _ <- subject()
       b <- body()
-    } yield e :: m :: r ++ List(d, b)
+    } yield e :: m :: r ++ (d :: b.toList)
 
 }
