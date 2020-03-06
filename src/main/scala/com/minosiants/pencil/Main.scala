@@ -16,7 +16,7 @@ object Main extends IOApp {
             .sendEmail(
               Email(
                 From(Mailbox("user1@mydomain.tld")),
-                To(List(Mailbox("user1@example.com"))),
+                To(Mailbox("user1@example.com")),
                 Subject("first email"),
                 Body("hello")
               )

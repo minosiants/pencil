@@ -11,7 +11,6 @@ import com.minosiants.pencil.data.{ Email, Mailbox }
 
 final case class Request(email: Email, socket: SmtpSocket) {}
 
-case class Response(value: String)
 
 object Smtp {
 
@@ -35,14 +34,14 @@ object Smtp {
 
   def ehlo(): Smtp[Replies] = command(Ehlo("pencil"))
 
-  def mail(): Smtp[Replies] = command1(m => Mail(m.from.value))
+  def mail(): Smtp[Replies] = command1(m => Mail(m.from.box))
 
   def rcpt(): Smtp[List[Replies]] = Smtp { req =>
     val rcptCommand = (m: Mailbox) => command(Rcpt(m)).run(req)
-    val ccValue     = req.email.cc.map(_.value).getOrElse(List.empty[Mailbox])
+    val ccValue     = req.email.cc.map(_.boxes).getOrElse(List.empty[Mailbox])
 
     for {
-      to <- req.email.to.value.traverse(rcptCommand)
+      to <- req.email.to.boxes.traverse(rcptCommand)
       cc <- ccValue.traverse(rcptCommand)
     } yield to ++ cc
 
