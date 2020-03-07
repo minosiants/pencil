@@ -11,7 +11,6 @@ import com.minosiants.pencil.data.{ Email, Mailbox }
 
 final case class Request(email: Email, socket: SmtpSocket) {}
 
-
 object Smtp {
 
   def apply[A](run: Request => IO[A]): Smtp[A] =

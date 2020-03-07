@@ -1,10 +1,9 @@
 package com.minosiants.pencil
 package data
 
-final case class Mailbox(value: String)  extends Product with Serializable
-final case class From(box: Mailbox)     extends Product with Serializable
+final case class From(box: Mailbox) extends Product with Serializable
 final case class To(boxes: List[Mailbox]) extends Product with Serializable {
-  def + (mailbox:Mailbox) = this.copy(boxes :+ mailbox)
+  def +(mailbox: Mailbox) = this.copy(boxes :+ mailbox)
 }
 final case class Cc(boxes: List[Mailbox]) extends Product with Serializable
 final case class Subject(value: String)   extends Product with Serializable
