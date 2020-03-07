@@ -7,12 +7,14 @@ import scala.util.control.NoStackTrace
 
 sealed trait Error extends NoStackTrace with Product with Serializable
 
-final case class SmtpError(msg: String) extends Error
-
 object Error {
 
+  final case class SmtpError(msg: String)      extends Error
+  final case class InvalidMailBox(msg: String) extends Error
+
   implicit lazy val errorShow: Show[Error] = Show.show {
-    case SmtpError(msg) => s"Smtp error: $msg "
+    case SmtpError(msg)      => s"Smtp error: $msg "
+    case InvalidMailBox(msg) => s"Invalid maildbox: $msg"
   }
 
   def smtpError[A](msg: String): IO[A] =

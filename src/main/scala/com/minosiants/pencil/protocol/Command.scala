@@ -19,15 +19,17 @@ case class Text(txt: String)            extends Command
 object Command {
 
   implicit lazy val CommandShow: Show[Command] = Show.show {
-    case Ehlo(domain)       => s"EHLO $domain $end"
-    case Mail(Mailbox(box)) => s"MAIL FROM: <$box> $end"
-    case Rcpt(Mailbox(box)) => s"RCPT TO: <$box> $end"
-    case Data               => s"DATA $end"
-    case Rset               => s"RSET $end"
-    case Vrfy(str)          => s"VRFY $str $end"
-    case Noop               => s"NOOP $end"
-    case Quit               => s"QUIT $end"
-    case Text(txt)          => s"$txt"
+    case Ehlo(domain) => s"EHLO $domain $end"
+    case Mail(Mailbox(localPart, domain)) =>
+      s"MAIL FROM: <$localPart@$domain> $end"
+    case Rcpt(Mailbox(localPart, domain)) =>
+      s"RCPT TO: <$localPart@$domain> $end"
+    case Data      => s"DATA $end"
+    case Rset      => s"RSET $end"
+    case Vrfy(str) => s"VRFY $str $end"
+    case Noop      => s"NOOP $end"
+    case Quit      => s"QUIT $end"
+    case Text(txt) => s"$txt"
   }
 
   val end      = "\r\n"

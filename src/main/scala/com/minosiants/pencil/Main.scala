@@ -15,8 +15,8 @@ object Main extends IOApp {
           client
             .sendEmail(
               Email(
-                From(Mailbox("user1@mydomain.tld")),
-                To(Mailbox("user1@example.com")),
+                From(Mailbox.unsafeFromString("user1@mydomain.tld")),
+                To(Mailbox.unsafeFromString("user1@example.com")),
                 Subject("first email"),
                 Body("hello")
               )
