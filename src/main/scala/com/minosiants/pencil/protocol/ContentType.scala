@@ -23,4 +23,9 @@ object ContentType {
   lazy val `application/octet-stream`: ContentType =
     ContentType("application", "octet-stream")
   lazy val `application/json`: ContentType = ContentType("application", "json")
+  lazy val `multipart/mixed`: ContentType  = ContentType("multipart", "mixed")
+  lazy val `multipart/alternative`: ContentType =
+    ContentType("multipart", "alternative")
+  lazy val `multipart/digest`: ContentType = ContentType("multipart", "digest")
+
 }
