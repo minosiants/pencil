@@ -30,6 +30,7 @@ lazy val root = (project in file("."))
       "com.github.julien-truffaut" %% "monocle-core"               % monocleVersion,
       "com.github.julien-truffaut" %% "monocle-macro"              % monocleVersion,
       "org.specs2"                 %% "specs2-core"                % specs2Version % "test",
+      "org.scalacheck" %% "scalacheck" % "1.14.1" % "test",
       "com.codecommit"             %% "cats-effect-testing-specs2" % "0.3.0",
       "ch.qos.logback"             % "logback-classic"             % logbackVersion
     ),

@@ -31,7 +31,7 @@ object MailboxParser {
             Error
               .InvalidMailBox(s"local part '$localPart' has invalid char $x'")
           )
-
+        case (Nil, x) => Right(Nil :+ x)
         case (_, x) if notValid(x) =>
           Left(
             Error
