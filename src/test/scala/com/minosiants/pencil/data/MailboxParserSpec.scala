@@ -31,6 +31,7 @@ class MailboxParserSpec extends Specification {
         "dha134@-dom.nab22.com",
         "sdfe33d@saf-sf.com-",
         "sdfe33d@-saf-sf-.com",
+        "sd>fe33d@-saf-sf-.com",
         "sdfe33d@",
         "sdfe33d"
       )
