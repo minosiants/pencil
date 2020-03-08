@@ -14,11 +14,11 @@ object Main extends IOApp {
           val client = Client("127.0.0.1")(sg)
           client
             .sendEmail(
-              Email(
+              Mail.ascii(
                 From(Mailbox.unsafeFromString("user1@mydomain.tld")),
                 To(Mailbox.unsafeFromString("user1@example.com")),
                 Subject("first email"),
-                Body("hello")
+                Body.Ascii("hello")
               )
             )
             .attempt

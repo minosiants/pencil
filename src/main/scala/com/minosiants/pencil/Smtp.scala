@@ -7,16 +7,16 @@ import data._
 import cats.implicits._
 
 import scala.Function._
-import com.minosiants.pencil.data.{ Email, Mailbox }
+import com.minosiants.pencil.data.{ Mail, Mailbox }
 
-final case class Request(email: Email, socket: SmtpSocket) {}
+final case class Request(email: Mail, socket: SmtpSocket) {}
 
 object Smtp {
 
   def apply[A](run: Request => IO[A]): Smtp[A] =
     Kleisli(req => run(req))
 
-  def write(run: Email => Command): Smtp[Unit] = Smtp { req =>
+  def write(run: Mail => Command): Smtp[Unit] = Smtp { req =>
     req.socket.write(run(req.email))
   }
 
@@ -25,7 +25,7 @@ object Smtp {
   def processErrors(replies: Replies): IO[Replies] =
     if (replies.success) IO(replies) else Error.smtpError(replies.show)
 
-  def command1(run: Email => Command): Smtp[Replies] = write(run) >> read()
+  def command1(run: Mail => Command): Smtp[Replies] = write(run) >> read()
 
   def command(c: Command): Smtp[Replies] = command1(const(c))
 

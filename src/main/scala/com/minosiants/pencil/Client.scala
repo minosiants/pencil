@@ -8,7 +8,7 @@ import fs2.io.tcp.SocketGroup
 import scala.concurrent.duration._
 
 trait Client {
-  def sendEmail(email: Email): IO[List[Replies]]
+  def sendEmail(email: Mail): IO[List[Replies]]
 }
 
 object Client {
@@ -34,7 +34,7 @@ case class EmailClient(
   private lazy val socket: Resource[IO, SmtpSocket] =
     SmtpSocket(host, port, readTimeout, writeTimeout, sg)
 
-  override def sendEmail(email: Email): IO[List[Replies]] = {
+  override def sendEmail(email: Mail): IO[List[Replies]] = {
     socket.use { s =>
       val send = for {
         i <- Smtp.init()
