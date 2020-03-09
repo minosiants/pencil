@@ -29,6 +29,7 @@ lazy val root = (project in file("."))
       "io.circe"                   %% "circe-parser"               % circeVersion,
       "com.github.julien-truffaut" %% "monocle-core"               % monocleVersion,
       "com.github.julien-truffaut" %% "monocle-macro"              % monocleVersion,
+      "org.apache.tika" % "tika-core" % "1.23",
       "org.specs2"                 %% "specs2-core"                % specs2Version % "test",
       "org.scalacheck"             %% "scalacheck"                 % scalacheckVersion % "test",
       "com.codecommit"             %% "cats-effect-testing-specs2" % "0.3.0",

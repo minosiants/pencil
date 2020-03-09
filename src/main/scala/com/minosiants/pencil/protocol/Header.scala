@@ -1,6 +1,8 @@
 package com.minosiants.pencil
 package protocol
 
+import com.minosiants.pencil.data.Mailbox
+
 sealed trait Header extends Product with Serializable
 
 object Header {

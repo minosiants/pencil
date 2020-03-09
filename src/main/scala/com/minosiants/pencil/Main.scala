@@ -4,7 +4,7 @@ import cats.effect._
 import cats.implicits._
 import fs2.io.tcp.SocketGroup
 import data._
-
+import Client._
 object Main extends IOApp {
 
   override def run(args: List[String]): IO[ExitCode] =
@@ -13,8 +13,8 @@ object Main extends IOApp {
         SocketGroup[IO](blocker).use { sg =>
           val client = Client("127.0.0.1")(sg)
           client
-            .sendEmail(
-              Mail.ascii(
+            .send(
+              Email.ascii(
                 From(Mailbox.unsafeFromString("user1@mydomain.tld")),
                 To(Mailbox.unsafeFromString("user1@example.com")),
                 Subject("first email"),
