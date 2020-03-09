@@ -47,10 +47,10 @@ object Client {
             m <- Smtp.mail()
             r <- Smtp.rcpt()
             d <- Smtp.data()
-            // _ <- Smtp.subject()
-            // b <- Smtp.body()
+            _ <- Smtp.mainHeaders()
+            b <- Smtp.asciiBody()
             q <- Smtp.quit()
-          } yield q :: d :: r ++ (m :: e :: i :: Nil)
+          } yield q :: b.toList ++ (d :: r ++ (m :: e :: i :: Nil))
           sendProg.run(Request(email, s))
         }
       }

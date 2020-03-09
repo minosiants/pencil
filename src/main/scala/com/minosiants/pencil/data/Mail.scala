@@ -18,6 +18,11 @@ final case class Subject(value: String)    extends Product with Serializable
 
 final case class Attachment(file: File) extends Product with Serializable
 
+object From {
+  implicit lazy val fromShow: Show[From] = Show(
+    from => s"${from.box.show}"
+  )
+}
 object To {
 
   def apply(to: Mailbox): To = To(List(to))
