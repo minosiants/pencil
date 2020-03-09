@@ -84,6 +84,9 @@ object Smtp {
     }
   }
 
+  def fromHeader(): Smtp[Unit] = Smtp { req =>
+    text(s"From: ${req.email.from.show} ${Command.end}").run(req)
+  }
   def toHeader(): Smtp[Unit] = Smtp { req =>
     text(s"To: ${req.email.to.show} ${Command.end}").run(req)
   }
@@ -103,8 +106,18 @@ object Smtp {
       case None => IO(None)
     }
   }
-  def mimeHeader(): Smtp[Unit] =
+  def mainHeaders(): Smtp[Unit] =
+    for {
+      _ <- fromHeader()
+      _ <- toHeader()
+      _ <- ccHeader()
+      _ <- bccHeader()
+      _ <- subjectHeader()
+    } yield ()
+
+  def mimeHeader(): Smtp[Unit] = {
     text(s"${headerShow.show(`MIME-Version`())} ${Command.end}")
+  }
 
   def contentTypeHeader(
       ct: `Content-Type`
