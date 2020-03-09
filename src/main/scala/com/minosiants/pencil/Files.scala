@@ -1,23 +1,25 @@
 package com.minosiants.pencil
 
-import java.io.File
+import java.io.{ File, InputStream }
 
 import cats.effect.{ IO, Resource }
-import scodec.bits.BitVector
+import com.minosiants.pencil.data.Error
 
 object Files {
 
-  def resource(file: File): Resource[IO, BitVector] = {
+  def resource(file: File): Resource[IO, InputStream] = {
     Resource
       .make {
         IO {
           getClass().getResourceAsStream(file.getAbsolutePath)
         }
-      } { is =>
-        IO(is.close()).handleErrorWith(
-          _ => data.Error.unableCloseResource(file.getAbsolutePath)
-        )
+      } {
+        { is =>
+          if (is != null)
+            IO(is.close())
+          else
+            Error.resourceNotFound(file.getAbsolutePath)
+        }
       }
-      .map(BitVector.fromInputStream(_))
   }
 }
