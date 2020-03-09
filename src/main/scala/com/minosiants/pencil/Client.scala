@@ -8,7 +8,12 @@ import fs2.io.tcp.SocketGroup
 import scala.concurrent.duration._
 
 trait Client {
-  def sendEmail(email: Mail): IO[List[Replies]]
+  def send[A](email: A)(implicit es: EmailSender[A]): IO[List[Replies]]
+
+}
+
+trait EmailSender[A] {
+  def send(email: A, socket: Resource[IO, SmtpSocket]): IO[List[Replies]]
 }
 
 object Client {
@@ -17,32 +22,49 @@ object Client {
       port: Int = 25,
       readTimeout: FiniteDuration = 5.minutes,
       writeTimeout: FiniteDuration = 5.minutes
-  )(sg: SocketGroup)(implicit cs: ContextShift[IO]): Client =
-    EmailClient(host, port, readTimeout, writeTimeout, sg)
+  )(sg: SocketGroup)(implicit cs: ContextShift[IO]): Client = new Client {
 
-}
+    lazy val socket: Resource[IO, SmtpSocket] =
+      SmtpSocket(host, port, readTimeout, writeTimeout, sg)
 
-case class EmailClient(
-    host: String,
-    port: Int,
-    readTimeout: FiniteDuration,
-    writeTimeout: FiniteDuration,
-    sg: SocketGroup
-)(implicit cs: ContextShift[IO])
-    extends Client {
-
-  private lazy val socket: Resource[IO, SmtpSocket] =
-    SmtpSocket(host, port, readTimeout, writeTimeout, sg)
-
-  override def sendEmail(email: Mail): IO[List[Replies]] = {
-    socket.use { s =>
-      val send = for {
-        i <- Smtp.init()
-        e <- Smtp.sendMail()
-        q <- Smtp.quit()
-      } yield q :: i :: e
-      send.run(Request(email, s))
-
+    override def send[A](
+        email: A
+    )(implicit es: EmailSender[A]): IO[List[Replies]] = {
+      es.send(email, socket)
     }
   }
+
+  implicit lazy val textEmailSender: EmailSender[AsciiEmail] =
+    new EmailSender[AsciiEmail] {
+      override def send(
+          email: AsciiEmail,
+          socket: Resource[IO, SmtpSocket]
+      ): IO[List[Replies]] = {
+        socket.use { s =>
+          val sendProg = for {
+            i <- Smtp.init()
+            e <- Smtp.ehlo()
+            m <- Smtp.mail()
+            r <- Smtp.rcpt()
+            d <- Smtp.data()
+            // _ <- Smtp.subject()
+            // b <- Smtp.body()
+            q <- Smtp.quit()
+          } yield q :: d :: r ++ (m :: e :: i :: Nil)
+          sendProg.run(Request(email, s))
+        }
+      }
+
+      implicit lazy val mimeEmailSender: EmailSender[MimeEmail] =
+        new EmailSender[MimeEmail] {
+          override def send(
+              email: MimeEmail,
+              socket: Resource[IO, SmtpSocket]
+          ): IO[List[Replies]] = {
+
+            ???
+          }
+        }
+    }
+
 }

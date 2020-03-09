@@ -1,12 +1,11 @@
 package com.minosiants.pencil
 package protocol
 
+import cats.Show
+
 final case class ContentType(mainType: String, subType: String)
     extends Product
-    with Serializable {
-  override def toString: String =
-    s"${mainType.toLowerCase}/${subType.toLowerCase}"
-}
+    with Serializable
 
 object ContentType {
   lazy val `text/plain`: ContentType = ContentType("text", "plain")
@@ -28,4 +27,33 @@ object ContentType {
     ContentType("multipart", "alternative")
   lazy val `multipart/digest`: ContentType = ContentType("multipart", "digest")
 
+  lazy val allTypes = List(
+    `text/plain`,
+    `text/html`,
+    `image/gif`,
+    `image/jpeg`,
+    `image/png`,
+    `audio/aac`,
+    `audio/mpeg`,
+    `audio/wav`,
+    `video/mpeg`,
+    `video/ogg`,
+    `video/webm`,
+    `application/json`,
+    `application/octet-stream`,
+    `multipart/alternative`,
+    `multipart/digest`,
+    `multipart/mixed`
+  )
+
+  def findType(str: String): Option[ContentType] =
+    str.split("/") match {
+      case Array(main, sub) =>
+        allTypes.find(ct => ct.mainType == main && ct.subType == sub)
+      case _ => None
+    }
+
+  implicit lazy val contentTypeShow: Show[ContentType] = Show(
+    ct => s"${ct.mainType.toLowerCase}/${ct.subType.toLowerCase}"
+  )
 }
