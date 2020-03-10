@@ -8,12 +8,12 @@ import fs2.io.tcp.SocketGroup
 import scala.concurrent.duration._
 
 trait Client {
-  def send[A](email: A)(implicit es: EmailSender[A]): IO[List[Replies]]
+  def send[A](email: A)(implicit es: EmailSender[A]): IO[Replies]
 
 }
 
 trait EmailSender[A] {
-  def send(email: A, socket: Resource[IO, SmtpSocket]): IO[List[Replies]]
+  def send(email: A, socket: Resource[IO, SmtpSocket]): IO[Replies]
 }
 
 object Client {
@@ -29,7 +29,7 @@ object Client {
 
     override def send[A](
         email: A
-    )(implicit es: EmailSender[A]): IO[List[Replies]] = {
+    )(implicit es: EmailSender[A]): IO[Replies] = {
       es.send(email, socket)
     }
   }
@@ -39,30 +39,42 @@ object Client {
       override def send(
           email: AsciiEmail,
           socket: Resource[IO, SmtpSocket]
-      ): IO[List[Replies]] = {
+      ): IO[Replies] =
         socket.use { s =>
           val sendProg = for {
-            i <- Smtp.init()
-            e <- Smtp.ehlo()
-            m <- Smtp.mail()
-            r <- Smtp.rcpt()
-            d <- Smtp.data()
+            _ <- Smtp.init()
+            _ <- Smtp.ehlo()
+            _ <- Smtp.mail()
+            _ <- Smtp.rcpt()
+            _ <- Smtp.data()
             _ <- Smtp.mainHeaders()
-            b <- Smtp.asciiBody()
-            q <- Smtp.quit()
-          } yield q :: b.toList ++ (d :: r ++ (m :: e :: i :: Nil))
+            r <- Smtp.asciiBody()
+            _ <- Smtp.quit()
+          } yield r
           sendProg.run(Request(email, s))
         }
-      }
 
       implicit lazy val mimeEmailSender: EmailSender[MimeEmail] =
         new EmailSender[MimeEmail] {
           override def send(
               email: MimeEmail,
               socket: Resource[IO, SmtpSocket]
-          ): IO[List[Replies]] = {
+          ): IO[Replies] = socket.use { s =>
+            val sendProg = for {
+              _ <- Smtp.init()
+              _ <- Smtp.ehlo()
+              _ <- Smtp.mail()
+              _ <- Smtp.rcpt()
+              _ <- Smtp.data()
+              _ <- Smtp.mainHeaders()
+              _ <- Smtp.mimeHeader()
+              _ <- Smtp.mimeBody()
+              _ <- Smtp.attachments()
+              r <- Smtp.endEmail()
+              _ <- Smtp.quit()
+            } yield r
 
-            ???
+            sendProg.run(Request(email, s))
           }
         }
     }
