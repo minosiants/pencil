@@ -1,22 +1,21 @@
 package com.minosiants.pencil
 package data
 
-import java.io.File
+import java.nio.file.Path
 
-import protocol._
 import Body._
 import cats.Show
 import cats.syntax.show._
+import io.estatico.newtype.macros.newtype
 
 final case class From(box: Mailbox) extends Product with Serializable
-final case class To(boxes: List[Mailbox]) extends Product with Serializable {
-  def +(mailbox: Mailbox) = this.copy(boxes :+ mailbox)
-}
-final case class Cc(boxes: List[Mailbox])  extends Product with Serializable
-final case class Bcc(boxes: List[Mailbox]) extends Product with Serializable
-final case class Subject(value: String)    extends Product with Serializable
+@newtype final case class To(boxes: List[Mailbox]) extends Product with Serializable
 
-final case class Attachment(file: File) extends Product with Serializable
+@newtype final case class Cc(boxes: List[Mailbox])  extends Product with Serializable
+@newtype final case class Bcc(boxes: List[Mailbox]) extends Product with Serializable
+@newtype final case class Subject(value: String)    extends Product with Serializable
+
+@newtype final case class Attachment(file: Path) extends Product with Serializable
 
 object From {
   implicit lazy val fromShow: Show[From] = Show(
@@ -78,6 +77,7 @@ final case class MimeEmail(
     case Some(value) => copy(cc = Some(Cc(value.boxes :+ mb)))
     case None        => copy(cc = Some(Cc(List(mb))))
   }
+  def isMultipart: Boolean = attachments.nonEmpty
 }
 
 object Email {

@@ -22,11 +22,12 @@ object Header {
 
     case `MIME-Version`(value) => s"MIME-Version: $value"
     case `Content-Type`(ct, params) =>
-      val values = (ct.show :: params.foldRight(List.empty[String]) {
-        (item, acc) =>
+      val values = params
+        .foldRight(List.empty[String]) { (item, acc) =>
           acc :+ s"${item._1}=${item._2}"
-      }).mkString(";")
-      s"Content Type: $values"
+        }
+        .mkString(";")
+      s"Content-Type: ${ct.show}; $values"
     case `Content-Transfer-Encoding`(mechanism) =>
       s"Content-Transfer-Encoding: ${mechanism.show}"
 

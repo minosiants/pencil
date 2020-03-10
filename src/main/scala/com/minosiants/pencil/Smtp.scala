@@ -7,6 +7,7 @@ import data._
 import cats.syntax.flatMap._
 import cats.syntax.show._
 import cats.syntax.traverse._
+import cats.syntax.functor._
 import cats.instances.list._
 
 import scala.Function._
@@ -14,6 +15,7 @@ import com.minosiants.pencil.data.{ Email, Mailbox }
 import Header._
 import ContentType._
 import com.minosiants.pencil.data.Body.{ Ascii, Html, Utf8 }
+import com.minosiants.pencil.protocol.Encoding.{ `7bit`, `base64` }
 import scodec.bits.BitVector
 
 final case class Request(email: Email, socket: SmtpSocket) {}
@@ -22,6 +24,9 @@ object Smtp {
 
   def apply[A](run: Request => IO[A]): Smtp[A] =
     Kleisli(req => run(req))
+
+  def pure[A](a: A): Smtp[A] =
+    Kleisli.pure(a)
 
   def write(run: Email => Command): Smtp[Unit] = Smtp { req =>
     req.socket.write(run(req.email))
@@ -89,11 +94,16 @@ object Smtp {
   }
 
   def subjectHeader(): Smtp[Option[Unit]] = Smtp { req =>
-    req.email.subject match {
-      case Some(Subject(s)) =>
-        text(s"Subject: $s ${Command.end}").run(req).map(Some(_))
-      case None => IO(None)
+    req.email match {
+      case AsciiEmail(_, _, _, _, Some(Subject(sub)), _) =>
+        text(s"Subject: $sub ${Command.end}").run(req).map(Some(_))
+      case MimeEmail(_, _, _, _, Some(Subject(sub)), _, _, _) =>
+        text(s"Subject: =?utf-8?b?${sub.toBase64}?= ${Command.end}")
+          .run(req)
+          .map(Some(_))
+      case _ => IO(None)
     }
+
   }
 
   def fromHeader(): Smtp[Unit] = Smtp { req =>
@@ -133,19 +143,22 @@ object Smtp {
 
   def contentTypeHeader(
       ct: `Content-Type`
-  ): Smtp[Unit] = text(s"${headerShow.show(ct)}")
+  ): Smtp[Unit] = text(s"${headerShow.show(ct)} ${Command.end}")
 
-  def contentTransferEncoding(encoding: Encoding) =
+  def contentTransferEncoding(encoding: Encoding): Smtp[Unit] =
     text(
       s"${headerShow.show(`Content-Transfer-Encoding`(encoding))} ${Command.end}"
     )
 
-  def boundary(isFinal: Boolean = false): Smtp[Option[Unit]] = Smtp { req =>
+  def boundary(isFinal: Boolean = false): Smtp[Unit] = Smtp { req =>
     req.email match {
-      case AsciiEmail(_, _, _, _, _, _) => IO(None)
-      case MimeEmail(_, _, _, _, _, _, _, Boundary(b)) =>
-        val end = if (isFinal) "---" else ""
-        text(s"---$b$end").run(req).map(Some(_))
+      case e @ MimeEmail(_, _, _, _, _, _, _, Boundary(b)) =>
+        val end = if (isFinal) "--" else ""
+        if (e.isMultipart)
+          text(s"--$b$end ${Command.end}").run(req)
+        else
+          IO(())
+      case AsciiEmail(_, _, _, _, _, _) => Error.smtpError("not mime")
     }
   }
 
@@ -154,46 +167,66 @@ object Smtp {
       _ <- boundary()
       _ <- contentTypeHeader(ct)
       _ <- contentTransferEncoding(mech)
+      _ <- text(Command.end)
       _ <- text(s"$body ${Command.end}")
     } yield ()
 
-  def mimeBody(): Smtp[Option[Unit]] = Smtp { req =>
-    def sender(ct: `Content-Type`, body: String) =
-      (for {
-        _ <- boundary()
-        _ <- contentTypeHeader(ct)
-        _ <- text(s"$body ${Command.end}")
-      } yield ()).run(req).map(Some(_))
+  def multipart(): Smtp[Unit] = Smtp { req =>
+    req.email match {
+      case MimeEmail(_, _, _, _, _, _, _, Boundary(b)) =>
+        contentTypeHeader(
+          `Content-Type`(`multipart/mixed`, Map("boundary" -> b))
+        ).run(req)
+      case _ => Error.smtpError("Does not support multipart")
+    }
 
+  }
+  def mimeBody(): Smtp[Unit] = Smtp { req =>
     req.email match {
       case MimeEmail(_, _, _, _, _, Some(Ascii(body)), _, _) =>
-        sender(`Content-Type`(`text/plain`, Map("charset" -> "US-ASCII")), body)
+        mimePart(
+          body,
+          `7bit`,
+          `Content-Type`(`text/plain`, Map("charset" -> "US-ASCII"))
+        ).run(req)
 
       case MimeEmail(_, _, _, _, _, Some(Html(body)), _, _) =>
-        sender(`Content-Type`(`text/html`, Map("charset" -> "UTF-8")), body)
+        mimePart(
+          body.toBase64,
+          `base64`,
+          `Content-Type`(`text/html`, Map("charset" -> "UTF-8"))
+        ).run(req)
 
-      case MimeEmail(_, _, _, _, _, Some(Utf8(body)), _, boundary) =>
-        sender(`Content-Type`(`text/plain`, Map("charset" -> "UTF-8")), body)
+      case MimeEmail(_, _, _, _, _, Some(Utf8(body)), _, _) =>
+        mimePart(
+          body.toBase64,
+          `base64`,
+          `Content-Type`(`text/plain`, Map("charset" -> "UTF-8"))
+        ).run(req)
 
-      case _ => IO(None)
+      case _ => Error.smtpError("not mime email")
     }
 
   }
 
-  def attachments(): Smtp[Option[Unit]] = Smtp { req =>
+  def attachments(): Smtp[Unit] = Smtp { req =>
     req.email match {
-      case AsciiEmail(_, _, _, _, _, _) => IO(None)
+      case AsciiEmail(_, _, _, _, _, _) =>
+        Error.smtpError("attachments not supported")
       case MimeEmail(_, _, _, _, _, _, attach, _) =>
         val result = attach.map { a =>
-          val res = Files.resource(a.file)
+          val res = Files.is(a.file)
           for {
             encoded <- res.use(v => IO(BitVector.fromInputStream(v).toBase64))
             ct      <- res.use(ContentTypeFinder.findType)
-            _ <- mimePart(encoded, Encoding.`base64`, `Content-Type`(ct))
-              .run(req)
+            _ <- mimePart(
+              encoded,
+              `base64`,
+              `Content-Type`(ct, Map("name" -> a.file.getFileName.toString))
+            ).run(req)
           } yield ()
         }
-        result.sequence.map(_.headOption)
+        result.sequence.as(())
     }
   }
 
