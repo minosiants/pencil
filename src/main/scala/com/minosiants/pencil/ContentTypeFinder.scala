@@ -1,10 +1,11 @@
 package com.minosiants.pencil
 
+import java.io.InputStream
+
 import protocol._
 import data._
-import java.io.{ File, InputStream }
 
-import cats.effect.{ IO, Resource }
+import cats.effect.IO
 import org.apache.tika.Tika
 
 object ContentTypeFinder {
@@ -18,8 +19,5 @@ object ContentTypeFinder {
         .findType(ct)
         .getOrElse(ContentType.`application/octet-stream`)
     }.handleErrorWith(Error.tikaException("Unable to read input stream"))
-
-  def findType(file: File): IO[ContentType] =
-    Files.resource(file).use(findType)
 
 }

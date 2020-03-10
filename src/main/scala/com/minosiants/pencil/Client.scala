@@ -53,30 +53,30 @@ object Client {
           } yield r
           sendProg.run(Request(email, s))
         }
+    }
+  implicit lazy val mimeEmailSender: EmailSender[MimeEmail] =
+    new EmailSender[MimeEmail] {
+      override def send(
+          email: MimeEmail,
+          socket: Resource[IO, SmtpSocket]
+      ): IO[Replies] = socket.use { s =>
+        val sendProg = for {
+          _ <- Smtp.init()
+          _ <- Smtp.ehlo()
+          _ <- Smtp.mail()
+          _ <- Smtp.rcpt()
+          _ <- Smtp.data()
+          _ <- Smtp.mimeHeader()
+          _ <- Smtp.mainHeaders()
+          _ <- if (email.isMultipart) Smtp.multipart() else Smtp.pure(())
+          _ <- Smtp.mimeBody()
+          _ <- Smtp.attachments()
+          r <- Smtp.endEmail()
+          _ <- Smtp.quit()
+        } yield r
 
-      implicit lazy val mimeEmailSender: EmailSender[MimeEmail] =
-        new EmailSender[MimeEmail] {
-          override def send(
-              email: MimeEmail,
-              socket: Resource[IO, SmtpSocket]
-          ): IO[Replies] = socket.use { s =>
-            val sendProg = for {
-              _ <- Smtp.init()
-              _ <- Smtp.ehlo()
-              _ <- Smtp.mail()
-              _ <- Smtp.rcpt()
-              _ <- Smtp.data()
-              _ <- Smtp.mainHeaders()
-              _ <- Smtp.mimeHeader()
-              _ <- Smtp.mimeBody()
-              _ <- Smtp.attachments()
-              r <- Smtp.endEmail()
-              _ <- Smtp.quit()
-            } yield r
-
-            sendProg.run(Request(email, s))
-          }
-        }
+        sendProg.run(Request(email, s))
+      }
     }
 
 }

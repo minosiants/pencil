@@ -9,7 +9,10 @@ val specs2Version     = "4.8.3"
 val logbackVersion    = "1.2.3"
 val circeVersion      = "0.12.3"
 val monocleVersion    = "2.0.0"
+val tikaVersion       = "1.23"
 val scalacheckVersion = "1.14.1"
+val newtypeVersion    = "0.4.3"
+
 lazy val root = (project in file("."))
   .settings(
     organization := "com.minosiatns",
@@ -29,7 +32,8 @@ lazy val root = (project in file("."))
       "io.circe"                   %% "circe-parser"               % circeVersion,
       "com.github.julien-truffaut" %% "monocle-core"               % monocleVersion,
       "com.github.julien-truffaut" %% "monocle-macro"              % monocleVersion,
-      "org.apache.tika" % "tika-core" % "1.23",
+      "org.apache.tika"            % "tika-core"                   % tikaVersion,
+      "io.estatico"                %% "newtype"                    % newtypeVersion,
       "org.specs2"                 %% "specs2-core"                % specs2Version % "test",
       "org.scalacheck"             %% "scalacheck"                 % scalacheckVersion % "test",
       "com.codecommit"             %% "cats-effect-testing-specs2" % "0.3.0",
