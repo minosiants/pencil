@@ -66,13 +66,25 @@ object Smtp {
 
   def text(txt: String): Smtp[Unit] = write(const(Text(txt)))
 
-  def endEmail(): Smtp[Replies] = text(Command.endEmail) >> read
+  def endEmail(): Smtp[Replies] = Smtp { req =>
+    val p = req.email match {
+      case AsciiEmail(_, _, _, _, _, _) => text(Command.endEmail) >> read
+      case _ =>
+        for {
+          _ <- boundary(true)
+          _ <- text(Command.endEmail)
+          r <- read
+        } yield r
+    }
+    p.run(req)
 
-  def asciiBody(): Smtp[Option[Replies]] = Smtp { req =>
+  }
+
+  def asciiBody(): Smtp[Replies] = Smtp { req =>
     req.email match {
       case AsciiEmail(_, _, _, _, _, Some(Ascii(body))) =>
-        (text(s"$body") >> endEmail()).run(req).map(Some(_))
-      case _ => IO(None)
+        (text(s"$body") >> endEmail()).run(req)
+      case _ => Error.smtpError("Body is not ascii")
     }
   }
 
