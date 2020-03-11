@@ -37,6 +37,7 @@ lazy val root = (project in file("."))
       "org.specs2"                 %% "specs2-core"                % specs2Version % "test",
       "org.scalacheck"             %% "scalacheck"                 % scalacheckVersion % "test",
       "com.codecommit"             %% "cats-effect-testing-specs2" % "0.3.0",
+      "org.scodec"                  %% "scodec-stream"             % "2.0.0" % "test",
       "ch.qos.logback"             % "logback-classic"             % logbackVersion
     ),
     addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3")
