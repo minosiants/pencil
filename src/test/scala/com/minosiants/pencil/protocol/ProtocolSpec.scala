@@ -5,7 +5,6 @@ import org.specs2.mutable.Specification
 import scodec.DecodeResult
 import scodec.bits._
 import scodec.codecs._
-import CommandCodec.commandCodec
 import com.minosiants.pencil.data.Mailbox
 
 import scala.io.Source
@@ -53,14 +52,14 @@ class ProtocolSpec extends Specification {
       )
     }
     "decode EHLO command" in {
-      val result = commandCodec.decode(command("EHLO domain \r\n")).toEither
+      val result = Command.codec.decode(command("EHLO domain \r\n")).toEither
       result must beRight(DecodeResult(Ehlo("domain"), BitVector.empty))
     }
 
     "decode MAIL command" in {
       val box = "name@domain.com"
       val result =
-        commandCodec.decode(command(s"MAIL FROM: <$box> \r\n")).toEither
+        Command.codec.decode(command(s"MAIL FROM: <$box> \r\n")).toEither
       result must beRight(
         DecodeResult(Mail(Mailbox.unsafeFromString(box)), BitVector.empty)
       )
@@ -69,19 +68,19 @@ class ProtocolSpec extends Specification {
     "decode RCPT command" in {
       val box = "name2@domain2.com"
       val result =
-        commandCodec.decode(command(s"RCPT TO: <$box> \r\n")).toEither
+        Command.codec.decode(command(s"RCPT TO: <$box> \r\n")).toEither
       result must beRight(
         DecodeResult(Rcpt(Mailbox.unsafeFromString(box)), BitVector.empty)
       )
     }
 
     "decode DATA command" in {
-      val result = commandCodec.decode(command(s"DATA: \r\n")).toEither
+      val result = Command.codec.decode(command(s"DATA: \r\n")).toEither
       result must beRight(DecodeResult(Data, BitVector.empty))
     }
 
     "decode QUIT command" in {
-      val result = commandCodec.decode(command(s"QUIT: \r\n")).toEither
+      val result = Command.codec.decode(command(s"QUIT: \r\n")).toEither
       result must beRight(DecodeResult(Quit, BitVector.empty))
     }
 

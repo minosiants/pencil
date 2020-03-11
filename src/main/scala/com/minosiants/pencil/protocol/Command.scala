@@ -3,6 +3,7 @@ package protocol
 
 import cats.Show
 import com.minosiants.pencil.data.Mailbox
+import scodec.Codec
 
 sealed trait Command extends Product with Serializable
 
@@ -34,4 +35,6 @@ object Command {
 
   val end      = "\r\n"
   val endEmail = s"$end.$end"
+
+  lazy val codec: Codec[Command] = CommandCodec()
 }
