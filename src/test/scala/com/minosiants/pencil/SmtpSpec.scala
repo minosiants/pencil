@@ -5,19 +5,20 @@ import cats.effect.specs2.CatsIO
 import cats.effect.{ Blocker, IO, Resource }
 import com.minosiants.pencil.protocol._
 import data._
-import fs2.io.tcp.SocketGroup
+import fs2.io.tcp.{ Socket, SocketGroup }
 import fs2.Stream
 import org.specs2.mutable.Specification
 import scodec.Codec
 import scodec.bits._
 import scodec.codecs._
+import scodec.stream.{ StreamDecoder, StreamEncoder }
 
 import scala.concurrent.duration._
 
 class SmtpSpec extends Specification with CatsIO {
 
   def socket(sg: SocketGroup): Resource[IO, SmtpSocket] =
-    SmtpSocket("localhost", 2222, 5.seconds, 5.seconds, sg)
+    SmtpSocket("localhost", 5555, 5.seconds, 5.seconds, sg)
 
   def withSocket[A](run: SmtpSocket => IO[A]) = {
     Blocker[IO]
@@ -28,32 +29,28 @@ class SmtpSpec extends Specification with CatsIO {
       }
   }
 
-  /*def smtpServer(sg: SocketGroup): IO[Unit] =
-      sg.server(new InetSocketAddress(5555)).map { clientResource =>
-        Stream.resource(clientResource).flatMap { client =>
-
-          client.write(ascii.encode("220 mail.example.com ESMTP Postfix"))
-          Stream.
-          client.reads(8192)
-            .through(text.utf8Decode)
-            .through(client.writes())
-        }
-      }.parJoin(100).compile.drain
-
-
-  }*/
   "Smtp" should {
-    "read ok" in {
-      /*
-        val result = withSocket{s =>
-            Smtp.read().run(Request(SmtpSpec.ascii(), s))
-        }.attempt.unsafeRunSync()
+    val r = Blocker[IO]
+      .use { blocker =>
+        SocketGroup[IO](blocker).use { sg =>
+          IO(SmtpServer(sg))
+        }
+      }
+      .attempt
+      .unsafeRunSync()
 
-      result must beRight(Reply(Code.code(220).get, " ", "text"))*/
-
+    "get response on EHLO" in {
+      val result = withSocket { s =>
+        (for {
+          i <- Smtp.init()
+          v <- Smtp.ehlo()
+        } yield List(i, v)).run(Request(SmtpSpec.ascii(), s))
+      }.attempt.unsafeRunSync()
+      println(result)
       success
     }
   }
+
 }
 
 object SmtpSpec {

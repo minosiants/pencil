@@ -20,6 +20,9 @@ final case class Replies(replies: List[Reply])
 
 object Replies {
   implicit lazy val RepliesShow: Show[Replies] = Show.fromToString
+
+  def apply(replies: Reply): Replies = Replies(List(replies))
+
 }
 
 object Reply {

@@ -28,6 +28,11 @@ final case class CommandCodec() extends Codec[Command] {
             }
           case "DATA" => Attempt.successful(DecodeResult(Data, BitVector.empty))
           case "QUIT" => Attempt.successful(DecodeResult(Quit, BitVector.empty))
+          case _ =>
+            ascii.decode(bits).map {
+              case DecodeResult(txt, _) =>
+                DecodeResult(Text(txt), BitVector.empty)
+            }
         }
     }
 
@@ -43,10 +48,10 @@ final case class CommandCodec() extends Codec[Command] {
     bits.take(bits.size - END.size)
   }
 
-  private def extractEmail(bits: BitVector): BitVector = {
+  private val `<` = byte.encode('<').getOrElse(BitVector.empty)
+  private val `>` = byte.encode('>').getOrElse(BitVector.empty)
 
-    val `<` = byte.encode('<').getOrElse(BitVector.empty)
-    val `>` = byte.encode('>').getOrElse(BitVector.empty)
+  private def extractEmail(bits: BitVector): BitVector = {
 
     val from = bits.indexOfSlice(`<`)
 
@@ -57,27 +62,19 @@ final case class CommandCodec() extends Codec[Command] {
     email
   }
 
-  def mailboxCodec: Codec[Mailbox] =
+  lazy val mailboxCodec: Codec[Mailbox] =
     Codec[Mailbox](
-      (
-          (mb: Mailbox) =>
-            Attempt.successful(Mailbox.mailboxShow.show(mb).toBitVector)
-        ),
-      (
-          bits =>
-            ascii.decode(extractEmail(bits)).flatMap {
-              case DecodeResult(box, remainder) =>
-                Mailbox.fromString(box) match {
-                  case Right(mb) =>
-                    Attempt.successful(DecodeResult(mb, remainder))
-                  case Left(error) =>
-                    Attempt.failure(Err(Error.errorShow.show(error)))
-                }
+      (mb: Mailbox) =>
+        Attempt.successful(Mailbox.mailboxShow.show(mb).toBitVector),
+      bits =>
+        ascii.decode(extractEmail(bits)).flatMap {
+          case DecodeResult(box, remainder) =>
+            Mailbox.fromString(box) match {
+              case Right(mb) =>
+                Attempt.successful(DecodeResult(mb, remainder))
+              case Left(error) =>
+                Attempt.failure(Err(Error.errorShow.show(error)))
             }
-        )
+        }
     )
-}
-
-object CommandCodec {
-  lazy val commandCodec: Codec[Command] = CommandCodec()
 }
