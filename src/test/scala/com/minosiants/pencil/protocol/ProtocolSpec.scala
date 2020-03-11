@@ -3,51 +3,55 @@ package protocol
 
 import cats.effect.IO
 import org.specs2.mutable.Specification
-import scodec.Attempt
+import scodec.{ Attempt, DecodeResult }
 import scodec.bits._
 import scodec.codecs._
 import cats.implicits._
 import data._
+
 import scala.io.Source
 
 class ProtocolSpec extends Specification {
+
   "Protocol" should {
-    "decode response" in {
 
-      val is       = getClass().getResourceAsStream("/output.txt")
-      val output   = Source.fromInputStream(is).mkString
+    "decode strings with CRLF into list" in {
+      val is     = getClass().getResourceAsStream("/output.txt")
+      val output = Source.fromInputStream(is).mkString
+      val result =
+        DelimiterListCodec(Reply.CRLF, ascii).decode(output.toBitVector)
       val expected = output.split("\r\n").toList
-
-      val vec = ascii.encode(output).getOrElse(BitVector.empty)
-
-      Reply.repliesCodec.decode(vec).map(_.value) match {
-        case Attempt.Successful(result) =>
-          result mustEqual expected
-        case Attempt.Failure(cause) =>
-          true mustEqual false
-
-      }
+      result.toEither must beRight(DecodeResult(expected, BitVector.empty))
     }
-    "bla" in {
-      val nums = List(3, 5, 8, 15)
 
-      val r: Either[List[Int], List[Int]] = nums.foldM(List.empty[Int]) {
-        case (acc, c) if c < 8 => (c :: acc).asRight
-        case (acc, _)          => acc.asLeft
-      }
-
-      println(r)
-
-      val l: List[IO[Unit]] = List(
-        IO(println("1")),
-        IO(println("2")),
-        Error.smtpError("error"),
-        IO(println("3"))
+    "decode reply" in {
+      val result = Reply.replyCodec.decode("250-PIPELINING".toBitVector)
+      result.toEither must beRight(
+        DecodeResult(
+          Reply(Code.code(250).get, "-", "PIPELINING"),
+          BitVector.empty
+        )
       )
-
-      println(l.sequence.attempt.unsafeRunSync())
-      success
     }
 
+    "decode replies" in {
+      val resp = List("250-mail.example.com", "250-PIPELINING", "250 8BITMIME")
+        .map(_ + "\r\n")
+        .mkString
+
+      val result = Reply.repliesCodec.decode(resp.toBitVector)
+      result.toEither must beRight(
+        DecodeResult(
+          Replies(
+            List(
+              Reply(Code.code(250).get, "-", "mail.example.com"),
+              Reply(Code.code(250).get, "-", "PIPELINING"),
+              Reply(Code.code(250).get, " ", "8BITMIME")
+            )
+          ),
+          BitVector.empty
+        )
+      )
+    }
   }
 }

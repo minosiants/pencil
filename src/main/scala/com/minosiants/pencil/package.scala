@@ -16,6 +16,9 @@ package object pencil {
     def toBase64: String = {
       BitVector.view(str.getBytes()).toBase64
     }
+    def toBitVector: BitVector = {
+      ascii.encode(str).getOrElse(BitVector.empty)
+    }
   }
 
 }
