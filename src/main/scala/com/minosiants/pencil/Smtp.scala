@@ -215,7 +215,7 @@ object Smtp {
         Error.smtpError("attachments not supported")
       case MimeEmail(_, _, _, _, _, _, attach, _) =>
         val result = attach.map { a =>
-          val res = Files.is(a.file)
+          val res = Files.inputStream(a.file)
           for {
             encoded <- res.use(v => IO(BitVector.fromInputStream(v).toBase64))
             ct      <- res.use(ContentTypeFinder.findType)
