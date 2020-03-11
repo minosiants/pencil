@@ -8,7 +8,7 @@ import org.specs2.mutable.Specification
 class ContentTypeFinderSpec extends Specification {
 
   def path(filename: String): Path = {
-    Paths.get(ClassLoader.getSystemResource(filename).toURI)
+    Paths.get(getClass.getClassLoader.getResource(filename).toURI)
   }
 
   def find(filename: String, expected: ContentType) = {
@@ -43,6 +43,10 @@ class ContentTypeFinderSpec extends Specification {
 
     "find jpg content type" in {
       find("files/jpeg-sample.jpg", ContentType.`image/jpeg`)
+    }
+
+    "find pdf content type" in {
+      find("files/rfc2045.pdf", ContentType.`application/pdf`)
     }
 
     "not find file" in {
