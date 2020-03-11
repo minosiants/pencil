@@ -6,16 +6,15 @@ import java.nio.file.Path
 import Body._
 import cats.Show
 import cats.syntax.show._
-import io.estatico.newtype.macros.newtype
 
-final case class From(box: Mailbox) extends Product with Serializable
-@newtype final case class To(boxes: List[Mailbox]) extends Product with Serializable
+final case class From(box: Mailbox)       extends Product with Serializable
+final case class To(boxes: List[Mailbox]) extends Product with Serializable
 
-@newtype final case class Cc(boxes: List[Mailbox])  extends Product with Serializable
-@newtype final case class Bcc(boxes: List[Mailbox]) extends Product with Serializable
-@newtype final case class Subject(value: String)    extends Product with Serializable
+final case class Cc(boxes: List[Mailbox])  extends Product with Serializable
+final case class Bcc(boxes: List[Mailbox]) extends Product with Serializable
+final case class Subject(value: String)    extends Product with Serializable
 
-@newtype final case class Attachment(file: Path) extends Product with Serializable
+final case class Attachment(file: Path) extends Product with Serializable
 
 object From {
   implicit lazy val fromShow: Show[From] = Show(
