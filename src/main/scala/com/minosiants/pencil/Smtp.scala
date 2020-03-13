@@ -28,6 +28,9 @@ object Smtp {
   def pure[A](a: A): Smtp[A] =
     Kleisli.pure(a)
 
+  def liftF[A](a: IO[A]): Smtp[A] =
+    Kleisli.liftF(a)
+
   def write(run: Email => Command): Smtp[Unit] = Smtp { req =>
     req.socket.write(run(req.email))
   }
@@ -88,7 +91,7 @@ object Smtp {
   def asciiBody(): Smtp[Replies] = Smtp { req =>
     req.email match {
       case AsciiEmail(_, _, _, _, _, Some(Ascii(body))) =>
-        (text(s"$body") >> endEmail()).run(req)
+        (text(s"$body ${Command.end}") >> endEmail()).run(req)
       case _ => Error.smtpError("Body is not ascii")
     }
   }

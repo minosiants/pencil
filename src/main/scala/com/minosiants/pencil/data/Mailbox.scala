@@ -17,6 +17,7 @@ object Mailbox {
   def unsafeFromString(mailbox: String): Mailbox =
     fromString(mailbox).fold(throw _, identity)
 
-  implicit val mailboxShow: Show[Mailbox] = Show(mb => s"<${mb.address}>")
+  implicit val mailboxShow: Show[Mailbox] =
+    Show.show[Mailbox](mb => s"<${mb.address}>")
 
 }
