@@ -64,4 +64,13 @@ object SmtpSocket {
       .map(fromSocket(_, readTimeout, writeTimeout))
   }
 
+  def apply(
+      address: InetSocketAddress,
+      readTimeout: FiniteDuration,
+      writeTimeout: FiniteDuration,
+      sg: SocketGroup
+  )(implicit cs: ContextShift[IO]): Resource[IO, SmtpSocket] = {
+    sg.client[IO](address)
+      .map(fromSocket(_, readTimeout, writeTimeout))
+  }
 }

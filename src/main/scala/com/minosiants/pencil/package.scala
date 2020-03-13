@@ -12,6 +12,8 @@ package object pencil {
 
   type Smtp[A] = Kleisli[IO, Request, A]
 
+  val CRLF: BitVector = ascii.encode("\r\n").getOrElse(BitVector.empty)
+
   implicit class ExtraStringOps(str: String) {
     def toBase64: String = {
       BitVector.view(str.getBytes()).toBase64

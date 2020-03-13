@@ -1,5 +1,5 @@
-package com.minosiants
-package pencil.protocol
+package com.minosiants.pencil
+package protocol
 
 import cats.Show
 import scodec.Attempt.Successful
@@ -15,7 +15,10 @@ final case class Replies(replies: List[Reply])
     extends Product
     with Serializable {
 
-  def success: Boolean = replies.forall(_.code.success)
+  def success: Boolean     = replies.forall(_.code.success)
+  def :+(reply: Reply)     = Replies(replies :+ reply)
+  def +:(reply: Reply)     = Replies(reply +: replies)
+  def ++(replies: Replies) = Replies(this.replies ++ replies.replies)
 }
 
 object Replies {
@@ -45,13 +48,24 @@ object Reply {
     }
   )
 
+  val textCodec: Codec[String] = Codec[String](
+    { (s: String) =>
+      ascii.encode(s + "\r\n")
+    }, { bits =>
+      {
+        if (bits.endsWith(CRLF))
+          limitedSizeBits(bits.size - CRLF.size, ascii).decode(bits)
+        else
+          ascii.decode(bits)
+      }
+    }
+  )
+
   implicit val replyCodec: Codec[Reply] = (
     ("code" | codeCodec) ::
       ("sep" | limitedSizeBits(8, ascii)) ::
-      ("text" | ascii)
+      ("text" | textCodec)
   ).as[Reply]
-
-  val CRLF: BitVector = ascii.encode("\r\n").getOrElse(BitVector.empty)
 
   implicit val repliesCodec: Codec[Replies] = (
     ("replies" | DelimiterListCodec(CRLF, replyCodec))

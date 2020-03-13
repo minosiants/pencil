@@ -17,26 +17,25 @@ final case class Subject(value: String)    extends Product with Serializable
 final case class Attachment(file: Path) extends Product with Serializable
 
 object From {
-  implicit lazy val fromShow: Show[From] = Show(
+  implicit lazy val fromShow: Show[From] = Show.show(
     from => s"${from.box.show}"
   )
 }
+
 object To {
 
-  def apply(to: Mailbox): To = To(List(to))
-
-  implicit lazy val toShow: Show[To] = Show(
+  implicit lazy val toShow: Show[To] = Show.show(
     to => to.boxes.map(v => Mailbox.mailboxShow.show(v)).mkString(",")
   )
+  def apply(to: Mailbox): To = To(List(to))
 }
-
 object Cc {
-  implicit lazy val ccShow: Show[Cc] = Show(
+  implicit lazy val ccShow: Show[Cc] = Show.show(
     cc => cc.boxes.map(_.show).mkString(",")
   )
 }
 object Bcc {
-  implicit lazy val bccShow: Show[Bcc] = Show(
+  implicit lazy val bccShow: Show[Bcc] = Show.show(
     bcc => bcc.boxes.map(_.show).mkString(",")
   )
 }
@@ -76,6 +75,11 @@ final case class MimeEmail(
     case Some(value) => copy(cc = Some(Cc(value.boxes :+ mb)))
     case None        => copy(cc = Some(Cc(List(mb))))
   }
+  def addBcc(mb: Mailbox): MimeEmail = bcc match {
+    case Some(value) => copy(bcc = Some(Bcc(value.boxes :+ mb)))
+    case None        => copy(bcc = Some(Bcc(List(mb))))
+  }
+
   def isMultipart: Boolean = attachments.nonEmpty
 }
 

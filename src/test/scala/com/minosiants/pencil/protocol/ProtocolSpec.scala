@@ -6,7 +6,7 @@ import scodec.DecodeResult
 import scodec.bits._
 import scodec.codecs._
 import com.minosiants.pencil.data.Mailbox
-
+import cats.syntax.show
 import scala.io.Source
 
 class ProtocolSpec extends Specification {
@@ -17,7 +17,7 @@ class ProtocolSpec extends Specification {
       val is     = getClass().getResourceAsStream("/output.txt")
       val output = Source.fromInputStream(is).mkString
       val result =
-        DelimiterListCodec(Reply.CRLF, ascii).decode(output.toBitVector)
+        DelimiterListCodec(CRLF, ascii).decode(output.toBitVector)
       val expected = output.split("\r\n").toList
       result.toEither must beRight(DecodeResult(expected, BitVector.empty))
     }
@@ -32,25 +32,6 @@ class ProtocolSpec extends Specification {
       )
     }
 
-    "decode replies" in {
-      val resp = List("250-mail.example.com", "250-PIPELINING", "250 8BITMIME")
-        .map(_ + "\r\n")
-        .mkString
-
-      val result = Reply.repliesCodec.decode(resp.toBitVector)
-      result.toEither must beRight(
-        DecodeResult(
-          Replies(
-            List(
-              Reply(Code.code(250).get, "-", "mail.example.com"),
-              Reply(Code.code(250).get, "-", "PIPELINING"),
-              Reply(Code.code(250).get, " ", "8BITMIME")
-            )
-          ),
-          BitVector.empty
-        )
-      )
-    }
     "decode EHLO command" in {
       val result = Command.codec.decode(command("EHLO domain \r\n")).toEither
       result must beRight(DecodeResult(Ehlo("domain"), BitVector.empty))
@@ -83,7 +64,16 @@ class ProtocolSpec extends Specification {
       val result = Command.codec.decode(command(s"QUIT: \r\n")).toEither
       result must beRight(DecodeResult(Quit, BitVector.empty))
     }
+    "encode/decode replies" in {
 
+      val replies = DataSamples.ehloReplies
+
+      val result = Reply.repliesCodec.encode(replies).toEither.flatMap { bits =>
+        Reply.repliesCodec.decode(bits).toEither
+      }
+      println(result)
+      result must beRight(DecodeResult(replies, BitVector.empty))
+    }
   }
 
   def command(str: String): BitVector = {
