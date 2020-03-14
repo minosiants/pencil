@@ -1,9 +1,0 @@
-'250-mail.example.com
-250-PIPELINING
-250 8BITMIME
-'
-
-'250-mail.example.com
-250-PIPELINING
-250 8BITMIME
-'
