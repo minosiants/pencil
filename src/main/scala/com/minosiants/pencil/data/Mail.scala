@@ -80,6 +80,8 @@ final case class MimeEmail(
     case None        => copy(bcc = Some(Bcc(List(mb))))
   }
 
+  def setBody(body: Body): MimeEmail = copy(body = Some(body))
+
   def isMultipart: Boolean = attachments.nonEmpty
 }
 

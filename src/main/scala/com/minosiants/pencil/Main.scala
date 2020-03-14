@@ -1,12 +1,13 @@
 package com.minosiants.pencil
 
-import java.nio.file.{ Path, Paths }
+import java.nio.file.Paths
 
 import cats.effect._
 import cats.implicits._
+import com.minosiants.pencil.Client._
+import com.minosiants.pencil.data._
 import fs2.io.tcp.SocketGroup
-import data._
-import Client._
+
 object Main extends IOApp {
 
   override def run(args: List[String]): IO[ExitCode] =
@@ -19,19 +20,18 @@ object Main extends IOApp {
             .attempt
             .map {
               case Right(value) =>
-                println(value.show)
                 ExitCode.Success
               case Left(error) =>
                 error match {
                   case e: Error     => println(e.show)
-                  case e: Throwable => e.printStackTrace()
+                  case e: Throwable => println(e.getMessage)
                 }
                 ExitCode.Error
             }
         }
       }
 
-  def ascii() = {
+  def ascii():AsciiEmail = {
     Email.ascii(
       From(Mailbox.unsafeFromString("user1@mydomain.tld")),
       To(Mailbox.unsafeFromString("user1@example.com")),
@@ -50,7 +50,7 @@ object Main extends IOApp {
       .addAttachment(
         Attachment(
           Paths.get(
-            "/Users/kaspar/stuff/sources/pencil/src/test/resources/files/gif-sample.gif"
+            "path/to/file"
           )
         )
       )
@@ -67,7 +67,7 @@ object Main extends IOApp {
     email.addAttachment(
       Attachment(
         Paths.get(
-          "/Users/kaspar/stuff/sources/pencil/src/test/resources/files/gif-sample.gif"
+          "/path/to/file"
         )
       )
     )

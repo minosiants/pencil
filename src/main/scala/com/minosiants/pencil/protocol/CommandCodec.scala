@@ -8,8 +8,8 @@ import scodec.{ Attempt, Codec, DecodeResult, Err, SizeBound }
 
 final case class CommandCodec() extends Codec[Command] {
   override def decode(bits: BitVector): Attempt[DecodeResult[Command]] = {
-    limitedSizeBits(4 * 8, ascii).decode(bits) match {
-      case Attempt.Successful(DecodeResult(cmd, rest)) =>
+    limitedSizeBits(4 * 8, ascii).decode(bits).flatMap {
+      case DecodeResult(cmd, rest) =>
         cmd match {
           case "EHLO" =>
             ascii.decode(stripEND(rest)).map {
