@@ -1,6 +1,7 @@
 scalaVersion := "2.13.1"
 
 val catsVersion           = "2.1.0"
+val catsEffectVersion     = "2.1.2"
 val fs2Version            = "2.2.1"
 val scodecCoreVersion     = "1.11.6"
 val scodecCatsVersion     = "1.0.0"
@@ -19,6 +20,7 @@ lazy val root = (project in file("."))
     scalaVersion := "2.13.1",
     libraryDependencies ++= Seq(
       "org.typelevel"   %% "cats-core"                  % catsVersion,
+      "org.typelevel"   %% "cats-effect"                % catsEffectVersion,
       "co.fs2"          %% "fs2-core"                   % fs2Version,
       "co.fs2"          %% "fs2-io"                     % fs2Version,
       "org.scodec"      %% "scodec-core"                % scodecCoreVersion,
