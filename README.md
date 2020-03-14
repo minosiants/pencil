@@ -1,47 +1,86 @@
-#Pencil 
+# Pencil 
 
-smtp-client
+Pencil is a smtp-client. It is build on top of [cats](https://typelevel.org/cats/), [cats-effect](https://typelevel.org/cats-effect/), [fs2](https://fs2.io/), [scodec](http://scodec.org/)
 
+Examples how to use it
 
-### Apache James
- 
-[Apache James](https://james.apache.org/index.html) is used as a test smtp server
+```scala
 
-Default domain named james.local and three default users: user01, user02, user03, with their default password being 1234.
-Note: this James server will respond to IMAP port 143 and SMTP port 25.
+import java.nio.file.Paths
 
-```aidl
-docker run -p "25:25" -p "143:143" linagora/james-jpa-sample:3.4.0 -e log4j.logger.james.smtpserver=DEBUG, SMTPSERVER -v /Users/kaspar/james/logs:/logs
-``` 
-[Quick start](https://james.apache.org/server/quick-start.html) might be interesting if run it without container
+import cats.effect._
+import cats.implicits._
+import com.minosiants.pencil.Client._
+import com.minosiants.pencil.data._
+import fs2.io.tcp.SocketGroup
 
+object Main extends IOApp {
 
-* cd bin
-  * james-cli -h localhost -p 9999 adddomain mydomain.tld
-  * james-cli -h localhost -p 9999 adduser user1@mydomain.tld 1234
+  override def run(args: List[String]): IO[ExitCode] =
+    Blocker[IO]
+      .use { blocker =>
+        SocketGroup[IO](blocker).use { sg =>
+          val client = Client("127.0.0.1")(sg)
+          client
+            .send(utf8())
+            .attempt
+            .map {
+              case Right(value) =>
+                ExitCode.Success
+              case Left(error) =>
+                error match {
+                  case e: Error     => println(e.show)
+                  case e: Throwable => println(e.getMessage)
+                }
+                ExitCode.Error
+            }
+        }
+      }
 
-  * The username to use in your mail client will be myuser@mydomain.tld
+  def ascii():AsciiEmail = {
+    Email.ascii(
+      From(Mailbox.unsafeFromString("user1@mydomain.tld")),
+      To(Mailbox.unsafeFromString("user1@example.com")),
+      Subject("first email"),
+      Body.Ascii("hello")
+    )
+  }
+  def utf8(): MimeEmail = {
+    Email
+      .mime(
+        From(Mailbox.unsafeFromString("user1@mydomain.tld")),
+        To(Mailbox.unsafeFromString("user1@example.com")),
+        Subject("привет"),
+        Body.Utf8("hi there")
+      )
+      .addAttachment(
+        Attachment(
+          Paths.get(
+            "path/to/file"
+          )
+        )
+      )
+  }
+  def html(): MimeEmail = {
+    val email = Email.mime(
+      From(Mailbox.unsafeFromString("user1@mydomain.tld")),
+      To(Mailbox.unsafeFromString("user1@example.com")),
+      Subject("привет"),
+      Body.Html(
+        """<!DOCTYPE html><html><body><h1>My First Heading</h1><p>My first paragraph.</p></body></html>"""
+      )
+    )
+    email.addAttachment(
+      Attachment(
+        Paths.get(
+          "/path/to/file"
+        )
+      )
+    )
+  }
+}
 
+```
 
-mailbox or address = name@domain
-
-commands starts with verb
-responses starts with 3 digits code
-ascii symbols
-
-ehlo = EHLO SP ( Domain / address-literal ) CRLF
-mail = MAIL FROM:<userx@y.foo.org> CRLF
-rcpt = "RCPT TO:" ( "<Postmaster@" Domain ">" / "<Postmaster>"
-/ Forward-path ) [SP Rcpt-parameters] CRLF
-
-data = "DATA" CRLF  response 354
-
-rset = "RSET" CRLF
-
-quit = "QUIT" CRLF
-
-    
-
-
-
-https://serversmtp.com/smtp-error/
+## Docker Mailserver
+ For test purposes [Docker Mailserver](https://github.com/jeboehm/docker-mailserver) can be used
