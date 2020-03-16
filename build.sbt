@@ -38,6 +38,7 @@ lazy val root = (project in file("."))
   .settings(
     githubPackagesSettings
   )
+  .settings(licenceSettings)
 
 import ReleaseTransformations._
 lazy val releaseProcessSettings = Seq(
@@ -61,4 +62,12 @@ lazy val releaseProcessSettings = Seq(
 lazy val githubPackagesSettings = Seq(
   githubOwner := "minosiants",
   githubRepository := "pencil"
+)
+
+lazy val licenceSettings = Seq(
+  organizationName := "Kaspar Minosiants",
+  startYear := Some(2020),
+  licenses += ("Apache-2.0", new URL(
+    "https://www.apache.org/licenses/LICENSE-2.0.txt"
+  ))
 )
