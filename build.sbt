@@ -16,7 +16,6 @@ lazy val root = (project in file("."))
   .settings(
     organization := "com.minosiatns",
     name := "pencil",
-    version := "0.0.1",
     scalaVersion := "2.13.1",
     libraryDependencies ++= Seq(
       "org.typelevel"   %% "cats-core"                  % catsVersion,
@@ -34,3 +33,30 @@ lazy val root = (project in file("."))
     ),
     addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3")
   )
+  .settings(releaseProcessSettings)
+  .settings(
+    githubPackagesSettings
+  )
+
+import ReleaseTransformations._
+lazy val releaseProcessSettings = Seq(
+  releaseIgnoreUntrackedFiles := true,
+  releaseProcess := Seq[ReleaseStep](
+    checkSnapshotDependencies,
+    inquireVersions,
+    runClean,
+    runTest,
+    setReleaseVersion,
+    commitReleaseVersion,
+    tagRelease,
+    publishArtifacts,
+    setNextVersion,
+    commitNextVersion,
+    pushChanges
+  )
+)
+
+lazy val githubPackagesSettings = Seq(
+  githubOwner := "minosiants",
+  githubRepository := "pencil"
+)

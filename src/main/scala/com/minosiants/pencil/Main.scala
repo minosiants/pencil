@@ -31,7 +31,7 @@ object Main extends IOApp {
         }
       }
 
-  def ascii():AsciiEmail = {
+  def ascii(): AsciiEmail = {
     Email.ascii(
       From(Mailbox.unsafeFromString("user1@mydomain.tld")),
       To(Mailbox.unsafeFromString("user1@example.com")),
