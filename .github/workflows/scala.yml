@@ -1,7 +1,8 @@
 name: build 
 
 on: [push]
-
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 jobs:
   build:
 
