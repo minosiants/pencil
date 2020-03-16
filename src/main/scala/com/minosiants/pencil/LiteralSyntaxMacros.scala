@@ -1,5 +1,5 @@
 package com.minosiants.pencil
-import com.minosiants.pencil.data.Mailbox
+import com.minosiants.pencil.data.{ Attachment, Mailbox }
 
 import scala.reflect.macros.blackbox
 import scala.reflect.macros.blackbox.Context
@@ -17,6 +17,16 @@ object LiteralSyntaxMacros {
       "Mailbox",
       Mailbox.fromString(_).isRight,
       s => c.universe.reify(Mailbox.unsafeFromString(s.splice))
+    )
+
+  def attachmentInterpolator(
+      c: blackbox.Context
+  )(args: c.Expr[Any]*): c.Expr[Attachment] =
+    singlePartInterpolator(c)(
+      args,
+      "Attachment",
+      Attachment.fromString(_).isRight,
+      s => c.universe.reify(Attachment.unsafeFromString(s.splice))
     )
 
   private def singlePartInterpolator[A](c: Context)(

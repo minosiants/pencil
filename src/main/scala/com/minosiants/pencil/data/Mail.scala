@@ -17,7 +17,7 @@
 package com.minosiants.pencil
 package data
 
-import java.nio.file.Path
+import java.nio.file.{ Path, Paths }
 
 import Body._
 import cats.Show
@@ -29,8 +29,6 @@ final case class To(boxes: List[Mailbox]) extends Product with Serializable
 final case class Cc(boxes: List[Mailbox])  extends Product with Serializable
 final case class Bcc(boxes: List[Mailbox]) extends Product with Serializable
 final case class Subject(value: String)    extends Product with Serializable
-
-final case class Attachment(file: Path) extends Product with Serializable
 
 object From {
   implicit lazy val fromShow: Show[From] = Show.show(
