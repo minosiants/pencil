@@ -315,9 +315,9 @@ object SmtpSpec {
 
   val ascii: AsciiEmail = {
     Email.ascii(
-      From(Mailbox.unsafeFromString("user1@mydomain.tld")),
-      To(Mailbox.unsafeFromString("user1@example.com")),
-      Subject("first email"),
+      From(mailbox"user1@mydomain.tld"),
+      To(mailbox"user1@example.com"),
+      subject"first email",
       Body.Ascii("hello")
     )
   }
@@ -327,9 +327,9 @@ object SmtpSpec {
   val mime =
     Email
       .mime(
-        From(Mailbox.unsafeFromString("user1@mydomain.tld")),
-        To(Mailbox.unsafeFromString("user1@example.com")),
-        Subject("привет"),
+        From(mailbox"user1@mydomain.tld"),
+        To(mailbox"user1@example.com"),
+        subject"привет",
         Body.Utf8("hi there")
       )
       .addAttachment(
@@ -339,7 +339,7 @@ object SmtpSpec {
           )
         )
       )
-      .addCC(Mailbox.unsafeFromString("ccuser1@example.com"))
-      .addBcc(Mailbox.unsafeFromString("bccuser1@example.com"))
+      .addCC(mailbox"ccuser1@example.com")
+      .addBcc(mailbox"bccuser1@example.com")
 
 }

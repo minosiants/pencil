@@ -16,15 +16,13 @@
 
 package com.minosiants
 
-import java.nio.charset.StandardCharsets
-
 import cats.data.Kleisli
 import cats.effect.IO
+import com.minosiants.pencil.syntax.LiteralsSyntax
 import scodec.bits.BitVector
-import scodec._
 import scodec.codecs._
 
-package object pencil {
+package object pencil extends LiteralsSyntax {
 
   type Smtp[A] = Kleisli[IO, Request, A]
 

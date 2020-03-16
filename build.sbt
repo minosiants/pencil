@@ -12,12 +12,17 @@ val scalacheckVersion     = "1.14.1"
 val scodecStreamVersion   = "2.0.0"
 val catsEffectTestVersion = "0.3.0"
 
+
+
 lazy val root = (project in file("."))
   .settings(
     organization := "com.minosiatns",
     name := "pencil",
     scalaVersion := "2.13.1",
     crossScalaVersions := Seq("2.12.4", "2.13.1"),
+    scalacOptions	++= Seq(
+      "-language:experimental.macros"
+    ),
     libraryDependencies ++= Seq(
       "org.typelevel"   %% "cats-core"                  % catsVersion,
       "org.typelevel"   %% "cats-effect"                % catsEffectVersion,
@@ -26,6 +31,7 @@ lazy val root = (project in file("."))
       "org.scodec"      %% "scodec-core"                % scodecCoreVersion,
       "org.scodec"      %% "scodec-cats"                % scodecCatsVersion,
       "org.apache.tika" % "tika-core"                   % tikaVersion,
+      "org.scala-lang" % "scala-reflect" % scalaVersion.value,
       "org.specs2"      %% "specs2-core"                % specs2Version % "test",
       "org.scalacheck"  %% "scalacheck"                 % scalacheckVersion % "test",
       "com.codecommit"  %% "cats-effect-testing-specs2" % catsEffectTestVersion % "test",
@@ -60,8 +66,8 @@ lazy val releaseProcessSettings = Seq(
 )
 
 lazy val githubPackagesSettings = Seq(
-  githubOwner := "minosiants",
-  githubRepository := "pencil"
+//  githubOwner := "minosiants",
+ // githubRepository := "pencil"
 )
 
 lazy val licenceSettings = Seq(
