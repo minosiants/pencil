@@ -16,16 +16,30 @@ libraryDependencies += "com.minosiatns" %% "pencil" % "0.0.1"
 
 ### Examples how to use it
 
+
+#### Create text email
+
 ```scala
+val email = Email.ascii(
+      From(mailbox"user1@mydomain.tld"),
+      To(mailbox"user1@example.com"),
+      subject"first email",
+      Body.Ascii("hello")
+)
+```
+#### Create mime email
 
-import java.nio.file.Paths
+```scala
+val email = Email.mime(
+     From(mailbox"user1@mydomain.tld"),
+     To(mailbox"user1@example.com"),
+     subject"привет",
+     Body.Utf8("hi there")
+) + attachment"path/to/file"
+```
+#### Send email
 
-import cats.effect._
-import cats.implicits._
-import com.minosiants.pencil.Client._
-import com.minosiants.pencil.data._
-import fs2.io.tcp.SocketGroup
-
+```scala
 object Main extends IOApp {
 
   override def run(args: List[String]): IO[ExitCode] =
@@ -41,58 +55,15 @@ object Main extends IOApp {
                 ExitCode.Success
               case Left(error) =>
                 error match {
-                  case e: Error     => println(e.show)
+                  case e: Error => println(e.show)
                   case e: Throwable => println(e.getMessage)
                 }
                 ExitCode.Error
             }
         }
       }
-
-  def ascii():AsciiEmail = {
-    Email.ascii(
-      From(Mailbox.unsafeFromString("user1@mydomain.tld")),
-      To(Mailbox.unsafeFromString("user1@example.com")),
-      Subject("first email"),
-      Body.Ascii("hello")
-    )
-  }
-  def utf8(): MimeEmail = {
-    Email
-      .mime(
-        From(Mailbox.unsafeFromString("user1@mydomain.tld")),
-        To(Mailbox.unsafeFromString("user1@example.com")),
-        Subject("привет"),
-        Body.Utf8("hi there")
-      )
-      .addAttachment(
-        Attachment(
-          Paths.get(
-            "path/to/file"
-          )
-        )
-      )
-  }
-  def html(): MimeEmail = {
-    val email = Email.mime(
-      From(Mailbox.unsafeFromString("user1@mydomain.tld")),
-      To(Mailbox.unsafeFromString("user1@example.com")),
-      Subject("привет"),
-      Body.Html(
-        """<!DOCTYPE html><html><body><h1>My First Heading</h1><p>My first paragraph.</p></body></html>"""
-      )
-    )
-    email.addAttachment(
-      Attachment(
-        Paths.get(
-          "/path/to/file"
-        )
-      )
-    )
-  }
 }
 
 ```
-
 ## Docker Mailserver
  For test purposes [Docker Mailserver](https://github.com/jeboehm/docker-mailserver) can be used

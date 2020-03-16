@@ -22,6 +22,7 @@ import com.minosiants.pencil.protocol._
 import fs2.io.tcp.SocketGroup
 
 import scala.concurrent.duration._
+import Email._
 
 trait Client {
   def send[A](email: A)(implicit es: EmailSender[A]): IO[Replies]

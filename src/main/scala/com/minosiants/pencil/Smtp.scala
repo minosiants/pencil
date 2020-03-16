@@ -33,6 +33,7 @@ import ContentType._
 import com.minosiants.pencil.data.Body.{ Ascii, Html, Utf8 }
 import com.minosiants.pencil.protocol.Encoding.{ `7bit`, `base64` }
 import scodec.bits.BitVector
+import Email._
 
 final case class Request(email: Email, socket: SmtpSocket) {}
 

@@ -11,6 +11,7 @@ import com.minosiants.pencil.protocol.Header.`Content-Type`
 import com.minosiants.pencil.protocol._
 import scodec.bits.BitVector
 import scodec.codecs
+import Email._
 
 class SmtpSpec extends SmtpBaseSpec {
 
@@ -333,7 +334,7 @@ object SmtpSpec {
         Body.Utf8("hi there")
       )
       .addAttachment(attachment"files/small.png")
-      .addCC(mailbox"ccuser1@example.com")
+      .addCc(mailbox"ccuser1@example.com")
       .addBcc(mailbox"bccuser1@example.com")
 
 }
