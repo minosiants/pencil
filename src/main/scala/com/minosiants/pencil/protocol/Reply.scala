@@ -7,6 +7,8 @@ import scodec.bits._
 import scodec.codecs._
 import scodec.{ Attempt, Codec, DecodeResult, Err }
 
+import scala.util.Try
+
 final case class Reply(code: Code, sep: String, text: String)
     extends Product
     with Serializable
@@ -38,7 +40,7 @@ object Reply {
       limitedSizeBits(3 * 8, ascii).decode(bits) match {
         case Successful(DecodeResult(code, rest)) =>
           Attempt.fromOption(
-            code.toIntOption
+            Try(code.toInt).toOption
               .flatMap(Code.code)
               .map(c => DecodeResult(c, rest)),
             Err(s"${code} code does not exist")

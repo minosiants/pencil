@@ -24,7 +24,7 @@ object MailboxParser {
     }
 
     localPart.toList
-      .foldM(List.empty[Char]) {
+      .foldM[Either[Error, *], List[Char]](List.empty[Char]) {
 
         case (Nil, x) if notValid(x) =>
           Left(
