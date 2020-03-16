@@ -23,6 +23,7 @@ import cats.implicits._
 import com.minosiants.pencil.Client._
 import com.minosiants.pencil.data._
 import fs2.io.tcp.SocketGroup
+import Email._
 
 object Main extends IOApp {
 
@@ -47,45 +48,16 @@ object Main extends IOApp {
         }
       }
 
-  def ascii(): AsciiEmail = {
-    Email.ascii(
-      From(Mailbox.unsafeFromString("user1@mydomain.tld")),
-      To(Mailbox.unsafeFromString("user1@example.com")),
-      Subject("first email"),
-      Body.Ascii("hello")
-    )
-  }
   def utf8(): MimeEmail = {
-    Email
+    /*Email
       .mime(
-        From(Mailbox.unsafeFromString("user1@mydomain.tld")),
-        To(Mailbox.unsafeFromString("user1@example.com")),
-        Subject("привет"),
+        From(mailbox"user1@mydomain.tld"),
+        To(mailbox"user1@example.com"),
+        subject"привет",
         Body.Utf8("hi there")
-      )
-      .addAttachment(
-        Attachment(
-          Paths.get(
-            "path/to/file"
-          )
-        )
-      )
+      ) //+ attachment"path/to/file"*/
+
+    ???
   }
-  def html(): MimeEmail = {
-    val email = Email.mime(
-      From(Mailbox.unsafeFromString("user1@mydomain.tld")),
-      To(Mailbox.unsafeFromString("user1@example.com")),
-      Subject("привет"),
-      Body.Html(
-        """<!DOCTYPE html><html><body><h1>My First Heading</h1><p>My first paragraph.</p></body></html>"""
-      )
-    )
-    email.addAttachment(
-      Attachment(
-        Paths.get(
-          "/path/to/file"
-        )
-      )
-    )
-  }
+
 }
