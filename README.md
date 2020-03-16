@@ -5,6 +5,15 @@
 ### Overview 
 Pencil is a smtp-client. It is build on top of [cats](https://typelevel.org/cats/), [cats-effect](https://typelevel.org/cats-effect/), [fs2](https://fs2.io/), [scodec](http://scodec.org/)
 
+### Usage
+Add dependency to your `build.sbt`
+
+```scala
+resolvers += "Github packages minosiants" at "https://maven.pkg.github.com/minosiants/_"
+
+libraryDependencies += "com.minosiatns" %% "pencil" % "0.0.1"
+```
+
 ### Examples how to use it
 
 ```scala
