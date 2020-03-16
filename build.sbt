@@ -17,6 +17,7 @@ lazy val root = (project in file("."))
     organization := "com.minosiatns",
     name := "pencil",
     scalaVersion := "2.13.1",
+    crossScalaVersions := Seq("2.12.4", "2.13.1"),
     libraryDependencies ++= Seq(
       "org.typelevel"   %% "cats-core"                  % catsVersion,
       "org.typelevel"   %% "cats-effect"                % catsEffectVersion,
@@ -41,6 +42,7 @@ lazy val root = (project in file("."))
 import ReleaseTransformations._
 lazy val releaseProcessSettings = Seq(
   releaseIgnoreUntrackedFiles := true,
+  releaseCrossBuild := true,
   releaseProcess := Seq[ReleaseStep](
     checkSnapshotDependencies,
     inquireVersions,
