@@ -332,13 +332,7 @@ object SmtpSpec {
         subject"привет",
         Body.Utf8("hi there")
       )
-      .addAttachment(
-        Attachment(
-          path(
-            "files/small.png"
-          )
-        )
-      )
+      .addAttachment(attachment"files/small.png")
       .addCC(mailbox"ccuser1@example.com")
       .addBcc(mailbox"bccuser1@example.com")
 

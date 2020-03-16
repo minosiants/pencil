@@ -17,11 +17,14 @@
 package com.minosiants.pencil
 
 import java.io.InputStream
-import java.nio.file.Path
+import java.net.URL
+import java.nio.file.{ Path, Paths, Files => JFiles }
 
 import cats.effect.{ IO, Resource }
 import com.minosiants.pencil.data.Error
+
 import Function._
+import scala.util
 
 object Files {
 
@@ -29,7 +32,7 @@ object Files {
     Resource
       .make {
         IO {
-          java.nio.file.Files.newInputStream(file)
+          JFiles.newInputStream(file)
         }.handleErrorWith(const(Error.resourceNotFound(file.toString)))
       } { is =>
         if (is != null)
@@ -37,5 +40,16 @@ object Files {
         else
           Error.resourceNotFound(file.toString)
       }
+  }
+
+  def pathFrom(file: String): Either[Error, Path] = {
+    val path = Paths.get(file)
+    Either.cond(JFiles.exists(path), path, Error.ResourceNotFound(file))
+  }
+
+  def pathFromClassLoader(file: String): Either[Error, Path] = {
+    val resource = getClass.getClassLoader.getResource(file)
+    val cond     = resource != null && JFiles.exists(Paths.get(resource.toURI))
+    Either.cond(cond, Paths.get(resource.toURI), Error.ResourceNotFound(file))
   }
 }
