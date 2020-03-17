@@ -84,6 +84,15 @@ object Smtp {
 
   def text(txt: String): Smtp[Unit] = write(const(Text(txt)))
 
+  def authLogin(): Smtp[Replies] = command(AuthLogin)
+
+  def login(credentials: Credentials): Smtp[Unit] =
+    for {
+      _ <- authLogin()
+      _ <- text(s"${credentials.username.show.toBase64} ${Command.end}")
+      _ <- text(s"${credentials.password.show.toBase64} ${Command.end}")
+    } yield ()
+
   def endEmail(): Smtp[Replies] = Smtp { req =>
     val p = req.email match {
       case TextEmail(_, _, _, _, _, _) => text(Command.endEmail) >> read
