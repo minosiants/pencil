@@ -93,7 +93,7 @@ object Smtp {
 
   def endEmail(): Smtp[Replies] = Smtp { req =>
     val p = req.email match {
-      case AsciiEmail(_, _, _, _, _, _) => text(Command.endEmail) >> read
+      case TextEmail(_, _, _, _, _, _) => text(Command.endEmail) >> read
       case _ =>
         for {
           _ <- boundary(true)
@@ -107,7 +107,7 @@ object Smtp {
 
   def asciiBody(): Smtp[Replies] = Smtp { req =>
     req.email match {
-      case AsciiEmail(_, _, _, _, _, Some(Ascii(body))) =>
+      case TextEmail(_, _, _, _, _, Some(Ascii(body))) =>
         (text(s"$body ${Command.end}") >> endEmail()).run(req)
       case _ => Error.smtpError("Body is not ascii")
     }
@@ -115,7 +115,7 @@ object Smtp {
 
   def subjectHeader(): Smtp[Option[Unit]] = Smtp { req =>
     req.email match {
-      case AsciiEmail(_, _, _, _, Some(Subject(sub)), _) =>
+      case TextEmail(_, _, _, _, Some(Subject(sub)), _) =>
         text(s"Subject: $sub ${Command.end}").run(req).map(Some(_))
       case MimeEmail(_, _, _, _, Some(Subject(sub)), _, _, _) =>
         text(s"Subject: =?utf-8?b?${sub.toBase64}?= ${Command.end}")
@@ -178,7 +178,7 @@ object Smtp {
           text(s"--$b$end ${Command.end}").run(req)
         else
           IO(())
-      case AsciiEmail(_, _, _, _, _, _) => Error.smtpError("not mime")
+      case TextEmail(_, _, _, _, _, _) => Error.smtpError("not mime")
     }
   }
 
@@ -231,7 +231,7 @@ object Smtp {
 
   def attachments(): Smtp[Unit] = Smtp { req =>
     req.email match {
-      case AsciiEmail(_, _, _, _, _, _) =>
+      case TextEmail(_, _, _, _, _, _) =>
         Error.smtpError("attachments not supported")
       case MimeEmail(_, _, _, _, _, _, attach, _) =>
         val result = attach.map { a =>
