@@ -32,7 +32,7 @@ val email = Email.ascii(
 ```scala
 val email = Email.mime(
      from"user1@mydomain.tld",
-     to"mailbox"user1@example.com",
+     to"user1@example.com",
      subject"привет",
      Body.Utf8("hi there")
 ) + attachment"path/to/file"

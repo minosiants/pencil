@@ -27,9 +27,11 @@ class SmtpSpec extends SmtpBaseSpec {
     "get response on RCPT" in {
       val email  = SmtpSpec.mime
       val result = testCommand(Smtp.rcpt(), email, codecs.ascii)
-      val boxes = email.to.boxes ++ email.cc
-        .map(_.boxes)
-        .getOrElse(List.empty) ++ email.bcc.map(_.boxes).getOrElse(List.empty)
+      val boxes = email.to.boxes.toList ++ email.cc
+        .map(_.boxes.toList)
+        .getOrElse(List.empty) ++ email.bcc
+        .map(_.boxes.toList)
+        .getOrElse(List.empty)
       val to = boxes
         .map(box => s"RCPT TO: ${box.show} ${Command.end}")
 
