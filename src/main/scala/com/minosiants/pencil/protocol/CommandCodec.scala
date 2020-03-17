@@ -18,6 +18,7 @@ package com.minosiants.pencil
 package protocol
 
 import com.minosiants.pencil.data.{ Error, Mailbox }
+import Command._
 import scodec.bits.BitVector
 import scodec.codecs._
 import scodec.{ Attempt, Codec, DecodeResult, Err, SizeBound }
