@@ -31,10 +31,12 @@ object Code {
   val `211` = Code(211, "System status, or system help reply")
   val `220` = Code(220, "Service ready")
   val `221` = Code(221, "Service closing transmission channel")
+  val `235` = Code(235, "2.7.0 Authentication successful")
   val `250` = Code(250, "Requested mail action okay, completed")
   val `251` = Code(251, "User not local; will forward to <forward-path>")
   val `252` =
     Code(252, "Cannot VRFY user, but will accept message and attempt delivery")
+  val `334` = Code(334, "Server challenge response")
   val `354` = Code(354, "Start mail input; end with <CRLF>.<CRLF")
   val `421` =
     Code(421, "<domain> Service not available, closing transmission channel")
@@ -62,9 +64,11 @@ object Code {
     `211`,
     `220`,
     `221`,
+    `235`,
     `250`,
     `251`,
     `252`,
+    `334`,
     `354`,
     `421`,
     `450`,

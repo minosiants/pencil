@@ -35,6 +35,7 @@ import com.minosiants.pencil.protocol.Encoding.{ `7bit`, `base64` }
 import scodec.bits.BitVector
 import Email._
 import Command._
+import com.minosiants.pencil.protocol.Code._
 final case class Request(email: Email, socket: SmtpSocket) {}
 
 object Smtp {
@@ -84,13 +85,34 @@ object Smtp {
 
   def text(txt: String): Smtp[Unit] = write(const(Text(txt)))
 
-  def authLogin(): Smtp[Replies] = command(AuthLogin)
+  def authLogin(): Smtp[Replies] =
+    for {
+      rep <- command(AuthLogin)
+      _   <- checkReplyFor(`334`, rep)
+    } yield rep
 
+  def checkReplyFor(code: Code, replies: Replies): Smtp[Replies] =
+    liftF(
+      IO.fromEither(
+        Either.cond(
+          replies.hasCode(code),
+          replies,
+          Error
+            .SmtpError(s"don't have ${code.value} in replies. ${replies.show}")
+        )
+      )
+    )
   def login(credentials: Credentials): Smtp[Unit] =
     for {
       _ <- authLogin()
-      _ <- text(s"${credentials.username.show.toBase64} ${Command.end}")
-      _ <- text(s"${credentials.password.show.toBase64} ${Command.end}")
+      ru <- command(
+        Text(s"${credentials.username.show.toBase64} ${Command.end}")
+      )
+      _ <- checkReplyFor(`334`, ru)
+      rp <- command(
+        Text(s"${credentials.password.show.toBase64} ${Command.end}")
+      )
+      _ <- checkReplyFor(`235`, rp)
     } yield ()
 
   def endEmail(): Smtp[Replies] = Smtp { req =>
