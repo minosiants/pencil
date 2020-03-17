@@ -69,18 +69,18 @@ trait AsciiMailOps {
   def setCc(cc: Cc): TextEmail = copy(cc = Some(cc))
 
   def addCc(mb: Mailbox*): TextEmail = this.cc match {
-    case Some(value) => copy(cc = Some(Cc(value.boxes ++ mb)))
-    case None        => copy(cc = Some(Cc(mb.toList)))
+    case Some(value) => copy(cc = Some(value + Cc(mb: _*)))
+    case None        => copy(cc = Some(Cc(mb: _*)))
   }
-  def addCc(cc: Cc): TextEmail = addCc(cc.boxes: _*)
+  def addCc(cc: Cc): TextEmail = addCc(cc.boxes.toList: _*)
   def +(cc: Cc): TextEmail     = addCc(cc)
 
   def setBcc(bcc: Bcc): TextEmail = copy(bcc = Some(bcc))
   def addBcc(mb: Mailbox*): TextEmail = this.bcc match {
-    case Some(value) => copy(bcc = Some(Bcc(value.boxes ++ mb)))
-    case None        => copy(bcc = Some(Bcc(mb.toList)))
+    case Some(value) => copy(bcc = Some(value + Bcc(mb: _*)))
+    case None        => copy(bcc = Some(Bcc(mb: _*)))
   }
-  def addBcc(bcc: Bcc): TextEmail = addBcc(bcc.boxes: _*)
+  def addBcc(bcc: Bcc): TextEmail = addBcc(bcc.boxes.toList: _*)
   def +(bcc: Bcc): TextEmail      = addBcc(bcc)
 
   def setBody(body: Ascii): TextEmail         = copy(body = Some(body))
@@ -89,7 +89,7 @@ trait AsciiMailOps {
   def setTo(to: To): TextEmail                = copy(to = to)
   def addTo(to: Mailbox*): TextEmail =
     copy(to = To(this.to.boxes ++ to.toList))
-  def addTo(to: To): TextEmail = addTo(to.boxes: _*)
+  def addTo(to: To): TextEmail = addTo(to.boxes.toList: _*)
   def +(to: To): TextEmail     = addTo(to)
 }
 
@@ -103,19 +103,19 @@ trait MimeEmailOps {
   def setCc(cc: Cc): MimeEmail = copy(cc = Some(cc))
 
   def addCc(mb: Mailbox*): MimeEmail = this.cc match {
-    case Some(value) => copy(cc = Some(Cc(value.boxes ++ mb)))
-    case None        => copy(cc = Some(Cc(mb.toList)))
+    case Some(value) => copy(cc = Some(value + Cc(mb: _*)))
+    case None        => copy(cc = Some(Cc(mb: _*)))
   }
-  def addCc(cc: Cc): MimeEmail = addCc(cc.boxes: _*)
+  def addCc(cc: Cc): MimeEmail = addCc(cc.boxes.toList: _*)
   def +(cc: Cc): MimeEmail     = addCc(cc)
 
   def setBcc(bcc: Bcc): MimeEmail = copy(bcc = Some(bcc))
 
   def addBcc(mb: Mailbox*): MimeEmail = this.bcc match {
-    case Some(value) => copy(bcc = Some(Bcc(value.boxes ++ mb)))
-    case None        => copy(bcc = Some(Bcc(mb.toList)))
+    case Some(value) => copy(bcc = Some(value + Bcc(mb: _*)))
+    case None        => copy(bcc = Some(Bcc(mb: _*)))
   }
-  def addBcc(bcc: Bcc): MimeEmail = addBcc(bcc.boxes: _*)
+  def addBcc(bcc: Bcc): MimeEmail = addBcc(bcc.boxes.toList: _*)
   def +(bcc: Bcc): MimeEmail      = addBcc(bcc)
 
   def setBody(body: Body): MimeEmail = copy(body = Some(body))
@@ -124,7 +124,7 @@ trait MimeEmailOps {
   def setFrom(from: From): MimeEmail          = copy(from = from)
   def setTo(to: To): MimeEmail                = copy(to = to)
   def addTo(to: Mailbox*): MimeEmail          = copy(to = To(this.to.boxes ++ to.toList))
-  def addTo(to: To): MimeEmail                = addTo(to.boxes: _*)
+  def addTo(to: To): MimeEmail                = addTo(to.boxes.toList: _*)
   def +(to: To): MimeEmail                    = addTo(to)
   def isMultipart: Boolean                    = attachments.nonEmpty
 
