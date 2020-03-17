@@ -33,10 +33,11 @@ final case class Replies(replies: List[Reply])
     extends Product
     with Serializable {
 
-  def success: Boolean     = replies.forall(_.code.success)
-  def :+(reply: Reply)     = Replies(replies :+ reply)
-  def +:(reply: Reply)     = Replies(reply +: replies)
-  def ++(replies: Replies) = Replies(this.replies ++ replies.replies)
+  def success: Boolean             = replies.forall(_.code.success)
+  def hasCode(code: Code): Boolean = replies.map(_.code).contains(code)
+  def :+(reply: Reply)             = Replies(replies :+ reply)
+  def +:(reply: Reply)             = Replies(reply +: replies)
+  def ++(replies: Replies)         = Replies(this.replies ++ replies.replies)
 }
 
 object Replies {
