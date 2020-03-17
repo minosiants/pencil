@@ -18,6 +18,7 @@ package com.minosiants.pencil
 package data
 
 import Body._
+import cats.data.NonEmptyList
 
 sealed abstract class Email extends Product with Serializable {
   def from: From
@@ -25,6 +26,12 @@ sealed abstract class Email extends Product with Serializable {
   def cc: Option[Cc]
   def bcc: Option[Bcc]
   def subject: Option[Subject]
+  def recipients: NonEmptyList[Mailbox] = (cc, bcc) match {
+    case (Some(cc), Some(bcc)) => to.boxes ::: cc.boxes ::: bcc.boxes
+    case (None, Some(bcc))     => to.boxes ::: bcc.boxes
+    case (Some(cc), None)      => to.boxes ::: cc.boxes
+    case (None, None) => to.boxes
+  }
 }
 
 object Email {

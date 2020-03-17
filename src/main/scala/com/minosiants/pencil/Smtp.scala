@@ -69,16 +69,7 @@ object Smtp {
 
   def rcpt(): Smtp[List[Replies]] = Smtp { req =>
     val rcptCommand = (m: Mailbox) => command(Rcpt(m)).run(req)
-    val ccValue =
-      req.email.cc.map(_.boxes.toList).getOrElse(List.empty[Mailbox])
-    val bccValue =
-      req.email.bcc.map(_.boxes.toList).getOrElse(List.empty[Mailbox])
-    for {
-      to  <- req.email.to.boxes.toList.traverse(rcptCommand)
-      cc  <- ccValue.traverse(rcptCommand)
-      bcc <- bccValue.traverse(rcptCommand)
-    } yield to ++ cc ++ bcc
-
+    req.email.recipients.toList.traverse(rcptCommand)
   }
 
   def data(): Smtp[Replies] = command(Data)
