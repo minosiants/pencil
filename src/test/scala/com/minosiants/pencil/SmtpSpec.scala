@@ -1,5 +1,4 @@
 package com.minosiants.pencil
-import java.nio.file.Paths
 
 import cats.effect.IO
 import cats.syntax.show._
@@ -82,7 +81,7 @@ class SmtpSpec extends SmtpBaseSpec {
     }
 
     "send asciiBody" in {
-      val email  = SmtpSpec.ascii
+      val email  = SmtpSpec.text
       val result = testCommand(Smtp.asciiBody(), email, codecs.ascii)
 
       result.map(_._1) must beRight(DataSamples.`250 OK`)
@@ -95,7 +94,7 @@ class SmtpSpec extends SmtpBaseSpec {
     }
 
     "send subjectHeader in ascii mail" in {
-      val email  = SmtpSpec.ascii
+      val email  = SmtpSpec.text
       val result = testCommand(Smtp.subjectHeader(), email, codecs.ascii)
       result.map(_._2) must beRight(
         List(
@@ -114,7 +113,7 @@ class SmtpSpec extends SmtpBaseSpec {
     }
 
     "send fromHeader" in {
-      val email  = SmtpSpec.ascii
+      val email  = SmtpSpec.text
       val result = testCommand(Smtp.fromHeader(), email, codecs.ascii)
       result.map(_._2) must beRight(
         List(
@@ -123,7 +122,7 @@ class SmtpSpec extends SmtpBaseSpec {
       )
     }
     "send toHeader" in {
-      val email  = SmtpSpec.ascii
+      val email  = SmtpSpec.text
       val result = testCommand(Smtp.toHeader(), email, codecs.ascii)
       result.map(_._2) must beRight(
         List(
@@ -314,16 +313,14 @@ class SmtpSpec extends SmtpBaseSpec {
 
 object SmtpSpec {
 
-  val ascii: AsciiEmail = {
-    Email.ascii(
+  val text: TextEmail = {
+    Email.text(
       From(mailbox"user1@mydomain.tld"),
       To(mailbox"user1@example.com"),
       subject"first email",
       Body.Ascii("hello")
     )
   }
-  def path(filename: String) =
-    Paths.get(getClass.getClassLoader.getResource(filename).toURI)
 
   val mime =
     Email

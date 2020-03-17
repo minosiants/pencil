@@ -1,5 +1,5 @@
 package com.minosiants.pencil
-import com.minosiants.pencil.data.{ Attachment, Mailbox }
+import com.minosiants.pencil.data._
 
 import scala.reflect.macros.blackbox
 import scala.reflect.macros.blackbox.Context
@@ -19,6 +19,44 @@ object LiteralSyntaxMacros {
       s => c.universe.reify(Mailbox.unsafeFromString(s.splice))
     )
 
+  def toInterpolator(
+      c: blackbox.Context
+  )(args: c.Expr[Any]*): c.Expr[To] =
+    singlePartInterpolator(c)(
+      args,
+      "To",
+      Mailbox.fromString(_).isRight,
+      s => c.universe.reify(To(Mailbox.unsafeFromString(s.splice)))
+    )
+  def fromInterpolator(
+      c: blackbox.Context
+  )(args: c.Expr[Any]*): c.Expr[From] =
+    singlePartInterpolator(c)(
+      args,
+      "From",
+      Mailbox.fromString(_).isRight,
+      s => c.universe.reify(From(Mailbox.unsafeFromString(s.splice)))
+    )
+
+  def ccInterpolator(
+      c: blackbox.Context
+  )(args: c.Expr[Any]*): c.Expr[Cc] =
+    singlePartInterpolator(c)(
+      args,
+      "Cc",
+      Mailbox.fromString(_).isRight,
+      s => c.universe.reify(Cc(Mailbox.unsafeFromString(s.splice)))
+    )
+
+  def bccInterpolator(
+      c: blackbox.Context
+  )(args: c.Expr[Any]*): c.Expr[Bcc] =
+    singlePartInterpolator(c)(
+      args,
+      "Bcc",
+      Mailbox.fromString(_).isRight,
+      s => c.universe.reify(Bcc(Mailbox.unsafeFromString(s.splice)))
+    )
   def attachmentInterpolator(
       c: blackbox.Context
   )(args: c.Expr[Any]*): c.Expr[Attachment] =

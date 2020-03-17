@@ -66,8 +66,8 @@ lazy val releaseProcessSettings = Seq(
 )
 
 lazy val githubPackagesSettings = Seq(
-//  githubOwner := "minosiants",
- // githubRepository := "pencil"
+  githubOwner := "minosiants",
+  githubRepository := "pencil"
 )
 
 lazy val licenceSettings = Seq(

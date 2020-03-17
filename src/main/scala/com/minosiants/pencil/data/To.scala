@@ -3,7 +3,9 @@ package data
 
 import cats.Show
 
-final case class To(boxes: List[Mailbox]) extends Product with Serializable
+final case class To(boxes: List[Mailbox]) extends Product with Serializable {
+  def +(to: To): To = copy(boxes = boxes ++ to.boxes)
+}
 
 object To {
 

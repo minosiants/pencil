@@ -51,10 +51,10 @@ object Client {
     }
   }
 
-  implicit lazy val textEmailSender: EmailSender[AsciiEmail] =
-    new EmailSender[AsciiEmail] {
+  implicit lazy val textEmailSender: EmailSender[TextEmail] =
+    new EmailSender[TextEmail] {
       override def send(
-          email: AsciiEmail,
+          email: TextEmail,
           socket: Resource[IO, SmtpSocket]
       ): IO[Replies] =
         socket.use { s =>

@@ -21,8 +21,8 @@ libraryDependencies += "com.minosiatns" %% "pencil" % "0.0.1"
 
 ```scala
 val email = Email.ascii(
-      From(mailbox"user1@mydomain.tld"),
-      To(mailbox"user1@example.com"),
+      from"user1@mydomain.tld",
+      to"user1@example.com",
       subject"first email",
       Body.Ascii("hello")
 )
@@ -31,8 +31,8 @@ val email = Email.ascii(
 
 ```scala
 val email = Email.mime(
-     From(mailbox"user1@mydomain.tld"),
-     To(mailbox"user1@example.com"),
+     from"user1@mydomain.tld",
+     to"mailbox"user1@example.com",
      subject"привет",
      Body.Utf8("hi there")
 ) + attachment"path/to/file"
@@ -48,7 +48,7 @@ object Main extends IOApp {
         SocketGroup[IO](blocker).use { sg =>
           val client = Client("127.0.0.1")(sg)
           client
-            .send(utf8())
+            .send(email)
             .attempt
             .map {
               case Right(value) =>

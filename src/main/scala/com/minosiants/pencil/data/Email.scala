@@ -29,7 +29,7 @@ sealed abstract class Email extends Product with Serializable {
 
 object Email {
 
-  final case class AsciiEmail(
+  final case class TextEmail(
       from: From,
       to: To,
       cc: Option[Cc],
@@ -51,8 +51,8 @@ object Email {
   ) extends Email
       with MimeEmailOps
 
-  def ascii(from: From, to: To, subject: Subject, body: Ascii): AsciiEmail =
-    AsciiEmail(from, to, None, None, Some(subject), Some(body))
+  def text(from: From, to: To, subject: Subject, body: Ascii): TextEmail =
+    TextEmail(from, to, None, None, Some(subject), Some(body))
 
   def mime(from: From, to: To, subject: Subject, body: Body): MimeEmail = {
     val boundary = Boundary.genFrom(from.box.address)
@@ -65,32 +65,32 @@ import Email._
 
 trait AsciiMailOps {
 
-  self: AsciiEmail =>
-  def setCc(cc: Cc): AsciiEmail = copy(cc = Some(cc))
+  self: TextEmail =>
+  def setCc(cc: Cc): TextEmail = copy(cc = Some(cc))
 
-  def addCc(mb: Mailbox*): AsciiEmail = this.cc match {
+  def addCc(mb: Mailbox*): TextEmail = this.cc match {
     case Some(value) => copy(cc = Some(Cc(value.boxes ++ mb)))
     case None        => copy(cc = Some(Cc(mb.toList)))
   }
-  def addCc(cc: Cc): AsciiEmail = addCc(cc.boxes: _*)
-  def +(cc: Cc): AsciiEmail     = addCc(cc)
+  def addCc(cc: Cc): TextEmail = addCc(cc.boxes: _*)
+  def +(cc: Cc): TextEmail     = addCc(cc)
 
-  def setBcc(bcc: Bcc): AsciiEmail = copy(bcc = Some(bcc))
-  def addBcc(mb: Mailbox*): AsciiEmail = this.bcc match {
+  def setBcc(bcc: Bcc): TextEmail = copy(bcc = Some(bcc))
+  def addBcc(mb: Mailbox*): TextEmail = this.bcc match {
     case Some(value) => copy(bcc = Some(Bcc(value.boxes ++ mb)))
     case None        => copy(bcc = Some(Bcc(mb.toList)))
   }
-  def addBcc(bcc: Bcc): AsciiEmail = addBcc(bcc.boxes: _*)
-  def +(bcc: Bcc): AsciiEmail      = addBcc(bcc)
+  def addBcc(bcc: Bcc): TextEmail = addBcc(bcc.boxes: _*)
+  def +(bcc: Bcc): TextEmail      = addBcc(bcc)
 
-  def setBody(body: Ascii): AsciiEmail         = copy(body = Some(body))
-  def setSubject(subject: Subject): AsciiEmail = copy(subject = Some(subject))
-  def setFrom(from: From): AsciiEmail          = copy(from = from)
-  def setTo(to: To): AsciiEmail                = copy(to = to)
-  def addTo(to: Mailbox*): AsciiEmail =
+  def setBody(body: Ascii): TextEmail         = copy(body = Some(body))
+  def setSubject(subject: Subject): TextEmail = copy(subject = Some(subject))
+  def setFrom(from: From): TextEmail          = copy(from = from)
+  def setTo(to: To): TextEmail                = copy(to = to)
+  def addTo(to: Mailbox*): TextEmail =
     copy(to = To(this.to.boxes ++ to.toList))
-  def addTo(to: To): AsciiEmail = addTo(to.boxes: _*)
-  def +(to: To): AsciiEmail     = addTo(to)
+  def addTo(to: To): TextEmail = addTo(to.boxes: _*)
+  def +(to: To): TextEmail     = addTo(to)
 }
 
 trait MimeEmailOps {
