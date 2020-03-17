@@ -30,13 +30,18 @@ trait Client {
 }
 
 trait EmailSender[A] {
-  def send(email: A, socket: Resource[IO, SmtpSocket]): IO[Replies]
+  def send(
+      email: A,
+      credentials: Option[Credentials],
+      socket: Resource[IO, SmtpSocket]
+  ): IO[Replies]
 }
 
 object Client {
   def apply(
       host: String,
       port: Int = 25,
+      credentials: Option[Credentials] = None,
       readTimeout: FiniteDuration = 5.minutes,
       writeTimeout: FiniteDuration = 5.minutes
   )(sg: SocketGroup)(implicit cs: ContextShift[IO]): Client = new Client {
@@ -47,7 +52,7 @@ object Client {
     override def send[A](
         email: A
     )(implicit es: EmailSender[A]): IO[Replies] = {
-      es.send(email, socket)
+      es.send(email, credentials, socket)
     }
   }
 
@@ -55,12 +60,14 @@ object Client {
     new EmailSender[TextEmail] {
       override def send(
           email: TextEmail,
+          credentials: Option[Credentials],
           socket: Resource[IO, SmtpSocket]
       ): IO[Replies] =
         socket.use { s =>
           val sendProg = for {
             _ <- Smtp.init()
             _ <- Smtp.ehlo()
+            _ <- credentials.fold(Smtp.pure(()))(Smtp.login)
             _ <- Smtp.mail()
             _ <- Smtp.rcpt()
             _ <- Smtp.data()
@@ -75,11 +82,13 @@ object Client {
     new EmailSender[MimeEmail] {
       override def send(
           email: MimeEmail,
+          credentials: Option[Credentials],
           socket: Resource[IO, SmtpSocket]
       ): IO[Replies] = socket.use { s =>
         val sendProg = for {
           _ <- Smtp.init()
           _ <- Smtp.ehlo()
+          _ <- credentials.fold(Smtp.pure(()))(Smtp.login)
           _ <- Smtp.mail()
           _ <- Smtp.rcpt()
           _ <- Smtp.data()
