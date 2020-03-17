@@ -20,7 +20,7 @@ libraryDependencies += "com.minosiatns" %% "pencil" % "0.0.1"
 #### Create text email
 
 ```scala
-val email = Email.ascii(
+val email = Email.text(
       from"user1@mydomain.tld",
       to"user1@example.com",
       subject"first email",
