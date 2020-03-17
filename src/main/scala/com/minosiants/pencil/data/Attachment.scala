@@ -2,6 +2,7 @@ package com.minosiants.pencil
 package data
 
 import java.nio.file.Path
+import cats.syntax.either._
 
 final case class Attachment(file: Path) extends Product with Serializable
 
