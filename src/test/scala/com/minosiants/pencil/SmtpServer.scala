@@ -9,6 +9,7 @@ import fs2.Stream
 import fs2.io.tcp.{ Socket, SocketGroup }
 import scodec.bits.BitVector
 import scodec.stream.{ StreamDecoder, StreamEncoder }
+import Command._
 
 final case class SmtpServer(
     sg: SocketGroup,

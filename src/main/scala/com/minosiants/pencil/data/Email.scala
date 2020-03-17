@@ -30,7 +30,7 @@ sealed abstract class Email extends Product with Serializable {
     case (Some(cc), Some(bcc)) => to.boxes ::: cc.boxes ::: bcc.boxes
     case (None, Some(bcc))     => to.boxes ::: bcc.boxes
     case (Some(cc), None)      => to.boxes ::: cc.boxes
-    case (None, None) => to.boxes
+    case (None, None)          => to.boxes
   }
 }
 

@@ -8,6 +8,7 @@ import scodec.codecs._
 import com.minosiants.pencil.data.Mailbox
 import cats.syntax.show
 import scala.io.Source
+import Command._
 
 class ProtocolSpec extends Specification {
 
