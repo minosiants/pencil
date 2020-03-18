@@ -35,6 +35,7 @@ object Command {
   case object Quit                        extends Command
   case class Text(txt: String)            extends Command
   case object AuthLogin                   extends Command
+  case object StartTls                    extends Command
 
   implicit lazy val CommandShow: Show[Command] = Show.show {
     case Ehlo(domain) => s"EHLO $domain $end"
@@ -49,6 +50,7 @@ object Command {
     case Quit      => s"QUIT $end"
     case Text(txt) => s"$txt"
     case AuthLogin => s"AUTH LOGIN $end"
+    case StartTls  => s"STARTTLS $end"
 
   }
 

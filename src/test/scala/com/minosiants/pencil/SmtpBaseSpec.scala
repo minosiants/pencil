@@ -66,7 +66,7 @@ trait SmtpBaseSpec extends SpecificationLike with CatsIO {
               }
           )
         )
-      } yield (v, r)).run(Request(email, s))
+      } yield (v, r)).run(SmtpRequest(email, s))
     }.attempt.unsafeRunSync()
 
   }

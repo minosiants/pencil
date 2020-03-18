@@ -36,11 +36,12 @@ import scodec.bits.BitVector
 import Email._
 import Command._
 import com.minosiants.pencil.protocol.Code._
-final case class Request(email: Email, socket: SmtpSocket) {}
+
+final case class SmtpRequest(email: Email, socket: SmtpSocket)
 
 object Smtp {
 
-  def apply[A](run: Request => IO[A]): Smtp[A] =
+  def apply[A](run: SmtpRequest => IO[A]): Smtp[A] =
     Kleisli(req => run(req))
 
   def pure[A](a: A): Smtp[A] =
@@ -48,6 +49,9 @@ object Smtp {
 
   def liftF[A](a: IO[A]): Smtp[A] =
     Kleisli.liftF(a)
+
+  def local[A](f: SmtpRequest => SmtpRequest)(smtp: Smtp[A]): Smtp[A] =
+    Kleisli.local(f)(smtp)
 
   def write(run: Email => Command): Smtp[Unit] = Smtp { req =>
     req.socket.write(run(req.email))
@@ -217,11 +221,12 @@ object Smtp {
 
   def multipart(): Smtp[Unit] = Smtp { req =>
     req.email match {
-      case MimeEmail(_, _, _, _, _, _, _, Boundary(b)) =>
+      case m @ MimeEmail(_, _, _, _, _, _, _, Boundary(b)) if m.isMultipart =>
         contentTypeHeader(
           `Content-Type`(`multipart/mixed`, Map("boundary" -> b))
         ).run(req)
-      case _ => Error.smtpError("Does not support multipart")
+      case m @ MimeEmail(_, _, _, _, _, _, _, _) => IO(())
+      case _                                     => Error.smtpError("Does not support multipart")
     }
 
   }
