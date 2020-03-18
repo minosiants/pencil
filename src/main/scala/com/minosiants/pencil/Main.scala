@@ -16,48 +16,60 @@
 
 package com.minosiants.pencil
 
+import java.net.InetSocketAddress
 import java.nio.file.Paths
 
 import cats.effect._
-import cats.implicits._
+//import cats.implicits._
 import com.minosiants.pencil.Client._
 import com.minosiants.pencil.data._
 import fs2.io.tcp.SocketGroup
 import Email._
+import fs2.Chunk
+import fs2.io.tls.TLSContext
+import scodec.{ Attempt, DecodeResult }
+import scodec.bits.BitVector
+import scodec.codecs._
 
 object Main extends IOApp {
 
-  override def run(args: List[String]): IO[ExitCode] =
-    Blocker[IO]
+  override def run(args: List[String]): IO[ExitCode] = {
+    val r = Blocker[IO]
       .use { blocker =>
         SocketGroup[IO](blocker).use { sg =>
-          val client = Client("127.0.0.1")(sg)
-          client
-            .send(utf8())
-            .attempt
-            .map {
-              case Right(value) =>
-                ExitCode.Success
-              case Left(error) =>
-                error match {
-                  case e: Error     => println(e.show)
-                  case e: Throwable => println(e.getMessage)
-                }
-                ExitCode.Error
+          sg.client[IO](new InetSocketAddress("localhost", 25)).use { socket =>
+            TLSContext.system[IO](blocker).flatMap { tls =>
+              tls.client(socket).use { client =>
+                client.read(1024).flatMap(f)
+
+              }
+
             }
+
+          }
         }
       }
 
-  def utf8(): MimeEmail = {
-    /*Email
-      .mime(
-        From(mailbox"user1@mydomain.tld"),
-        To(mailbox"user1@example.com"),
-        subject"привет",
-        Body.Utf8("hi there")
-      ) //+ attachment"path/to/file"*/
+    r.attempt.flatMap {
+      case Right(v) =>
+        println(">>>" + v)
+        IO(ExitCode.Success)
+      case Left(e) =>
+        e.printStackTrace()
+        IO(ExitCode.Error)
+    }
+  }
 
-    ???
+  def f(chunks: Option[Chunk[Byte]]) = {
+    chunks match {
+      case Some(chunk) =>
+        utf8.decode(BitVector.view(chunk.toArray)) match {
+          case Attempt.Successful(DecodeResult(value, _)) => IO(value)
+          case Attempt.Failure(cause) =>
+            data.Error.smtpError(cause.messageWithContext)
+        }
+      case None => data.Error.smtpError("Nothing to read")
+    }
   }
 
 }
