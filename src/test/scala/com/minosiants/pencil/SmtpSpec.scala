@@ -1,6 +1,8 @@
 package com.minosiants.pencil
 
-import cats.effect.IO
+import java.net.InetSocketAddress
+
+import cats.effect.{ Blocker, ExitCode, IO }
 import cats.syntax.show._
 import com.minosiants.pencil.data.Body.{ Ascii, Html, Utf8 }
 import com.minosiants.pencil.data._
@@ -11,6 +13,8 @@ import com.minosiants.pencil.protocol._
 import scodec.bits.BitVector
 import scodec.codecs
 import Email._
+import fs2.io.tcp.SocketGroup
+import fs2.io.tls.TLSContext
 
 class SmtpSpec extends SmtpBaseSpec {
 

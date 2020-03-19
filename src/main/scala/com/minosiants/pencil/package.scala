@@ -25,7 +25,7 @@ import scodec.codecs._
 
 package object pencil extends LiteralsSyntax {
 
-  type Smtp[A] = Kleisli[IO, SmtpRequest, A]
+  type Smtp[A] = Kleisli[IO, Request, A]
 
   val CRLF: BitVector = ascii.encode("\r\n").getOrElse(BitVector.empty)
 

@@ -37,11 +37,11 @@ import Email._
 import Command._
 import com.minosiants.pencil.protocol.Code._
 
-final case class SmtpRequest(email: Email, socket: SmtpSocket)
+final case class Request(email: Email, socket: SmtpSocket)
 
 object Smtp {
 
-  def apply[A](run: SmtpRequest => IO[A]): Smtp[A] =
+  def apply[A](run: Request => IO[A]): Smtp[A] =
     Kleisli(req => run(req))
 
   def pure[A](a: A): Smtp[A] =
@@ -50,7 +50,7 @@ object Smtp {
   def liftF[A](a: IO[A]): Smtp[A] =
     Kleisli.liftF(a)
 
-  def local[A](f: SmtpRequest => SmtpRequest)(smtp: Smtp[A]): Smtp[A] =
+  def local[A](f: Request => Request)(smtp: Smtp[A]): Smtp[A] =
     Kleisli.local(f)(smtp)
 
   def write(run: Email => Command): Smtp[Unit] = Smtp { req =>
@@ -88,6 +88,8 @@ object Smtp {
   def quit(): Smtp[Replies] = command(Quit)
 
   def text(txt: String): Smtp[Unit] = write(const(Text(txt)))
+
+  def startTls(): Smtp[Replies] = command(StartTls)
 
   def authLogin(): Smtp[Replies] =
     for {

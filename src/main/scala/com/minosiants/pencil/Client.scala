@@ -24,10 +24,10 @@ import com.minosiants.pencil.protocol._
 import fs2.io.tcp.{ Socket, SocketGroup }
 
 import scala.concurrent.duration._
-import fs2.io.tls.{ TLSContext, TLSSocket }
-
+import fs2.io.tls.{ TLSContext, TLSParameters, TLSSocket }
+import cats.syntax.flatMap._
 trait Client {
-  def send[A<:Email](email: A)(implicit es: EmailSender[A]): IO[Replies]
+  def send[A <: Email](email: A)(implicit es: EmailSender[A]): IO[Replies]
 
 }
 
@@ -47,16 +47,53 @@ object Client {
     lazy val smtpSocket =
       socket.map(SmtpSocket.fromSocket(_, readTimeout, writeTimeout))
 
-    lazy val tlsSmtpSocket: Resource[IO, SmtpSocket] =
-      socket
-        .flatMap(tlsContext.client[IO](_))
-        .map(SmtpSocket.fromSocket(_, readTimeout, writeTimeout))
+    lazy val tlsSocket: Socket[IO] => Resource[IO, SmtpSocket] =
+      (s: Socket[IO]) =>
+        tlsContext
+          .client[IO](s)
+          .map(SmtpSocket.fromSocket(_, readTimeout, writeTimeout))
 
-    override def send[A](
+    override def send[A <: Email](
         email: A
     )(implicit es: EmailSender[A]): IO[Replies] = {
-      es.send(email, credentials, smtpSocket, tlsSmtpSocket)
+
+      socket.use { s =>
+        tlsSocket(s).use { tls =>
+          (for {
+            _   <- Smtp.init()
+            rep <- Smtp.ehlo()
+            r <- if (supportTLS(rep)) sendEmailViaTls(tls)
+            else login(rep) >> es.send()
+          } yield r).run(
+            Request(email, SmtpSocket.fromSocket(s, readTimeout, writeTimeout))
+          )
+
+        }
+      }
     }
+    def login(rep: Replies): Smtp[Unit] = {
+      if(supportLogin(rep))
+        credentials.fold(Smtp.pure(()))(Smtp.login)
+      else Smtp.pure(())
+    }
+
+    def supportTLS(rep: Replies): Boolean = {
+      rep.replies.exists(r => r.text.contains("STARTTLS"))
+    }
+    def supportLogin(rep: Replies):Boolean ={
+      rep.replies.exists(_.text.contains("AUTH LOGIN"))
+    }
+    def sendEmailViaTls[A <: Email](
+        tls: SmtpSocket
+    )(implicit es: EmailSender[A]): Smtp[Replies] =
+      for {
+        _ <- Smtp.startTls()
+        r <- Smtp.local(req => Request(req.email, tls))(for {
+          rep <- Smtp.ehlo()
+          _ <- login(rep)
+          r <- es.send()
+        } yield r)
+      } yield r
   }
 
 }

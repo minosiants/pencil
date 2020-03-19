@@ -23,7 +23,7 @@ trait SmtpBaseSpec extends SpecificationLike with CatsIO {
       address: InetSocketAddress,
       sg: SocketGroup
   ): Resource[IO, SmtpSocket] =
-    SmtpSocket(address, 5.seconds, 5.seconds, sg)
+    sg.client[IO](address).map(SmtpSocket.fromSocket(_, 5.seconds, 5.seconds))
 
   type ServerState = Ref[IO, List[BitVector]]
 
@@ -66,7 +66,7 @@ trait SmtpBaseSpec extends SpecificationLike with CatsIO {
               }
           )
         )
-      } yield (v, r)).run(SmtpRequest(email, s))
+      } yield (v, r)).run(Request(email, s))
     }.attempt.unsafeRunSync()
 
   }
