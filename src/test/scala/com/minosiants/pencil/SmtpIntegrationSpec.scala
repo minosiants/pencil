@@ -1,10 +1,8 @@
 package com.minosiants.pencil
 
-import java.net.InetSocketAddress
-
-import cats.effect.{Blocker, IO}
 import cats.effect.specs2.CatsIO
-import com.minosiants.pencil.data.{Body, Credentials, Email, Password, Username}
+import cats.effect.{ Blocker, IO }
+import com.minosiants.pencil.data._
 import fs2.io.tcp.SocketGroup
 import fs2.io.tls.TLSContext
 import org.specs2.execute.Pending

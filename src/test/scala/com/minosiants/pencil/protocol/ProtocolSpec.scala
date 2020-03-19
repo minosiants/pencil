@@ -1,14 +1,14 @@
 package com.minosiants.pencil
 package protocol
 
+import com.minosiants.pencil.data.Mailbox
+import com.minosiants.pencil.protocol.Command._
 import org.specs2.mutable.Specification
 import scodec.DecodeResult
 import scodec.bits._
 import scodec.codecs._
-import com.minosiants.pencil.data.Mailbox
-import cats.syntax.show
+
 import scala.io.Source
-import Command._
 
 class ProtocolSpec extends Specification {
 

@@ -18,7 +18,6 @@ package com.minosiants.pencil.data
 
 import cats.Show
 import cats.effect.IO
-import org.apache.tika.exception.TikaException
 
 import scala.util.control.NoStackTrace
 

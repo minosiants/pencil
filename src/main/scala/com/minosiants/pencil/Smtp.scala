@@ -227,8 +227,8 @@ object Smtp {
         contentTypeHeader(
           `Content-Type`(`multipart/mixed`, Map("boundary" -> b))
         ).run(req)
-      case m @ MimeEmail(_, _, _, _, _, _, _, _) => IO(())
-      case _                                     => Error.smtpError("Does not support multipart")
+      case MimeEmail(_, _, _, _, _, _, _, _) => IO(())
+      case _                                 => Error.smtpError("Does not support multipart")
     }
 
   }

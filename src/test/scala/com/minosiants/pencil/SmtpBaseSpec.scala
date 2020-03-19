@@ -5,15 +5,13 @@ import java.net.InetSocketAddress
 import cats.effect.concurrent.{ Deferred, Ref }
 import cats.effect.specs2.CatsIO
 import cats.effect.{ Blocker, IO, Resource, Timer }
+import cats.instances.list._
+import cats.syntax.traverse._
 import com.minosiants.pencil.data.{ Email, Error }
 import fs2.io.tcp.SocketGroup
 import org.specs2.mutable.SpecificationLike
-import scodec.{ Codec, DecodeResult }
 import scodec.bits.BitVector
-import cats.syntax.show._
-import cats.syntax.traverse._
-import cats.instances.list._
-import cats.instances.either._
+import scodec.{ Codec, DecodeResult }
 
 import scala.concurrent.duration._
 

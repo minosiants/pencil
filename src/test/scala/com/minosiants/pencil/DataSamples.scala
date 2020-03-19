@@ -15,10 +15,12 @@ object DataSamples {
   )
 
   val `mail.example.com` = Reply(Code.code(250).get, "-", "mail.example.com")
-  val PIPELINING         = Reply(Code.code(250).get, "-", "PIPELINING")
-  val `8BITMIME`         = Reply(Code.code(250).get, " ", "8BITMIME")
+  val PIPELINING: Reply  = Reply(Code.code(250).get, "-", "PIPELINING")
+  val `8BITMIME`: Reply  = Reply(Code.code(250).get, " ", "8BITMIME")
 
-  val ehloReplies = Replies(List(`mail.example.com`, PIPELINING, `8BITMIME`))
+  val ehloReplies: Replies = Replies(
+    List(`mail.example.com`, PIPELINING, `8BITMIME`)
+  )
 
   val `250 OK` = Replies(
     Reply(Code.code(250).get, " ", "2.1.0 Ok")

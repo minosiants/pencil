@@ -72,7 +72,7 @@ final case class CommandCodec() extends Codec[Command] {
 
     val from = bits.indexOfSlice(`<`)
 
-    val (v, tail)  = bits.splitAt(from)
+    val (_, tail)  = bits.splitAt(from)
     val _tail      = tail.drop(`<`.size)
     val to         = _tail.indexOfSlice(`>`)
     val (email, _) = _tail.splitAt(to)

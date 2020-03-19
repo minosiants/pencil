@@ -24,7 +24,7 @@ import com.minosiants.pencil.protocol._
 import fs2.io.tcp.{ Socket, SocketGroup }
 
 import scala.concurrent.duration._
-import fs2.io.tls.{ TLSContext, TLSParameters, TLSSocket }
+import fs2.io.tls.TLSContext
 import cats.syntax.flatMap._
 trait Client {
   def send[A <: Email](email: A)(implicit es: EmailSender[A]): IO[Replies]
@@ -44,8 +44,7 @@ object Client {
     lazy val socket: Resource[IO, Socket[IO]] =
       sg.client[IO](new InetSocketAddress(host, port))
 
-    lazy val smtpSocket =
-      socket.map(SmtpSocket.fromSocket(_, readTimeout, writeTimeout))
+    socket.map(SmtpSocket.fromSocket(_, readTimeout, writeTimeout))
 
     lazy val tlsSocket: Socket[IO] => Resource[IO, SmtpSocket] =
       (s: Socket[IO]) =>
@@ -72,7 +71,7 @@ object Client {
       }
     }
     def login(rep: Replies): Smtp[Unit] = {
-      if(supportLogin(rep))
+      if (supportLogin(rep))
         credentials.fold(Smtp.pure(()))(Smtp.login)
       else Smtp.pure(())
     }
@@ -80,7 +79,7 @@ object Client {
     def supportTLS(rep: Replies): Boolean = {
       rep.replies.exists(r => r.text.contains("STARTTLS"))
     }
-    def supportLogin(rep: Replies):Boolean ={
+    def supportLogin(rep: Replies): Boolean = {
       rep.replies.exists(_.text.contains("AUTH LOGIN"))
     }
     def sendEmailViaTls[A <: Email](
@@ -90,8 +89,8 @@ object Client {
         _ <- Smtp.startTls()
         r <- Smtp.local(req => Request(req.email, tls))(for {
           rep <- Smtp.ehlo()
-          _ <- login(rep)
-          r <- es.send()
+          _   <- login(rep)
+          r   <- es.send()
         } yield r)
       } yield r
   }

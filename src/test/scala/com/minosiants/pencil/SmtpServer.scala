@@ -75,9 +75,13 @@ final case class SmtpServer(
         Stream.eval_(state.tryUpdate(_ :+ raw)) ++
           Stream(DataSamples.`250 OK`)
 
-      case In(raw, Text(txt)) =>
+      case In(raw, Text(_)) =>
         Stream.eval_(state.tryUpdate(_ :+ raw)) ++
           Stream.empty
+      case In(_, AuthLogin) =>
+        ???
+      case In(_, StartTls) =>
+        ???
     }
 
   }
@@ -101,6 +105,7 @@ final case class MessageSocket(socket: Socket[IO])
       .through(StreamEncoder.many(Reply.repliesCodec).toPipeByte)
       .through(socket.writes())
 
-  final val decoder = StreamDecoder.many(In.inListDecoder)
+  final val decoder: StreamDecoder[List[In]] =
+    StreamDecoder.many(In.inListDecoder)
 
 }

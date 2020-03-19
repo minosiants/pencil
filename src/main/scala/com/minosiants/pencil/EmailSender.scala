@@ -17,7 +17,7 @@
 package com.minosiants.pencil
 
 import com.minosiants.pencil.data.Email
-import com.minosiants.pencil.data.Email.{MimeEmail, TextEmail}
+import com.minosiants.pencil.data.Email.{ MimeEmail, TextEmail }
 import com.minosiants.pencil.protocol.Replies
 
 trait EmailSender[A <: Email] {

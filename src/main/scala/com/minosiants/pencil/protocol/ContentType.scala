@@ -44,7 +44,7 @@ object ContentType {
     ContentType("multipart", "alternative")
   lazy val `multipart/digest`: ContentType = ContentType("multipart", "digest")
 
-  lazy val allTypes = List(
+  lazy val allTypes: List[ContentType] = List(
     `text/plain`,
     `text/html`,
     `image/gif`,

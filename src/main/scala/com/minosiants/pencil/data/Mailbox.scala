@@ -19,7 +19,7 @@ package data
 
 import cats.Show
 
-final private[pencil] case class Mailbox(localPart: String, domain: String)
+final case class Mailbox(localPart: String, domain: String)
     extends Product
     with Serializable {
 

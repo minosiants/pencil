@@ -4,6 +4,8 @@ import java.nio.file.{ Path, Paths }
 import com.minosiants.pencil.data._
 import com.minosiants.pencil.protocol._
 import org.specs2.mutable.Specification
+import com.minosiants.pencil.protocol.ContentType
+import org.specs2.matcher.MatchResult
 
 class ContentTypeFinderSpec extends Specification {
 
@@ -11,7 +13,10 @@ class ContentTypeFinderSpec extends Specification {
     Paths.get(getClass.getClassLoader.getResource(filename).toURI)
   }
 
-  def find(filename: String, expected: ContentType) = {
+  def find(
+      filename: String,
+      expected: ContentType
+  ): MatchResult[Either[Throwable, ContentType]] = {
 
     Files
       .inputStream(path(filename))

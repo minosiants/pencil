@@ -17,14 +17,12 @@
 package com.minosiants.pencil
 
 import java.io.InputStream
-import java.net.URL
 import java.nio.file.{ Path, Paths, Files => JFiles }
 
 import cats.effect.{ IO, Resource }
 import com.minosiants.pencil.data.Error
 
 import Function._
-import scala.util
 
 object Files {
 

@@ -33,7 +33,7 @@ class LiteralsOps(val sc: StringContext) extends AnyVal {
   def from(args: Any*): From = macro LiteralSyntaxMacros.fromInterpolator
   def cc(args: Any*): Cc = macro LiteralSyntaxMacros.ccInterpolator
   def bcc(args: Any*): Bcc = macro LiteralSyntaxMacros.bccInterpolator
-  def subject(args: Any*): Subject = Subject(sc.s())
+  def subject(): Subject = Subject(sc.s())
 
   def attachment(args: Any*): Attachment =
     macro LiteralSyntaxMacros.attachmentInterpolator

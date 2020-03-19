@@ -1,5 +1,3 @@
-scalaVersion := "2.13.1"
-
 val catsVersion           = "2.1.0"
 val catsEffectVersion     = "2.1.2"
 val fs2Version            = "2.2.1"
@@ -16,10 +14,13 @@ lazy val root = (project in file("."))
   .settings(
     organization := "com.minosiatns",
     name := "pencil",
-    scalaVersion := "2.13.1",
-    crossScalaVersions := Seq("2.12.4", "2.13.1"),
+    scalaVersion := "2.12.11",
+    crossScalaVersions := Seq("2.12.11", "2.13.1"),
     scalacOptions ++= Seq(
-      "-language:experimental.macros"
+      "-language:experimental.macros",
+      "-Yrangepos",
+      "-Ywarn-unused",
+      "-Xlint"
     ),
     libraryDependencies ++= Seq(
       "org.typelevel"   %% "cats-core"                  % catsVersion,
@@ -36,7 +37,8 @@ lazy val root = (project in file("."))
       "org.scodec"      %% "scodec-stream"              % scodecStreamVersion % "test",
       "ch.qos.logback"  % "logback-classic"             % logbackVersion
     ),
-    addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3")
+    addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3"),
+      addCompilerPlugin(scalafixSemanticdb)
   )
   .settings(releaseProcessSettings)
   .settings(

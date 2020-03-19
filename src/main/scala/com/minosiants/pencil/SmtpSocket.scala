@@ -24,7 +24,7 @@ import fs2.Chunk
 import fs2.io.tcp.Socket
 import scodec.bits.BitVector
 import scodec.codecs._
-import scodec.{Attempt, DecodeResult}
+import scodec.{ Attempt, DecodeResult }
 
 import scala.concurrent.duration.FiniteDuration
 

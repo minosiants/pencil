@@ -29,7 +29,7 @@ object MailboxParser {
   type LocalPart = String
   type Domain    = String
 
-  val special =
+  val special: List[Char] =
     List('<', '>', '(', ')', '[', ']', '\\', ',', ';', ':', '@', '\"')
   val domainPattern: Regex = "^(?!-)[a-zA-Z1-9.-]+[^-]$" r
 
@@ -82,7 +82,7 @@ object MailboxParser {
     box.split("@").toList match {
       case Nil      => Left(Error.InvalidMailBox(s" '$box' does not have '@'"))
       case _ :: Nil => Left(Error.InvalidMailBox(s" '$box' does not have '@'"))
-      case lp :: d  => Right(lp, d.mkString)
+      case lp :: d  => Right((lp, d.mkString))
     }
 
   def parse(mailbox: String): Either[Error, Mailbox] = {

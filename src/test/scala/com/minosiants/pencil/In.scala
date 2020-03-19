@@ -16,7 +16,8 @@ object In {
       } yield DecodeResult(In(bits, command.value), BitVector.empty)
   )
 
-  val inListDecoder = new Decoder[List[In]]() {
+  val inListDecoder: inListDecoder = new inListDecoder
+  class inListDecoder extends Decoder[List[In]]() {
     val delimiter    = CRLF
     val endEmailBits = Command.endEmail.toBitVector
     override def decode(bits: BitVector): Attempt[DecodeResult[List[In]]] = {
