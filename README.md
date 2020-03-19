@@ -3,7 +3,14 @@
 ![build](https://github.com/minosiants/pencil/workflows/build/badge.svg)
 
 ### Overview 
-Pencil is a smtp-client. It is build on top of [cats](https://typelevel.org/cats/), [cats-effect](https://typelevel.org/cats-effect/), [fs2](https://fs2.io/), [scodec](http://scodec.org/)
+`Pencil` is a simple smtp client. The main goal it to be able to send emails in the simplest way.   
+It is build on top of [cats](https://typelevel.org/cats/), [cats-effect](https://typelevel.org/cats-effect/), [fs2](https://fs2.io/), [scodec](http://scodec.org/)
+
+`Pencil` supports: 
+* Text email (ascii)
+* Mime email 
+* TLS
+* Authorisation 
 
 ### Usage
 Add dependency to your `build.sbt`
@@ -11,7 +18,7 @@ Add dependency to your `build.sbt`
 ```scala
 resolvers += "Github packages minosiants" at "https://maven.pkg.github.com/minosiants/_"
 
-libraryDependencies += "com.minosiatns" %% "pencil" % "0.0.1"
+libraryDependencies += "com.minosiatns" %% "pencil" % "0.2.0"
 ```
 
 ### Examples how to use it
