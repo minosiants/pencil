@@ -16,17 +16,15 @@
 
 package com.minosiants.pencil
 
-import java.net.InetSocketAddress
-
 import cats.effect._
 import cats.syntax.show._
 import com.minosiants.pencil.protocol.Command._
 import com.minosiants.pencil.protocol._
 import fs2.Chunk
-import fs2.io.tcp.{ Socket, SocketGroup }
+import fs2.io.tcp.Socket
 import scodec.bits.BitVector
 import scodec.codecs._
-import scodec.{ Attempt, DecodeResult }
+import scodec.{Attempt, DecodeResult}
 
 import scala.concurrent.duration.FiniteDuration
 
@@ -38,13 +36,12 @@ trait SmtpSocket {
 
 object SmtpSocket {
 
-  def bytesToReply(bytes: Array[Byte]): IO[Replies] = {
+  def bytesToReply(bytes: Array[Byte]): IO[Replies] =
     Reply.repliesCodec.decode(BitVector(bytes)) match {
       case Attempt.Successful(DecodeResult(value, _)) => IO(value)
       case Attempt.Failure(cause) =>
         data.Error.smtpError(cause.messageWithContext)
     }
-  }
 
   def fromSocket(
       s: Socket[IO],
@@ -58,7 +55,7 @@ object SmtpSocket {
         case None        => data.Error.smtpError("Nothing to read")
       }
 
-    override def write(command: Command): IO[Unit] = {
+    override def write(command: Command): IO[Unit] =
       ascii.encode(command.show) match {
         case Attempt.Successful(value) =>
           s.write(Chunk.array(value.toByteArray), Some(writeTimeout))
@@ -66,27 +63,6 @@ object SmtpSocket {
           data.Error.smtpError(cause.messageWithContext)
       }
 
-    }
-  }
-// default timeout should be 5 min
-  def apply(
-      host: String,
-      port: Int,
-      readTimeout: FiniteDuration,
-      writeTimeout: FiniteDuration,
-      sg: SocketGroup
-  )(implicit cs: ContextShift[IO]): Resource[IO, SmtpSocket] = {
-    sg.client[IO](new InetSocketAddress(host, port))
-      .map(fromSocket(_, readTimeout, writeTimeout))
   }
 
-  def apply(
-      address: InetSocketAddress,
-      readTimeout: FiniteDuration,
-      writeTimeout: FiniteDuration,
-      sg: SocketGroup
-  )(implicit cs: ContextShift[IO]): Resource[IO, SmtpSocket] = {
-    sg.client[IO](address)
-      .map(fromSocket(_, readTimeout, writeTimeout))
-  }
 }
