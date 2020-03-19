@@ -46,7 +46,18 @@ object Main extends IOApp {
     Blocker[IO]
       .use { blocker =>
         SocketGroup[IO](blocker).use { sg =>
-          val client = Client("127.0.0.1")(sg)
+          TLSContext.system[IO](blocker).flatMap { tls =>
+          val client = Client(
+                          "localhost",
+                          25,
+                          Some(
+                            Credentials(
+                              Username("user1@example.com"),
+                              Password("12345678")
+                            )
+                          ),
+                          tls
+                        )(sg)
           client
             .send(email)
             .attempt
