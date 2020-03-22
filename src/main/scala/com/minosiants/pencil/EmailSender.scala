@@ -20,12 +20,18 @@ import com.minosiants.pencil.data.Email
 import com.minosiants.pencil.data.Email.{ MimeEmail, TextEmail }
 import com.minosiants.pencil.protocol.Replies
 
+/**
+  * Typeclass for sending email
+  */
 trait EmailSender[A <: Email] {
   def send(): Smtp[Replies]
 }
 
 object EmailSender {
 
+  /**
+    * Sends [[TextEmail]]
+    */
   implicit lazy val textEmailSender: EmailSender[TextEmail] =
     new EmailSender[TextEmail] {
       override def send(): Smtp[Replies] =
@@ -39,6 +45,10 @@ object EmailSender {
         } yield r
     }
 
+  /**
+    * Sends [[MimeEmail]]
+    *
+    */
   implicit lazy val mimeEmailSender: EmailSender[MimeEmail] =
     new EmailSender[MimeEmail] {
       override def send(): Smtp[Replies] =

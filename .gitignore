@@ -17,4 +17,5 @@ target
 tests.iml
 .bloop
 .metals
+.vscode
 project/metals.sbt

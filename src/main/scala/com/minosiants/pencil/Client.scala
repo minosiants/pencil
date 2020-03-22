@@ -26,7 +26,21 @@ import fs2.io.tcp.{ Socket, SocketGroup }
 import scala.concurrent.duration._
 import fs2.io.tls.TLSContext
 import cats.syntax.flatMap._
+import Function.const
+
+/**
+  * Smtp client
+  *
+  */
 trait Client {
+
+  /**
+    * Sends `email` to a smtp server
+    *
+    * @param email - email to be sent
+    * @param es - sender [[EmailSender]]
+    * @return - IO of [[Replies]] from smtp server
+    */
   def send[A <: Email](email: A)(implicit es: EmailSender[A]): IO[Replies]
 
 }
@@ -43,8 +57,6 @@ object Client {
 
     lazy val socket: Resource[IO, Socket[IO]] =
       sg.client[IO](new InetSocketAddress(host, port))
-
-    socket.map(SmtpSocket.fromSocket(_, readTimeout, writeTimeout))
 
     lazy val tlsSocket: Socket[IO] => Resource[IO, SmtpSocket] =
       (s: Socket[IO]) =>
@@ -70,18 +82,18 @@ object Client {
         }
       }
     }
-    def login(rep: Replies): Smtp[Unit] = {
-      if (supportLogin(rep))
-        credentials.fold(Smtp.pure(()))(Smtp.login)
-      else Smtp.pure(())
-    }
 
-    def supportTLS(rep: Replies): Boolean = {
+    def login(rep: Replies): Smtp[Unit] =
+      credentials
+        .filter(const(supportLogin(rep)))
+        .fold(Smtp.pure(()))(Smtp.login)
+
+    def supportTLS(rep: Replies): Boolean =
       rep.replies.exists(r => r.text.contains("STARTTLS"))
-    }
-    def supportLogin(rep: Replies): Boolean = {
+
+    def supportLogin(rep: Replies): Boolean =
       rep.replies.exists(_.text.contains("AUTH LOGIN"))
-    }
+
     def sendEmailViaTls[A <: Email](
         tls: SmtpSocket
     )(implicit es: EmailSender[A]): Smtp[Replies] =
