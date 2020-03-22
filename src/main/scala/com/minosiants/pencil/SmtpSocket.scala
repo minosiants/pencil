@@ -28,9 +28,19 @@ import scodec.{ Attempt, DecodeResult }
 
 import scala.concurrent.duration.FiniteDuration
 
+/**
+  * Wraps [[Socket[IO]]] with smtp specific protocol
+  */
 trait SmtpSocket {
 
+  /**
+    * Reads [[Replies]] from smtp server
+    */
   def read(): IO[Replies]
+
+  /**
+    * Semd [[Command]] to smtp server
+    */
   def write(command: Command): IO[Unit]
 }
 
