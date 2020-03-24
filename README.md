@@ -18,7 +18,7 @@ Add dependency to your `build.sbt`
 ```scala
 resolvers += "Github packages minosiants" at "https://maven.pkg.github.com/minosiants/_"
 
-libraryDependencies += "com.minosiatns" %% "pencil" % "0.2.0"
+libraryDependencies += "com.minosiatns" %% "pencil" % "0.2.1"
 ```
 
 ### Examples how to use it
@@ -54,20 +54,14 @@ object Main extends IOApp {
       .use { blocker =>
         SocketGroup[IO](blocker).use { sg =>
           TLSContext.system[IO](blocker).flatMap { tls =>
-          val client = Client(
-                          "localhost",
-                          25,
-                          Some(
-                            Credentials(
+          val credentials = Credentials(
                               Username("user1@example.com"),
                               Password("12345678")
                             )
-                          ),
-                          tls
-                        )(sg)
-          client
-            .send(email)
-            .attempt
+          val client = Client("localhost", 25, Some(credentials))(blocker, sg, tls)
+          val result = client.send(email)
+
+          result.attempt
             .map {
               case Right(value) =>
                 ExitCode.Success
