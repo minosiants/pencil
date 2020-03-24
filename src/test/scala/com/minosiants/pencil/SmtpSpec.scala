@@ -1,6 +1,6 @@
 package com.minosiants.pencil
 
-import cats.effect.IO
+import cats.effect.{ IO, Blocker }
 import cats.syntax.show._
 import com.minosiants.pencil.data.Body.{ Ascii, Html, Utf8 }
 import com.minosiants.pencil.data.Email._
@@ -291,19 +291,24 @@ class SmtpSpec extends SmtpBaseSpec {
   "send attachments" in {
     val email      = SmtpSpec.mime
     val attachment = email.attachments.head
-    val encodedFile = Files
-      .inputStream(attachment.file)
-      .use(is => IO(BitVector.fromInputStream(is).toBase64))
+    val encodedFile = Blocker[IO]
+      .use { blocker =>
+        fs2.io.file
+          .readAll[IO](attachment.file, blocker, 1024)
+          .through(fs2.text.base64Encode)
+          .compile
+          .toList
+      }
       .unsafeRunSync()
+
     val result = testCommand(Smtp.attachments(), email, codecs.ascii)
     result.map(_._2) must beRight(
       List(
         s"--${email.boundary.value} ${Command.end}",
         s"Content-Type: image/png; name=${attachment.file.getFileName.toString} ${Command.end}",
         s"Content-Transfer-Encoding: base64 ${Command.end}",
-        s"${Command.end}",
-        s"$encodedFile ${Command.end}"
-      )
+        s"${Command.end}"
+      ) ++ encodedFile.map(v => s"$v ${Command.end}")
     )
   }
 

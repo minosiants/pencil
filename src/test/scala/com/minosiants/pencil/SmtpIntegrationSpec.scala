@@ -18,9 +18,7 @@ class SmtpIntegrationSpec extends SpecificationLike with CatsIO {
         to"user1@example.com",
         subject"привет",
         Body.Utf8("hi there")
-      ) + attachment"/Users/kaspar/stuff/sources/pencil/src/test/resources/files/jpeg-sample.jpg" +
-        attachment"/Users/kaspar/Downloads/keyboard-shortcuts-macos(1).pdf" +
-        attachment"/Users/kaspar/Downloads/sbtb-slides.pdf"
+      ) + attachment"files/jpeg-sample.jpg"
 
       val result = Blocker[IO]
         .use { blocker =>
@@ -43,7 +41,7 @@ class SmtpIntegrationSpec extends SpecificationLike with CatsIO {
           IO(failure)
       }
 
-      //Pending("this is integration test")
+      Pending("this is integration test")
     }
   }
 }
