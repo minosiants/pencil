@@ -32,12 +32,14 @@ import Header._
 import ContentType._
 import com.minosiants.pencil.data.Body.{ Ascii, Html, Utf8 }
 import com.minosiants.pencil.protocol.Encoding.{ `7bit`, `base64` }
-import scodec.bits.BitVector
 import Email._
 import Command._
 import com.minosiants.pencil.protocol.Code._
+import cats.effect.Blocker
+import cats.effect.ContextShift
+import fs2.io.file.readAll
 
-final case class Request(email: Email, socket: SmtpSocket)
+final case class Request(email: Email, socket: SmtpSocket, blocker: Blocker)
 
 object Smtp {
 
@@ -128,7 +130,7 @@ object Smtp {
         for {
           _ <- boundary(true)
           _ <- text(Command.endEmail)
-          r <- read
+          r <- read()
         } yield r
     }
     p.run(req)
@@ -212,13 +214,12 @@ object Smtp {
     }
   }
 
-  def mimePart(body: String, mech: Encoding, ct: `Content-Type`): Smtp[Unit] =
+  def mimePart(mech: Encoding, ct: `Content-Type`): Smtp[Unit] =
     for {
       _ <- boundary()
       _ <- contentTypeHeader(ct)
       _ <- contentTransferEncoding(mech)
       _ <- text(Command.end)
-      _ <- text(s"$body ${Command.end}")
     } yield ()
 
   def multipart(): Smtp[Unit] = Smtp { req =>
@@ -235,30 +236,30 @@ object Smtp {
   def mimeBody(): Smtp[Unit] = Smtp { req =>
     req.email match {
       case MimeEmail(_, _, _, _, _, Some(Ascii(body)), _, _) =>
-        mimePart(
-          body,
+        (mimePart(
           `7bit`,
           `Content-Type`(`text/plain`, Map("charset" -> "US-ASCII"))
-        ).run(req)
+        ) >> text(s"$body ${Command.end}")).run(req)
 
       case MimeEmail(_, _, _, _, _, Some(Html(body)), _, _) =>
-        mimePart(
-          body.toBase64,
+        (mimePart(
           `base64`,
           `Content-Type`(`text/html`, Map("charset" -> "UTF-8"))
-        ).run(req)
+        ) >> text(s"${body.toBase64} ${Command.end}")).run(req)
 
       case MimeEmail(_, _, _, _, _, Some(Utf8(body)), _, _) =>
-        mimePart(
-          body.toBase64,
+        (mimePart(
           `base64`,
           `Content-Type`(`text/plain`, Map("charset" -> "UTF-8"))
-        ).run(req)
+        ) >> text(s"${body.toBase64} ${Command.end}")).run(req)
 
       case _ => Error.smtpError("not mime email")
     }
 
   }
+
+  import scala.concurrent.ExecutionContext.Implicits.global
+  implicit val ioContextShift: ContextShift[IO] = IO.contextShift(global)
 
   def attachments(): Smtp[Unit] = Smtp { req =>
     req.email match {
@@ -268,15 +269,22 @@ object Smtp {
         val result = attach.map { a =>
           val res = Files.inputStream(a.file)
           for {
-            encoded <- res.use(v => IO(BitVector.fromInputStream(v).toBase64))
-            ct      <- res.use(ContentTypeFinder.findType)
+            ct <- res.use(ContentTypeFinder.findType)
             _ <- mimePart(
-              encoded,
               `base64`,
               `Content-Type`(ct, Map("name" -> a.file.getFileName.toString))
             ).run(req)
+            _ <- readAll[IO](a.file, req.blocker, 1024)
+              .through(fs2.text.base64Encode)
+              .evalMap { part =>
+                text(s"$part ${Command.end}").run(req)
+              }
+              .compile
+              .drain
+
           } yield ()
         }
+
         result.sequence.as(())
     }
   }

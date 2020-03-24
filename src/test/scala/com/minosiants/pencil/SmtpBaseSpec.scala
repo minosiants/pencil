@@ -25,7 +25,7 @@ trait SmtpBaseSpec extends SpecificationLike with CatsIO {
 
   type ServerState = Ref[IO, List[BitVector]]
 
-  def withSocket[A](run: (SmtpSocket, ServerState) => IO[A]): IO[A] = {
+  def withSocket[A](run: (SmtpSocket, Blocker, ServerState) => IO[A]): IO[A] = {
     val localBindAddress =
       Deferred[IO, InetSocketAddress].unsafeRunSync()
 
@@ -36,7 +36,7 @@ trait SmtpBaseSpec extends SpecificationLike with CatsIO {
             state   <- Ref[IO].of(List.empty[BitVector])
             f       <- SmtpServer(sg, state).start(localBindAddress).start
             address <- localBindAddress.get
-            r       <- socket(address, sg).use(s => run(s, state))
+            r       <- socket(address, sg).use(s => run(s, blocker, state))
             _       <- f.cancel
           } yield r
         }
@@ -48,7 +48,7 @@ trait SmtpBaseSpec extends SpecificationLike with CatsIO {
       email: Email,
       codec: Codec[B]
   ): Either[Throwable, (A, List[B])] = {
-    withSocket { (s, state) =>
+    withSocket { (s, blocker, state) =>
       (for {
         _ <- Smtp.init()
         v <- command
@@ -64,7 +64,7 @@ trait SmtpBaseSpec extends SpecificationLike with CatsIO {
               }
           )
         )
-      } yield (v, r)).run(Request(email, s))
+      } yield (v, r)).run(Request(email, s, blocker))
     }.attempt.unsafeRunSync()
 
   }

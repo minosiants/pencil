@@ -27,6 +27,7 @@ import scala.concurrent.duration._
 import fs2.io.tls.TLSContext
 import cats.syntax.flatMap._
 import Function.const
+import cats.effect.Blocker
 
 /**
   * Smtp client
@@ -47,13 +48,14 @@ trait Client {
 
 object Client {
   def apply(
-      host: String,
+      host: String = "localhost",
       port: Int = 25,
       credentials: Option[Credentials] = None,
-      tlsContext: TLSContext,
       readTimeout: FiniteDuration = 5.minutes,
       writeTimeout: FiniteDuration = 5.minutes
-  )(sg: SocketGroup)(implicit cs: ContextShift[IO]): Client = new Client {
+  )(blocker: Blocker, sg: SocketGroup, tlsContext: TLSContext)(
+      implicit cs: ContextShift[IO]
+  ): Client = new Client {
 
     lazy val socket: Resource[IO, Socket[IO]] =
       sg.client[IO](new InetSocketAddress(host, port))
@@ -76,7 +78,11 @@ object Client {
             r <- if (supportTLS(rep)) sendEmailViaTls(tls)
             else login(rep) >> es.send()
           } yield r).run(
-            Request(email, SmtpSocket.fromSocket(s, readTimeout, writeTimeout))
+            Request(
+              email,
+              SmtpSocket.fromSocket(s, readTimeout, writeTimeout),
+              blocker
+            )
           )
 
         }
@@ -99,7 +105,7 @@ object Client {
     )(implicit es: EmailSender[A]): Smtp[Replies] =
       for {
         _ <- Smtp.startTls()
-        r <- Smtp.local(req => Request(req.email, tls))(for {
+        r <- Smtp.local(req => Request(req.email, tls, req.blocker))(for {
           rep <- Smtp.ehlo()
           _   <- login(rep)
           r   <- es.send()
