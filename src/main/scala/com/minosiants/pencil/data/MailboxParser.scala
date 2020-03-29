@@ -31,12 +31,12 @@ object MailboxParser {
 
   val special: List[Char] =
     List('<', '>', '(', ')', '[', ']', '\\', ',', ';', ':', '@', '\"')
-  val domainPattern: Regex = "^(?!-)[a-zA-Z1-9.-]+[^-]$" r
+  val domainPattern: Regex = "^(?!-)[a-zA-Z0-9.-]+[^-]$" r
 
-  private def verifyLocalPart(localPart: String): Either[Error, String] = {
+  def verifyLocalPart(localPart: String): Either[Error, String] = {
 
     def notValid(ch: Char): Boolean = {
-      ch < 0 || ch > 127 || special.contains(ch)
+      ch < 33 || ch > 127 || special.contains(ch)
     }
 
     localPart.toList
@@ -65,14 +65,18 @@ object MailboxParser {
       .map(_.mkString)
   }
 
-  private def verifyDomain(domain: String): Either[Error, String] =
+  def verifyDomain(domain: String): Either[Error, String] = {
+
     Either.fromOption(
       domainPattern.findFirstMatchIn(domain).map(const(domain)),
       Error.InvalidMailBox(s"invalid domain '$domain'")
     )
+  }
 
   private def verifyLength(box: String): Either[Error, String] = {
-    if (box.length > 255)
+    if (box.isBlank())
+      Left(Error.InvalidMailBox(s"mailbox has empty value '$box''"))
+    else if (box.length > 255)
       Left(Error.InvalidMailBox(s"mailbox is too long '$box''"))
     else
       Right(box)
@@ -82,7 +86,11 @@ object MailboxParser {
     box.split("@").toList match {
       case Nil      => Left(Error.InvalidMailBox(s" '$box' does not have '@'"))
       case _ :: Nil => Left(Error.InvalidMailBox(s" '$box' does not have '@'"))
-      case lp :: d  => Right((lp, d.mkString))
+      case lp :: _ if lp.isBlank =>
+        Left(Error.InvalidMailBox(s" '$box' does not have local part"))
+      case _ :: d if d.mkString.isBlank =>
+        Left(Error.InvalidMailBox(s" '$box' does not have domain"))
+      case lp :: d => Right((lp, d.mkString))
     }
 
   def parse(mailbox: String): Either[Error, Mailbox] = {

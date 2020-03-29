@@ -1,50 +1,61 @@
-package com.minosiants.pencil.data
+package com.minosiants.pencil
+package data
 
-import com.minosiants.pencil.data.Error.InvalidMailBox
-import org.specs2.execute.Result
 import org.specs2.mutable.Specification
-
-class MailboxParserSpec extends Specification {
+import org.scalacheck._
+import org.specs2.ScalaCheck
+class MailboxParserSpec extends Specification with ScalaCheck {
+  import MailboxParserSpec._
 
   "MailboxParser" should {
 
-    "parse correctly" in {
-
-      val emails = List(
-        "name.ru@somedomain.com",
-        ".dha134@dom.nab.com",
-        "dha134@dom.nab22.com",
-        "sdfe33d@saf-sf.com"
-      )
-
-      Result.foreach(emails) { e =>
-        val result       = MailboxParser.parse(e)
-        val Array(lp, d) = e.split("@")
-        result must beRight(Mailbox(lp, d))
-      }
+    "parse" in Prop.forAll(localPartGen, domainGen) { (lp, domain) =>
+      val result = MailboxParser.parse(s"$lp@$domain")
+      result == Right(Mailbox(lp, domain))
     }
 
-    "parse with error" in {
+    "parse with invalid localPart" in Prop.forAll(
+      invalidLocalPartGen,
+      domainGen
+    ) { (lp, domain) =>
+      val result = MailboxParser.parse(s"$lp@$domain")
+      result.isLeft
+    }
 
-      val emails = List(
-        "name..ru@somedomain.com",
-        "dha134@-dom.nab22.com",
-        "sdfe33d@saf-sf.com-",
-        "sdfe33d@-saf-sf-.com",
-        "sd>fe33d@-saf-sf-.com",
-        "sdfe33d@",
-        "sdfe33d"
-      )
-
-      Result.foreach(emails) { e =>
-        val result = MailboxParser.parse(e)
-        result match {
-          case Left(InvalidMailBox(_)) =>
-            success
-          case _ =>
-            failure(s"$e has not been parsed correctly ")
-        }
-      }
+    "parse with invalid domain" in Prop.forAll(
+      localPartGen,
+      invalidDomainGen
+    ) { (lp, domain) =>
+      val result = MailboxParser.parse(s"$lp@$domain")
+      result.isLeft
     }
   }
+}
+
+object MailboxParserSpec extends Gens {
+  val localPartWithDots = Gen
+    .nonEmptyListOf(
+      Gen.frequency((1, localPartGen.map(_.take(10))), (3, Gen.const("..")))
+    )
+    .map(_.mkString)
+    .retryUntil(_.contains(".."))
+
+  val localPartWithSpecialCharsGen = Gen
+    .nonEmptyListOf(Gen.asciiChar.retryUntil(MailboxParser.special.contains))
+    .filter(_.length > 1)
+    .map(_.mkString)
+
+  val localPartWithControlCharsGen = Gen.choose(0.toChar, 31.toChar)
+
+  val invalidLocalPartGen = Gen.oneOf(
+    localPartWithDots,
+    localPartWithSpecialCharsGen,
+    localPartWithControlCharsGen
+  )
+
+  val invalidDomainGen = Gen.oneOf(
+    domainGen.map(v => "-" + v),
+    domainGen.map(v => v + "-"),
+    domainGen.map(v => "-" + v + "-")
+  )
 }

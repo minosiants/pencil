@@ -3,7 +3,7 @@ val catsEffectVersion     = "2.1.2"
 val fs2Version            = "2.2.1"
 val scodecCoreVersion     = "1.11.6"
 val scodecCatsVersion     = "1.0.0"
-val specs2Version         = "4.8.3"
+val specs2Version         = "4.9.2"
 val logbackVersion        = "1.2.3"
 val tikaVersion           = "1.23"
 val scalacheckVersion     = "1.14.1"
@@ -32,13 +32,14 @@ lazy val root = (project in file("."))
       "org.apache.tika" % "tika-core"                   % tikaVersion,
       "org.scala-lang"  % "scala-reflect"               % scalaVersion.value,
       "org.specs2"      %% "specs2-core"                % specs2Version % "test",
+      "org.specs2"      %% "specs2-scalacheck"          % specs2Version % Test,
       "org.scalacheck"  %% "scalacheck"                 % scalacheckVersion % "test",
       "com.codecommit"  %% "cats-effect-testing-specs2" % catsEffectTestVersion % "test",
       "org.scodec"      %% "scodec-stream"              % scodecStreamVersion % "test",
       "ch.qos.logback"  % "logback-classic"             % logbackVersion
     ),
     addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3"),
-      addCompilerPlugin(scalafixSemanticdb)
+    addCompilerPlugin(scalafixSemanticdb)
   )
   .settings(releaseProcessSettings)
   .settings(

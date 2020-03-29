@@ -20,6 +20,7 @@ package data
 import cats.Show
 import cats.syntax.show._
 import cats.data.NonEmptyList
+import cats.kernel.Semigroup
 
 final case class Bcc(boxes: NonEmptyList[Mailbox])
     extends Product
@@ -34,4 +35,7 @@ object Bcc {
   implicit lazy val bccShow: Show[Bcc] = Show.show(
     bcc => bcc.boxes.map(_.show).toList.mkString(",")
   )
+
+  implicit lazy val bccSemigroup: Semigroup[Bcc] =
+    Semigroup.instance((a, b) => a + b)
 }
