@@ -22,6 +22,7 @@ lazy val root = (project in file("."))
       "-Ywarn-unused",
       "-Xlint"
     ),
+    javacOptions ++= Seq("-source", "1.11", "-target", "1.8"),
     libraryDependencies ++= Seq(
       "org.typelevel"   %% "cats-core"                  % catsVersion,
       "org.typelevel"   %% "cats-effect"                % catsEffectVersion,
@@ -42,9 +43,9 @@ lazy val root = (project in file("."))
     addCompilerPlugin(scalafixSemanticdb)
   )
   .settings(releaseProcessSettings)
-  .settings(
+  /*  .settings(
     githubPackagesSettings
-  )
+  )*/
   .settings(licenceSettings)
 
 import ReleaseTransformations._
@@ -66,10 +67,10 @@ lazy val releaseProcessSettings = Seq(
   )
 )
 
-lazy val githubPackagesSettings = Seq(
+/*lazy val githubPackagesSettings = Seq(
   githubOwner := "minosiants",
   githubRepository := "pencil"
-)
+)*/
 
 lazy val licenceSettings = Seq(
   organizationName := "Kaspar Minosiants",
