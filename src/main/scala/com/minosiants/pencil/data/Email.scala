@@ -19,6 +19,8 @@ package data
 
 import Body._
 import cats.data.NonEmptyList
+import cats.syntax.semigroup._
+import cats.instances.option._
 
 /**
   * Abstract class represents email
@@ -112,10 +114,7 @@ trait TextEmailOps {
   /**
     * Add [[Mailbox]] to `cc` .
     */
-  def addCc(mb: Mailbox*): TextEmail = this.cc match {
-    case Some(value) => copy(cc = Some(value + Cc(mb: _*)))
-    case None        => copy(cc = Some(Cc(mb: _*)))
-  }
+  def addCc(mb: Mailbox*): TextEmail = copy(cc = cc |+| Some(Cc(mb: _*)))
 
   /**
     * Combine values from both `cc`.
@@ -135,10 +134,7 @@ trait TextEmailOps {
   /**
     * Add [[Mailbox]] to `bcc`.
     */
-  def addBcc(mb: Mailbox*): TextEmail = this.bcc match {
-    case Some(value) => copy(bcc = Some(value + Bcc(mb: _*)))
-    case None        => copy(bcc = Some(Bcc(mb: _*)))
-  }
+  def addBcc(mb: Mailbox*): TextEmail = copy(bcc = bcc |+| Some(Bcc(mb: _*)))
 
   /**
     * Combine to `bcc`.
@@ -209,10 +205,7 @@ trait MimeEmailOps {
   /**
     * Add [[Mailbox]] to `cc`.
     */
-  def addCc(mb: Mailbox*): MimeEmail = this.cc match {
-    case Some(value) => copy(cc = Some(value + Cc(mb: _*)))
-    case None        => copy(cc = Some(Cc(mb: _*)))
-  }
+  def addCc(mb: Mailbox*): MimeEmail = copy(cc = cc |+| Some(Cc(mb: _*)))
 
   /**
     * Combine `cc` values.
@@ -232,10 +225,7 @@ trait MimeEmailOps {
   /**
     * Add [[Mailbox]] to `bcc` value.
     */
-  def addBcc(mb: Mailbox*): MimeEmail = this.bcc match {
-    case Some(value) => copy(bcc = Some(value + Bcc(mb: _*)))
-    case None        => copy(bcc = Some(Bcc(mb: _*)))
-  }
+  def addBcc(mb: Mailbox*): MimeEmail = copy(bcc = bcc |+| Some(Bcc(mb: _*)))
 
   /**
     * Combine `bcc` values
@@ -271,7 +261,7 @@ trait MimeEmailOps {
   /**
     * Add [[Mailbox]] to `to`.
     */
-  def addTo(to: Mailbox*): MimeEmail = copy(to = To(this.to.boxes ++ to.toList))
+  def addTo(to: Mailbox*): MimeEmail = copy(to = this.to |+| To(to: _*))
 
   /**
     * Combine `to` values.

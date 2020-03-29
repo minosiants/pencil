@@ -19,6 +19,7 @@ package data
 
 import cats.Show
 import cats.data.NonEmptyList
+import cats.kernel.Semigroup
 
 final case class To(boxes: NonEmptyList[Mailbox])
     extends Product
@@ -32,4 +33,7 @@ object To {
     to => to.boxes.map(v => Mailbox.mailboxShow.show(v)).toList.mkString(",")
   )
   def apply(to: Mailbox*): To = To(NonEmptyList.fromListUnsafe(to.toList))
+
+  implicit lazy val toSemigroup: Semigroup[To] =
+    Semigroup.instance((a, b) => a + b)
 }

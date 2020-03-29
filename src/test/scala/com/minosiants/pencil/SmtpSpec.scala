@@ -9,7 +9,6 @@ import com.minosiants.pencil.protocol.ContentType.`application/pdf`
 import com.minosiants.pencil.protocol.Encoding.`base64`
 import com.minosiants.pencil.protocol.Header.`Content-Type`
 import com.minosiants.pencil.protocol._
-import scodec.bits.BitVector
 import scodec.codecs
 
 class SmtpSpec extends SmtpBaseSpec {
