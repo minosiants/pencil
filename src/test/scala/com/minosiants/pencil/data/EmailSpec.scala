@@ -1,7 +1,6 @@
 package com.minosiants.pencil
 package data
 
-import com.minosiants.pencil.data.Email.TextEmail
 import org.specs2.mutable.Specification
 
 import org.specs2.ScalaCheck
