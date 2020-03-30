@@ -1,12 +1,8 @@
-package com.minosiants.pencil
+package com.minosiants.pencil.data
 
-import java.nio.file.Paths
+import java.nio.file.{Path, Paths}
 
-import org.scalacheck._
-import data._
-import Email._
-import com.minosiants.pencil.data.Email
-import java.nio.file.Path
+import com.minosiants.pencil.data.Email.{MimeEmail, TextEmail}
 import org.scalacheck.Gen
 
 trait EmailGens {
