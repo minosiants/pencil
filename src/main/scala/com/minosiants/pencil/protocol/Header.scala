@@ -49,12 +49,3 @@ object Header {
 
   }
 }
-//Character set
-//Message
-//Entity
-//Body part
-//Body
-//7bit Data
-//8bit Data
-//Binary Data
-//Lines

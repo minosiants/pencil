@@ -19,11 +19,12 @@ package protocol
 
 import com.minosiants.pencil.data.{ Error, Mailbox }
 import Command._
-import scodec.bits.BitVector
+import scodec.bits.{ BitVector, ByteVector }
 import scodec.codecs._
 import scodec.{ Attempt, Codec, DecodeResult, Err, SizeBound }
 
 final case class CommandCodec() extends Codec[Command] {
+
   override def decode(bits: BitVector): Attempt[DecodeResult[Command]] = {
     limitedSizeBits(4 * 8, ascii).decode(bits).flatMap {
       case DecodeResult(cmd, rest) =>
@@ -34,17 +35,28 @@ final case class CommandCodec() extends Codec[Command] {
                 DecodeResult(Ehlo(domain.trim), BitVector.empty)
             }
           case "MAIL" =>
-            mailboxCodec.decode(rest).map {
+            MailboxCodec.codec.decode(rest).map {
               case DecodeResult(email, _) =>
                 DecodeResult(Mail(email), BitVector.empty)
             }
           case "RCPT" =>
-            mailboxCodec.decode(rest.drop(4 * 8)).map {
+            MailboxCodec.codec.decode(rest.drop(4 * 8)).map {
               case DecodeResult(email, _) =>
                 DecodeResult(Rcpt(email), BitVector.empty)
             }
           case "DATA" => Attempt.successful(DecodeResult(Data, BitVector.empty))
           case "QUIT" => Attempt.successful(DecodeResult(Quit, BitVector.empty))
+          case "RSET" => Attempt.successful(DecodeResult(Rset, BitVector.empty))
+          case "NOOP" => Attempt.successful(DecodeResult(Noop, BitVector.empty))
+          case "VRFY" =>
+            ascii.decode(stripEND(rest)).map {
+              case DecodeResult(txt, _) =>
+                DecodeResult(Vrfy(txt.trim), BitVector.empty)
+            }
+          case "AUTH" =>
+            Attempt.successful(DecodeResult(AuthLogin, BitVector.empty))
+          case "STAR" =>
+            Attempt.successful(DecodeResult(StartTls, BitVector.empty))
           case _ =>
             ascii.decode(bits).map {
               case DecodeResult(txt, _) =>
@@ -65,33 +77,40 @@ final case class CommandCodec() extends Codec[Command] {
     bits.take(bits.size - END.size)
   }
 
-  private val `<` = byte.encode('<').getOrElse(BitVector.empty)
-  private val `>` = byte.encode('>').getOrElse(BitVector.empty)
+}
 
-  private def extractEmail(bits: BitVector): BitVector = {
+final case class MailboxCodec() extends Codec[Mailbox] {
+  private val `<` = ByteVector("<".getBytes)
+  private val `>` = ByteVector(">".getBytes)
 
-    val from = bits.indexOfSlice(`<`)
+  private def extractEmail(bits: BitVector): Attempt[BitVector] = {
+    val bytes = bits.toByteVector
+    val from  = bytes.indexOfSlice(`<`)
+    val to    = bytes.indexOfSlice(`>`)
+    if (from < 0 || to < 0)
+      Attempt.failure(Err("email does not included into '<' '>'"))
+    else
+      Attempt.successful(bytes.slice(from + `<`.size, to).bits)
 
-    val (_, tail)  = bits.splitAt(from)
-    val _tail      = tail.drop(`<`.size)
-    val to         = _tail.indexOfSlice(`>`)
-    val (email, _) = _tail.splitAt(to)
-    email
   }
 
-  lazy val mailboxCodec: Codec[Mailbox] =
-    Codec[Mailbox](
-      (mb: Mailbox) =>
-        Attempt.successful(Mailbox.mailboxShow.show(mb).toBitVector),
-      bits =>
-        ascii.decode(extractEmail(bits)).flatMap {
-          case DecodeResult(box, remainder) =>
-            Mailbox.fromString(box) match {
-              case Right(mb) =>
-                Attempt.successful(DecodeResult(mb, remainder))
-              case Left(error) =>
-                Attempt.failure(Err(Error.errorShow.show(error)))
-            }
+  override def decode(bits: BitVector): Attempt[DecodeResult[Mailbox]] =
+    extractEmail(bits).flatMap(ascii.decode(_).flatMap {
+      case DecodeResult(box, remainder) =>
+        Mailbox.fromString(box) match {
+          case Right(mb) =>
+            Attempt.successful(DecodeResult(mb, remainder))
+          case Left(error) =>
+            Attempt.failure(Err(Error.errorShow.show(error)))
         }
-    )
+    })
+
+  override def encode(mb: Mailbox): Attempt[BitVector] =
+    Attempt.successful(Mailbox.mailboxShow.show(mb).toBitVector)
+
+  override def sizeBound: SizeBound = SizeBound.unknown
+}
+
+object MailboxCodec {
+  val codec = MailboxCodec()
 }

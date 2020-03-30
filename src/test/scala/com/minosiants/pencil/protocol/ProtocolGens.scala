@@ -1,3 +1,36 @@
-package com.minosiants.pencil.protocol class ProtocolGens {
+package com.minosiants.pencil
+package protocol
+import Command._
+import data.EmailGens
+import org.scalacheck.Gen
 
+trait ProtocolGens extends EmailGens {
+
+  val codeGen: Gen[Code] = Gen.oneOf(Code.codes)
+
+  val replyGen: Gen[Reply] = for {
+    code <- codeGen
+    sep  <- Gen.oneOf(List("-", " "))
+    text <- Gen.asciiPrintableStr
+  } yield Reply(code, sep, text)
+
+  val commandGen: Gen[Command] = for {
+    box    <- mailboxGen
+    domain <- Gen.asciiPrintableStr
+    command <- Gen.oneOf(
+      List[Command](
+        Ehlo(domain),
+        Mail(box),
+        Rcpt(box),
+        Vrfy(domain),
+        Data,
+        Rset,
+        Noop,
+        Quit,
+        Text(domain),
+        AuthLogin,
+        StartTls
+      )
+    )
+  } yield command
 }
