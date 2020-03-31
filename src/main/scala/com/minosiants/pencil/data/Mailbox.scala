@@ -18,6 +18,7 @@ package com.minosiants.pencil
 package data
 
 import cats.Show
+import scodec.Codec
 
 final case class Mailbox(localPart: String, domain: String)
     extends Product
@@ -35,5 +36,7 @@ object Mailbox {
 
   implicit val mailboxShow: Show[Mailbox] =
     Show.show[Mailbox](mb => s"<${mb.address}>")
+
+  implicit lazy val codec: Codec[Mailbox] = MailboxCodec()
 
 }

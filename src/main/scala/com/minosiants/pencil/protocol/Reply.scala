@@ -47,7 +47,7 @@ object Replies {
 
   implicit val codec: Codec[Replies] = (
     ("replies" | DelimiterListCodec(CRLF, Reply.codec))
-    ).as[Replies]
+  ).as[Replies]
 
 }
 

@@ -19,7 +19,7 @@ package com.minosiants
 import cats.data.Kleisli
 import cats.effect.IO
 import com.minosiants.pencil.syntax.LiteralsSyntax
-import scodec.bits.{BitVector, ByteVector}
+import scodec.bits.{ BitVector, ByteVector }
 import scodec.codecs._
 
 package object pencil extends LiteralsSyntax {
@@ -34,7 +34,7 @@ package object pencil extends LiteralsSyntax {
     }
     def toBitVector: BitVector = BitVector(str.getBytes)
 
-    def toByteVector:ByteVector = ByteVector(str.getBytes)
+    def toByteVector: ByteVector = ByteVector(str.getBytes)
   }
 
 }

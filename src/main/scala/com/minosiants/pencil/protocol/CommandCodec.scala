@@ -17,11 +17,11 @@
 package com.minosiants.pencil
 package protocol
 
-import com.minosiants.pencil.data.{ Error, Mailbox }
-import Command._
+import com.minosiants.pencil.data.Mailbox
+import com.minosiants.pencil.protocol.Command._
 import scodec.bits.{ BitVector, ByteVector }
 import scodec.codecs._
-import scodec.{ Attempt, Codec, DecodeResult, Err, SizeBound }
+import scodec.{ Attempt, Codec, DecodeResult, SizeBound }
 
 final case class CommandCodec() extends Codec[Command] {
 
@@ -35,12 +35,12 @@ final case class CommandCodec() extends Codec[Command] {
                 DecodeResult(Ehlo(domain), BitVector.empty)
             }
           case "MAIL" =>
-            MailboxCodec.codec.decode(rest).map {
+            Mailbox.codec.decode(rest).map {
               case DecodeResult(email, _) =>
                 DecodeResult(Mail(email), BitVector.empty)
             }
           case "RCPT" =>
-            MailboxCodec.codec.decode(rest.drop(4 * 8)).map {
+            Mailbox.codec.decode(rest.drop(4 * 8)).map {
               case DecodeResult(email, _) =>
                 DecodeResult(Rcpt(email), BitVector.empty)
             }
@@ -72,45 +72,9 @@ final case class CommandCodec() extends Codec[Command] {
 
   override def sizeBound: SizeBound = SizeBound.unknown
 
-  private val END = Command.end.toBitVector
+  private val END   = Command.end.toBitVector
   private val SPACE = ByteVector(" ".getBytes).toBitVector
   private def extractText(bits: BitVector) =
-    bits.drop(SPACE.size).dropRight(SPACE.size+END.size)
+    bits.drop(SPACE.size).dropRight(SPACE.size + END.size)
 
-}
-
-final case class MailboxCodec() extends Codec[Mailbox] {
-  private val `<` = ByteVector("<".getBytes)
-  private val `>` = ByteVector(">".getBytes)
-
-  private def extractEmail(bits: BitVector): Attempt[BitVector] = {
-    val bytes = bits.toByteVector
-    val from  = bytes.indexOfSlice(`<`)
-    val to    = bytes.indexOfSlice(`>`)
-    if (from < 0 || to < 0)
-      Attempt.failure(Err("email does not included into '<' '>'"))
-    else
-      Attempt.successful(bytes.slice(from + `<`.size, to).bits)
-
-  }
-
-  override def decode(bits: BitVector): Attempt[DecodeResult[Mailbox]] =
-    extractEmail(bits).flatMap(ascii.decode(_).flatMap {
-      case DecodeResult(box, remainder) =>
-        Mailbox.fromString(box) match {
-          case Right(mb) =>
-            Attempt.successful(DecodeResult(mb, remainder))
-          case Left(error) =>
-            Attempt.failure(Err(Error.errorShow.show(error)))
-        }
-    })
-
-  override def encode(mb: Mailbox): Attempt[BitVector] =
-    Attempt.successful(Mailbox.mailboxShow.show(mb).toBitVector)
-
-  override def sizeBound: SizeBound = SizeBound.unknown
-}
-
-object MailboxCodec {
-  val codec = MailboxCodec()
 }

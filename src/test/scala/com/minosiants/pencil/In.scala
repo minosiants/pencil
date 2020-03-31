@@ -1,8 +1,8 @@
 package com.minosiants.pencil
 
 import com.minosiants.pencil.protocol.Command
-import scodec.{Attempt, Codec, DecodeResult, Decoder}
-import scodec.bits.{BitVector, ByteVector}
+import scodec.{ Attempt, Codec, DecodeResult, Decoder }
+import scodec.bits.{ BitVector, ByteVector }
 
 final case class In(raw: BitVector, command: Command)
 
