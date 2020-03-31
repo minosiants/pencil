@@ -18,12 +18,9 @@ package com.minosiants.pencil
 package protocol
 
 import cats.Show
-import scodec.Attempt.Successful
-import scodec.bits._
 import scodec.codecs._
-import scodec.{ Attempt, Codec, DecodeResult, Err }
+import scodec.Codec
 
-import scala.util.Try
 
 final case class Reply(code: Code, sep: String, text: String)
     extends Product
@@ -55,22 +52,6 @@ object Reply {
 
   implicit lazy val ReplyShow: Show[Reply] = Show.fromToString
 
-  implicit val codeCodec: Codec[Code] = Codec[Code](
-    (value: Code) => ascii.encode(value.value.toString),
-    (bits: BitVector) => {
-      limitedSizeBits(3 * 8, ascii).decode(bits) match {
-        case Successful(DecodeResult(code, rest)) =>
-          Attempt.fromOption(
-            Try(code.toInt).toOption
-              .flatMap(Code.code)
-              .map(c => DecodeResult(c, rest)),
-            Err(s"${code} code does not exist")
-          )
-        case Attempt.Failure(cause) => Attempt.failure(cause)
-      }
-    }
-  )
-
   val textCodec: Codec[String] = Codec[String](
     { (s: String) =>
       ascii.encode(s + "\r\n")
@@ -85,7 +66,7 @@ object Reply {
   )
 
   implicit val codec: Codec[Reply] = (
-    ("code" | codeCodec) ::
+    ("code" | Code.codec) ::
       ("sep" | limitedSizeBits(8, ascii)) ::
       ("text" | textCodec)
   ).as[Reply]

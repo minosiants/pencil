@@ -20,7 +20,6 @@ import cats.data.Kleisli
 import cats.effect.IO
 import com.minosiants.pencil.syntax.LiteralsSyntax
 import scodec.bits.{ BitVector, ByteVector }
-import scodec.codecs._
 
 package object pencil extends LiteralsSyntax {
 
