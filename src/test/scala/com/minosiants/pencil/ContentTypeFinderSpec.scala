@@ -1,63 +1,27 @@
 package com.minosiants.pencil
-import java.nio.file.{ Path, Paths }
+import java.nio.file.{Path, Paths}
 
+import cats.effect.IO
 import com.minosiants.pencil.data._
-import com.minosiants.pencil.protocol._
-import org.specs2.mutable.Specification
 import com.minosiants.pencil.protocol.ContentType
-import org.specs2.matcher.MatchResult
+import com.minosiants.pencil.protocol.ContentType._
+import org.scalacheck.Prop.forAll
+import org.scalacheck._
+import org.specs2.ScalaCheck
+import org.specs2.mutable.Specification
 
-class ContentTypeFinderSpec extends Specification {
+class ContentTypeFinderSpec extends Specification with ScalaCheck {
+  import ContentTypeFinderSpec._
 
-  def path(filename: String): Path = {
-    Paths.get(getClass.getClassLoader.getResource(filename).toURI)
-  }
-
-  def find(
-      filename: String,
-      expected: ContentType
-  ): MatchResult[Either[Throwable, ContentType]] = {
-
-    Files
-      .inputStream(path(filename))
-      .use { is =>
-        ContentTypeFinder
-          .findType(is)
-      }
-      .attempt
-      .unsafeRunSync() must beRight(expected)
-
-  }
   "ContentTypeFinder" should {
 
-    "find ascii content type" in {
-      find("files/ascii-sample.txt", ContentType.`text/plain`)
-    }
-
-    "find html content type" in {
-      find("files/html-sample.html", ContentType.`text/html`)
-    }
-
-    "find png content type" in {
-      find("files/image-sample.png", ContentType.`image/png`)
-    }
-
-    "find gif content type" in {
-      find("files/gif-sample.gif", ContentType.`image/gif`)
-    }
-
-    "find jpg content type" in {
-      find("files/jpeg-sample.jpg", ContentType.`image/jpeg`)
-    }
-
-    "find pdf content type" in {
-      find("files/rfc2045.pdf", ContentType.`application/pdf`)
+    "find content type" in forAll(pathGen) {
+      case (p, t) =>
+        findContentType(p).attempt.unsafeRunSync() ==== Right(t)
     }
 
     "not find file" in {
-
       val f = Paths.get("files/!!!jpeg-sample.jpg")
-
       Files
         .inputStream(f)
         .use { is =>
@@ -69,4 +33,33 @@ class ContentTypeFinderSpec extends Specification {
     }
   }
 
+}
+
+object ContentTypeFinderSpec {
+  def path(filename: String): Path = {
+    Paths.get(getClass.getClassLoader.getResource(filename).toURI)
+  }
+
+  def findContentType(
+      path: Path
+  ): IO[ContentType] = {
+    Files
+      .inputStream(path)
+      .use { is =>
+        ContentTypeFinder
+          .findType(is)
+      }
+
+  }
+
+  val files = List(
+    ("files/ascii-sample.txt", `text/plain`),
+    ("files/html-sample.html", `text/html`),
+    ("files/image-sample.png", `image/png`),
+    ("files/gif-sample.gif", `image/gif`),
+    ("files/jpeg-sample.jpg", `image/jpeg`),
+    ("files/rfc2045.pdf", `application/pdf`)
+  ).map { case (f, t) => (path(f), t) }
+
+  val pathGen: Gen[(Path, ContentType)] = Gen.oneOf(files)
 }

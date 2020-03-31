@@ -43,9 +43,9 @@ lazy val root = (project in file("."))
     addCompilerPlugin(scalafixSemanticdb)
   )
   .settings(releaseProcessSettings)
-  /*  .settings(
+  .settings(
     githubPackagesSettings
-  )*/
+  )
   .settings(licenceSettings)
 
 import ReleaseTransformations._
@@ -67,10 +67,10 @@ lazy val releaseProcessSettings = Seq(
   )
 )
 
-/*lazy val githubPackagesSettings = Seq(
+lazy val githubPackagesSettings = Seq(
   githubOwner := "minosiants",
   githubRepository := "pencil"
-)*/
+)
 
 lazy val licenceSettings = Seq(
   organizationName := "Kaspar Minosiants",
