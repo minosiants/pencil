@@ -102,7 +102,7 @@ final case class MessageSocket(socket: Socket[IO])
 
   def writes(stream: Stream[IO, Replies]): Stream[IO, Unit] =
     stream
-      .through(StreamEncoder.many(Reply.repliesCodec).toPipeByte)
+      .through(StreamEncoder.many(Replies.codec).toPipeByte)
       .through(socket.writes())
 
   final val decoder: StreamDecoder[List[In]] =

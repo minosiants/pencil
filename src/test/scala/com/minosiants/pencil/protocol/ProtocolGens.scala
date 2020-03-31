@@ -14,6 +14,8 @@ trait ProtocolGens extends EmailGens {
     text <- Gen.asciiPrintableStr
   } yield Reply(code, sep, text)
 
+  val repliesGen: Gen[Replies] = Gen.nonEmptyListOf(replyGen).map(Replies(_))
+
   val commandGen: Gen[Command] = for {
     box    <- mailboxGen
     domain <- Gen.asciiPrintableStr
