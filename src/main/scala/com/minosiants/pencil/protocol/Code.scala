@@ -17,6 +17,13 @@
 package com.minosiants
 package pencil.protocol
 
+import scodec.Attempt.Successful
+import scodec.bits.BitVector
+import scodec.codecs.{ascii, limitedSizeBits}
+import scodec.{Attempt, Codec, DecodeResult, Err}
+
+import scala.util.Try
+
 final case class Code(value: Int, description: String)
     extends Product
     with Serializable {
@@ -91,4 +98,19 @@ object Code {
     `555`
   )
 
+  lazy val codec:Codec[Code] = Codec[Code](
+    (value: Code) => ascii.encode(value.value.toString),
+    (bits: BitVector) => {
+      limitedSizeBits(3 * 8, ascii).decode(bits) match {
+        case Successful(DecodeResult(code, rest)) =>
+          Attempt.fromOption(
+            Try(code.toInt).toOption
+              .flatMap(Code.code)
+              .map(c => DecodeResult(c, rest)),
+            Err(s"${code} code does not exist")
+          )
+        case Attempt.Failure(cause) => Attempt.failure(cause)
+      }
+    }
+  )
 }
