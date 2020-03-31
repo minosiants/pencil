@@ -21,7 +21,6 @@ import cats.Show
 import scodec.codecs._
 import scodec.Codec
 
-
 final case class Reply(code: Code, sep: String, text: String)
     extends Product
     with Serializable
