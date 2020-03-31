@@ -17,8 +17,8 @@
 package com.minosiants.pencil
 package protocol
 
-import scodec.{Attempt, Codec, DecodeResult, SizeBound}
-import scodec.bits.{BitVector, ByteVector}
+import scodec.{ Attempt, Codec, DecodeResult, SizeBound }
+import scodec.bits.{ BitVector, ByteVector }
 
 final case class DelimiterListCodec[A](
     delimiter: ByteVector,

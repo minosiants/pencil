@@ -57,5 +57,5 @@ object Command {
   val end              = "\r\n"
   val endEmail: String = s"$end.$end"
 
-  lazy val codec: Codec[Command] = CommandCodec()
+  lazy implicit val codec: Codec[Command] = CommandCodec()
 }
