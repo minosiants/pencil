@@ -1,15 +1,15 @@
 package com.minosiants.pencil
 package protocol
 
-import org.scalacheck.Prop
+import org.scalacheck.Prop.forAll
 import org.specs2.ScalaCheck
 import org.specs2.mutable.Specification
-
-import scodec.{ Attempt, DecodeResult }
+import scodec.{Attempt, Codec, DecodeResult}
 import scodec.bits._
 import scodec.codecs._
 
 import scala.io.Source
+import org.specs2.matcher.MatchResult
 
 class ProtocolSpec extends Specification with ScalaCheck with ProtocolGens {
 
@@ -24,22 +24,19 @@ class ProtocolSpec extends Specification with ScalaCheck with ProtocolGens {
       result.toEither must beRight(DecodeResult(expected, BitVector.empty))
     }
 
-    "reply encoding" in Prop.forAll(replyGen) { reply =>
-      val encoded = Reply.replyCodec.encode(reply)
-      val decoded = encoded.flatMap(Reply.replyCodec.decode)
-      decoded ==== Attempt.successful(DecodeResult(reply, CRLF))
-    }
+    "reply encoding" in forAll(replyGen)(property(Reply.codec))
 
-    "mailbox encoding" in Prop.forAll(mailboxGen) { box =>
-      val encoded = MailboxCodec.codec.encode(box)
-      val decoded = encoded.flatMap(MailboxCodec.codec.decode)
-      decoded ==== Attempt.successful(DecodeResult(box, BitVector.empty))
-    }
+    "replies encoding" in forAll(repliesGen)(property(Replies.codec))
 
-    "command encoding" in Prop.forAll(commandGen) { command =>
-      val encoded = Command.codec.encode(command)
-      val decoded = encoded.flatMap(Command.codec.decode)
-      decoded ==== Attempt.successful(DecodeResult(command, BitVector.empty))
-    }
+    "mailbox encoding" in forAll(mailboxGen)(property(MailboxCodec.codec))
+
+    "command encoding" in forAll(commandGen)(property(Command.codec))
+
+  }
+
+  def property[A](codec:Codec[A])(a:A): MatchResult[Attempt[DecodeResult[A]]]= {
+    val encoded = codec.encode(a)
+    val decoded = encoded.flatMap(codec.decode)
+    decoded ==== Attempt.successful(DecodeResult(a, BitVector.empty))
   }
 }

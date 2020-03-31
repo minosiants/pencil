@@ -30,9 +30,9 @@ final case class CommandCodec() extends Codec[Command] {
       case DecodeResult(cmd, rest) =>
         cmd match {
           case "EHLO" =>
-            ascii.decode(stripEND(rest)).map {
+            ascii.decode(extractText(rest)).map {
               case DecodeResult(domain, _) =>
-                DecodeResult(Ehlo(domain.trim), BitVector.empty)
+                DecodeResult(Ehlo(domain), BitVector.empty)
             }
           case "MAIL" =>
             MailboxCodec.codec.decode(rest).map {
@@ -49,9 +49,9 @@ final case class CommandCodec() extends Codec[Command] {
           case "RSET" => Attempt.successful(DecodeResult(Rset, BitVector.empty))
           case "NOOP" => Attempt.successful(DecodeResult(Noop, BitVector.empty))
           case "VRFY" =>
-            ascii.decode(stripEND(rest)).map {
+            ascii.decode(extractText(rest)).map {
               case DecodeResult(txt, _) =>
-                DecodeResult(Vrfy(txt.trim), BitVector.empty)
+                DecodeResult(Vrfy(txt), BitVector.empty)
             }
           case "AUTH" =>
             Attempt.successful(DecodeResult(AuthLogin, BitVector.empty))
@@ -73,9 +73,9 @@ final case class CommandCodec() extends Codec[Command] {
   override def sizeBound: SizeBound = SizeBound.unknown
 
   private val END = Command.end.toBitVector
-  private def stripEND(bits: BitVector) = {
-    bits.take(bits.size - END.size)
-  }
+  private val SPACE = ByteVector(" ".getBytes).toBitVector
+  private def extractText(bits: BitVector) =
+    bits.drop(SPACE.size).dropRight(SPACE.size+END.size)
 
 }
 

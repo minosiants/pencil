@@ -45,6 +45,10 @@ object Replies {
 
   def apply(replies: Reply): Replies = Replies(List(replies))
 
+  implicit val codec: Codec[Replies] = (
+    ("replies" | DelimiterListCodec(CRLF, Reply.codec))
+    ).as[Replies]
+
 }
 
 object Reply {
@@ -72,21 +76,18 @@ object Reply {
       ascii.encode(s + "\r\n")
     }, { bits =>
       {
-        if (bits.endsWith(CRLF))
-          limitedSizeBits(bits.size - CRLF.size, ascii).decode(bits)
+        if (bits.toByteVector.endsWith(CRLF))
+          ascii.decode(bits.dropRight(CRLF.bits.size))
         else
           ascii.decode(bits)
       }
     }
   )
 
-  implicit val replyCodec: Codec[Reply] = (
+  implicit val codec: Codec[Reply] = (
     ("code" | codeCodec) ::
       ("sep" | limitedSizeBits(8, ascii)) ::
       ("text" | textCodec)
   ).as[Reply]
 
-  implicit val repliesCodec: Codec[Replies] = (
-    ("replies" | DelimiterListCodec(CRLF, replyCodec))
-  ).as[Replies]
 }
