@@ -19,8 +19,8 @@ package pencil.protocol
 
 import scodec.Attempt.Successful
 import scodec.bits.BitVector
-import scodec.codecs.{ascii, limitedSizeBits}
-import scodec.{Attempt, Codec, DecodeResult, Err}
+import scodec.codecs.{ ascii, limitedSizeBits }
+import scodec.{ Attempt, Codec, DecodeResult, Err }
 
 import scala.util.Try
 
@@ -98,7 +98,7 @@ object Code {
     `555`
   )
 
-  lazy val codec:Codec[Code] = Codec[Code](
+  implicit lazy val codec: Codec[Code] = Codec[Code](
     (value: Code) => ascii.encode(value.value.toString),
     (bits: BitVector) => {
       limitedSizeBits(3 * 8, ascii).decode(bits) match {

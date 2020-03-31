@@ -25,6 +25,8 @@ class ProtocolSpec extends Specification with ScalaCheck with ProtocolGens {
       result.toEither must beRight(DecodeResult(expected, BitVector.empty))
     }
 
+    "code encoding" in forAll(codeGen)(property[Code])
+
     "reply encoding" in forAll(replyGen)(property[Reply])
 
     "replies encoding" in forAll(repliesGen)(property[Replies])
