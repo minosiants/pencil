@@ -40,7 +40,8 @@ lazy val root = (project in file("."))
       "ch.qos.logback"  % "logback-classic"             % logbackVersion
     ),
     addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3"),
-    addCompilerPlugin(scalafixSemanticdb)
+    addCompilerPlugin(scalafixSemanticdb),
+    publishTo := sonatypePublishToBundle.value
   )
   .settings(releaseProcessSettings)
   .settings(licenceSettings)
