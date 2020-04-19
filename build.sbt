@@ -12,7 +12,7 @@ val catsEffectTestVersion = "0.3.0"
 
 lazy val root = (project in file("."))
   .settings(
-    organization := "com.minosiatns",
+    organization := "com.minosiants",
     name := "pencil",
     scalaVersion := "2.12.11",
     crossScalaVersions := Seq("2.12.11", "2.13.1"),
@@ -43,9 +43,6 @@ lazy val root = (project in file("."))
     addCompilerPlugin(scalafixSemanticdb)
   )
   .settings(releaseProcessSettings)
-  .settings(
-    githubPackagesSettings
-  )
   .settings(licenceSettings)
 
 import ReleaseTransformations._
@@ -65,11 +62,6 @@ lazy val releaseProcessSettings = Seq(
     commitNextVersion,
     pushChanges
   )
-)
-
-lazy val githubPackagesSettings = Seq(
-  githubOwner := "minosiants",
-  githubRepository := "pencil"
 )
 
 lazy val licenceSettings = Seq(
