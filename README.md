@@ -16,7 +16,7 @@ It is build on top of [cats](https://typelevel.org/cats/), [cats-effect](https:/
 Add dependency to your `build.sbt`
 
 ```scala
-libraryDependencies += "com.minosiants" %% "pencil" % "0.2.2"
+libraryDependencies += "com.minosiants" %% "pencil" % "0.2.3"
 ```
 
 ### Examples how to use it
