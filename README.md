@@ -16,9 +16,7 @@ It is build on top of [cats](https://typelevel.org/cats/), [cats-effect](https:/
 Add dependency to your `build.sbt`
 
 ```scala
-resolvers += "Github packages minosiants" at "https://maven.pkg.github.com/minosiants/_"
-
-libraryDependencies += "com.minosiatns" %% "pencil" % "0.2.1"
+libraryDependencies += "com.minosiants" %% "pencil" % "0.2.2"
 ```
 
 ### Examples how to use it
