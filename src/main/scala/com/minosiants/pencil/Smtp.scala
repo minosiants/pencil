@@ -35,11 +35,8 @@ import com.minosiants.pencil.protocol.Encoding.{ `7bit`, `base64` }
 import Email._
 import Command._
 import com.minosiants.pencil.protocol.Code._
-import cats.effect.Blocker
 import cats.effect.ContextShift
 import fs2.io.file.readAll
-
-final case class Request(email: Email, socket: SmtpSocket, blocker: Blocker)
 
 object Smtp {
 
@@ -58,6 +55,8 @@ object Smtp {
   def write(run: Email => Command): Smtp[Unit] = Smtp { req =>
     req.socket.write(run(req.email))
   }
+
+  def ask: Smtp[Request] = Kleisli.ask[IO, Request]
 
   def read(): Smtp[Replies] = Smtp(_.socket.read()).flatMapF(processErrors)
 
