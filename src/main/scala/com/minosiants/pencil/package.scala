@@ -17,13 +17,12 @@
 package com.minosiants
 
 import cats.data.Kleisli
-import cats.effect.IO
 import com.minosiants.pencil.syntax.LiteralsSyntax
 import scodec.bits.{ BitVector, ByteVector }
 
 package object pencil extends LiteralsSyntax {
 
-  type Smtp[A] = Kleisli[IO, Request, A]
+  type Smtp[F[_], A] = Kleisli[F, Request[F], A]
 
   val CRLF: ByteVector = ByteVector("\r\n".getBytes)
 

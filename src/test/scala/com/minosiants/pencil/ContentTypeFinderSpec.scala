@@ -23,10 +23,10 @@ class ContentTypeFinderSpec extends Specification with ScalaCheck {
     "not find file" in {
       val f = Paths.get("files/!!!jpeg-sample.jpg")
       Files
-        .inputStream(f)
+        .inputStream[IO](f)
         .use { is =>
           ContentTypeFinder
-            .findType(is)
+            .findType[IO](is)
         }
         .attempt
         .unsafeRunSync() must beLeft(Error.ResourceNotFound(f.toString))
@@ -44,10 +44,10 @@ object ContentTypeFinderSpec {
       path: Path
   ): IO[ContentType] = {
     Files
-      .inputStream(path)
+      .inputStream[IO](path)
       .use { is =>
         ContentTypeFinder
-          .findType(is)
+          .findType[IO](is)
       }
 
   }
