@@ -16,36 +16,37 @@
 
 package com.minosiants.pencil
 
+import cats.implicits._
 import java.io.InputStream
 import java.nio.file.{ Path, Paths, Files => JFiles }
 
-import cats.effect.{ IO, Resource }
+import cats.effect.{ Sync, Resource }
 import com.minosiants.pencil.data.Error
 
 import Function._
 
 object Files {
 
-  def inputStream(file: Path): Resource[IO, InputStream] = {
+  def inputStream[F[_]: Sync](file: Path): Resource[F, InputStream] = {
     Resource
       .make {
-        IO {
+        Sync[F].delay {
           JFiles.newInputStream(file)
-        }.handleErrorWith(const(Error.resourceNotFound(file.toString)))
+        }.handleErrorWith(const(Error.resourceNotFound[F, InputStream](file.toString)))
       } { is =>
         if (is != null)
-          IO(is.close())
+          Sync[F].delay(is.close())
         else
-          Error.resourceNotFound(file.toString)
+          Error.resourceNotFound[F, Unit](file.toString)
       }
   }
 
-  def pathFrom(file: String): Either[Error, Path] = {
+  def pathFrom[F[_]: Sync](file: String): F[Either[Error, Path]] = Sync[F].delay{
     val path = Paths.get(file)
     Either.cond(JFiles.exists(path), path, Error.ResourceNotFound(file))
   }
 
-  def pathFromClassLoader(file: String): Either[Error, Path] = {
+  def pathFromClassLoader[F[_]: Sync](file: String): F[Either[Error, Path]] = Sync[F].delay{
     val resource = getClass.getClassLoader.getResource(file)
     val cond     = resource != null && JFiles.exists(Paths.get(resource.toURI))
     Either.cond(cond, Paths.get(resource.toURI), Error.ResourceNotFound(file))

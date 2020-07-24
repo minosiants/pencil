@@ -18,7 +18,7 @@ package com.minosiants.pencil
 
 import java.net.InetSocketAddress
 
-import cats.effect.{ ContextShift, IO, Resource }
+import cats.effect._
 import com.minosiants.pencil.data._
 import com.minosiants.pencil.protocol._
 import com.minosiants.pencil.data.Email.{ MimeEmail, TextEmail }
@@ -26,7 +26,6 @@ import fs2.io.tcp.{ Socket, SocketGroup }
 
 import scala.concurrent.duration._
 import fs2.io.tls.TLSContext
-import cats.syntax.flatMap._
 import Function.const
 import cats.effect.Blocker
 
@@ -34,7 +33,7 @@ import cats.effect.Blocker
   * Smtp client
   *
   */
-trait Client {
+trait Client[F[_]] {
 
   /**
     * Sends `email` to a smtp server
@@ -43,41 +42,39 @@ trait Client {
     * @param es - sender [[EmailSender]]
     * @return - IO of [[Replies]] from smtp server
     */
-  def send(email: Email): IO[Replies]
+  def send(email: Email): F[Replies]
 
 }
 
 object Client {
-  def apply(
+  def apply[F[_]: Concurrent: ContextShift](
       host: String = "localhost",
       port: Int = 25,
       credentials: Option[Credentials] = None,
       readTimeout: FiniteDuration = 5.minutes,
-      writeTimeout: FiniteDuration = 5.minutes
-  )(blocker: Blocker, sg: SocketGroup, tlsContext: TLSContext)(
-      implicit cs: ContextShift[IO]
-  ): Client = new Client {
+      writeTimeout: FiniteDuration = 5.minutes,
+  )(blocker: Blocker, sg: SocketGroup, tlsContext: TLSContext): Client[F] = new Client[F] {
 
-    lazy val socket: Resource[IO, Socket[IO]] =
-      sg.client[IO](new InetSocketAddress(host, port))
+    lazy val socket: Resource[F, Socket[F]] =
+      sg.client[F](new InetSocketAddress(host, port))
 
-    lazy val tlsSocket: Socket[IO] => Resource[IO, SmtpSocket] =
-      (s: Socket[IO]) =>
+    lazy val tlsSocket: Socket[F] => Resource[F, SmtpSocket[F]] =
+      (s: Socket[F]) =>
         tlsContext
-          .client[IO](s)
+          .client[F](s)
           .map(SmtpSocket.fromSocket(_, readTimeout, writeTimeout))
 
     override def send(
         email: Email
-    ): IO[Replies] = {
+    ): F[Replies] = {
 
       socket.use { s =>
         tlsSocket(s).use { tls =>
           (for {
-            _   <- Smtp.init()
-            rep <- Smtp.ehlo()
+            _   <- Smtp.init[F]()
+            rep <- Smtp.ehlo[F]()
             r <- if (supportTLS(rep)) sendEmailViaTls(tls)
-            else login(rep) >> sender
+            else login(rep).flatMap(_ => sender)
           } yield r).run(
             Request(
               email,
@@ -90,10 +87,10 @@ object Client {
       }
     }
 
-    def login(rep: Replies): Smtp[Unit] =
+    def login(rep: Replies): Smtp[F, Unit] =
       credentials
         .filter(const(supportLogin(rep)))
-        .fold(Smtp.pure(()))(Smtp.login)
+        .fold(Smtp.pure[F, Unit](()))(Smtp.login[F])
 
     def supportTLS(rep: Replies): Boolean =
       rep.replies.exists(r => r.text.contains("STARTTLS"))
@@ -102,43 +99,44 @@ object Client {
       rep.replies.exists(_.text.contains("AUTH LOGIN"))
 
     def sendEmailViaTls(
-        tls: SmtpSocket
-    ): Smtp[Replies] =
+        tls: SmtpSocket[F]
+    ): Smtp[F, Replies] =
       for {
-        _ <- Smtp.startTls()
-        r <- Smtp.local(req => Request(req.email, tls, req.blocker))(for {
-          rep <- Smtp.ehlo()
+        _ <- Smtp.startTls[F]()
+        r <- Smtp.local{req: Request[F] => Request(req.email, tls, req.blocker)}(for {
+          rep <- Smtp.ehlo[F]()
           _   <- login(rep)
           r   <- sender
         } yield r)
       } yield r
-  }
 
-  private def sender: Smtp[Replies] = Smtp.ask.flatMap{r => 
-    r.email match {
-      case TextEmail(_, _,_, _, _, _) => 
-        for {
-          _ <- Smtp.mail()
-          _ <- Smtp.rcpt()
-          _ <- Smtp.data()
-          _ <- Smtp.mainHeaders()
-          r <- Smtp.asciiBody()
-          _ <- Smtp.quit()
-        } yield r
-      case MimeEmail(_, _, _, _, _, _, _, _) =>
-        for {
-          _ <- Smtp.mail()
-          _ <- Smtp.rcpt()
-          _ <- Smtp.data()
-          _ <- Smtp.mimeHeader()
-          _ <- Smtp.mainHeaders()
-          _ <- Smtp.multipart()
-          _ <- Smtp.mimeBody()
-          _ <- Smtp.attachments()
-          r <- Smtp.endEmail()
-          _ <- Smtp.quit()
-        } yield r
+    def sender: Smtp[F, Replies] = Smtp.ask[F].flatMap{r => 
+      r.email match {
+        case TextEmail(_, _,_, _, _, _) => 
+          for {
+            _ <- Smtp.mail[F]()
+            _ <- Smtp.rcpt[F]()
+            _ <- Smtp.data[F]()
+            _ <- Smtp.mainHeaders[F]()
+            r <- Smtp.asciiBody[F]()
+            _ <- Smtp.quit[F]()
+          } yield r
+        case MimeEmail(_, _, _, _, _, _, _, _) =>
+          for {
+            _ <- Smtp.mail[F]()
+            _ <- Smtp.rcpt[F]()
+            _ <- Smtp.data[F]()
+            _ <- Smtp.mimeHeader[F]()
+            _ <- Smtp.mainHeaders[F]()
+            _ <- Smtp.multipart[F]()
+            _ <- Smtp.mimeBody[F]()
+            _ <- Smtp.attachments[F]()
+            r <- Smtp.endEmail[F]()
+            _ <- Smtp.quit[F]()
+          } yield r
+      }
     }
+
   }
 
 }

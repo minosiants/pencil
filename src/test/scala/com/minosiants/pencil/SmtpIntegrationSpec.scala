@@ -24,7 +24,7 @@ class SmtpIntegrationSpec extends SpecificationLike with CatsIO {
         .use { blocker =>
           SocketGroup[IO](blocker).use { sg =>
             TLSContext.system[IO](blocker).flatMap { tls =>
-              val client = Client()(blocker, sg, tls)
+              val client = Client[IO]()(blocker, sg, tls)
               client.send(email)
             }
 

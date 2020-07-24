@@ -21,19 +21,20 @@ import java.io.InputStream
 import protocol._
 import data._
 
-import cats.effect.IO
+import cats.implicits._
+import cats.effect.Sync
 import org.apache.tika.Tika
 
 object ContentTypeFinder {
 
   lazy val tika = new Tika()
 
-  def findType(is: InputStream): IO[ContentType] =
-    IO {
+  def findType[F[_]: Sync](is: InputStream): F[ContentType] =
+    Sync[F].delay {
       val ct = tika.detect(is)
       ContentType
         .findType(ct)
         .getOrElse(ContentType.`application/octet-stream`)
-    }.handleErrorWith(Error.tikaException("Unable to read input stream"))
+    }.handleErrorWith(Error.tikaException[F, ContentType]("Unable to read input stream"))
 
 }

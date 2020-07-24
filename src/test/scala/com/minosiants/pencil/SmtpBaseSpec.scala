@@ -20,12 +20,12 @@ trait SmtpBaseSpec extends SpecificationLike with CatsIO {
   def socket(
       address: InetSocketAddress,
       sg: SocketGroup
-  ): Resource[IO, SmtpSocket] =
+  ): Resource[IO, SmtpSocket[IO]] =
     sg.client[IO](address).map(SmtpSocket.fromSocket(_, 5.seconds, 5.seconds))
 
   type ServerState = Ref[IO, List[BitVector]]
 
-  def withSocket[A](run: (SmtpSocket, Blocker, ServerState) => IO[A]): IO[A] = {
+  def withSocket[A](run: (SmtpSocket[IO], Blocker, ServerState) => IO[A]): IO[A] = {
     val localBindAddress =
       Deferred[IO, InetSocketAddress].unsafeRunSync()
 
@@ -44,13 +44,13 @@ trait SmtpBaseSpec extends SpecificationLike with CatsIO {
   }
 
   def testCommand[A, B](
-      command: Smtp[A],
+      command: Smtp[IO, A],
       email: Email,
       codec: Codec[B]
   ): Either[Throwable, (A, List[B])] = {
     withSocket { (s, blocker, state) =>
       (for {
-        _ <- Smtp.init()
+        _ <- Smtp.init[IO]()
         v <- command
         raw <- Smtp.liftF(Timer[IO].sleep(100.millis).flatMap { _ =>
           state.get
@@ -60,7 +60,7 @@ trait SmtpBaseSpec extends SpecificationLike with CatsIO {
             bits =>
               codec.decode(bits).toEither match {
                 case Right(DecodeResult(value, _)) => IO(value)
-                case Left(err)                     => Error.smtpError(err.message)
+                case Left(err)                     => Error.smtpError[IO, B](err.message)
               }
           )
         )

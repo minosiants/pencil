@@ -16,8 +16,8 @@
 
 package com.minosiants.pencil.data
 
-import cats.Show
-import cats.effect.IO
+import cats._
+// import cats.effect.IO
 
 import scala.util.control.NoStackTrace
 
@@ -41,20 +41,20 @@ object Error {
     case TikaException(msg)       => s"Tika exception: $msg"
   }
 
-  def smtpError[A](msg: String): IO[A] =
-    IO.raiseError[A](SmtpError(msg))
+  def smtpError[F[_]: ApplicativeError[*[_], Throwable], A](msg: String): F[A] =
+    ApplicativeError[F, Throwable].raiseError[A](SmtpError(msg))
 
-  def authError[A](msg: String): IO[A] =
-    IO.raiseError[A](AuthError(msg))
+  def authError[F[_]: ApplicativeError[*[_], Throwable], A](msg: String): F[A] =
+    ApplicativeError[F, Throwable].raiseError[A](AuthError(msg))
 
-  def unableCloseResource[A](msg: String): IO[A] =
-    IO.raiseError(UnableCloseResource(msg))
+  def unableCloseResource[F[_]: ApplicativeError[*[_], Throwable],A](msg: String): F[A] =
+    ApplicativeError[F, Throwable].raiseError(UnableCloseResource(msg))
 
-  def resourceNotFound[A](msg: String): IO[A] =
-    IO.raiseError(ResourceNotFound(msg))
+  def resourceNotFound[F[_]: ApplicativeError[*[_], Throwable],A](msg: String): F[A] =
+    ApplicativeError[F, Throwable].raiseError(ResourceNotFound(msg))
 
-  def tikaException[A](msg: String)(e: Throwable): IO[A] = {
+  def tikaException[F[_]: ApplicativeError[*[_], Throwable],A](msg: String)(e: Throwable): F[A] = {
     val m = if (e.getMessage != null) s"Message: ${e.getMessage}" else ""
-    IO.raiseError(TikaException(s"$msg $m"))
+    ApplicativeError[F, Throwable].raiseError(TikaException(s"$msg $m"))
   }
 }
