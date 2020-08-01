@@ -53,7 +53,7 @@ object Client {
       port: Int = 25,
       credentials: Option[Credentials] = None,
       readTimeout: FiniteDuration = 5.minutes,
-      writeTimeout: FiniteDuration = 5.minutes,
+      writeTimeout: FiniteDuration = 5.minutes
   )(blocker: Blocker, sg: SocketGroup, tlsContext: TLSContext)(
       implicit cs: ContextShift[IO]
   ): Client = new Client {
