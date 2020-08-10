@@ -115,15 +115,17 @@ object Smtp {
         )
       )
     )
+  //todo: This should probably take a charset to be explicit in how to getBytes from the string.
+  // Uses UTF-8 for now
   def login[F[_]: MonadError[*[_], Throwable]](credentials: Credentials): Smtp[F, Unit] =
     for {
       _ <- authLogin[F]()
       ru <- command[F](
-        Text(s"${credentials.username.show.toBase64} ${Command.end}")
+        Text(s"${credentials.username.show.toBase64UTF8} ${Command.end}")
       )
       _ <- checkReplyFor[F](`334`, ru)
       rp <- command[F](
-        Text(s"${credentials.password.show.toBase64} ${Command.end}")
+        Text(s"${credentials.password.show.toBase64UTF8} ${Command.end}")
       )
       _ <- checkReplyFor[F](`235`, rp)
     } yield ()
@@ -154,7 +156,7 @@ object Smtp {
       case TextEmail(_, _, _, _, Some(Subject(sub)), _) =>
         text(s"Subject: $sub ${Command.end}").run(req).map(Some(_))
       case MimeEmail(_, _, _, _, Some(Subject(sub)), _, _, _) =>
-        text(s"Subject: =?utf-8?b?${sub.toBase64}?= ${Command.end}")
+        text(s"Subject: =?utf-8?b?${sub.toBase64UTF8}?= ${Command.end}")
           .run(req)
           .map(Some(_))
       case _ => Applicative[F].pure(None)
@@ -249,13 +251,13 @@ object Smtp {
         (mimePart[F](
           `base64`,
           `Content-Type`(`text/html`, Map("charset" -> "UTF-8"))
-        ).flatMap(_ => text(s"${body.toBase64} ${Command.end}"))).run(req)
+        ).flatMap(_ => text(s"${body.toBase64UTF8Mime} ${Command.end}"))).run(req)
 
       case MimeEmail(_, _, _, _, _, Some(Utf8(body)), _, _) =>
         (mimePart[F](
           `base64`,
           `Content-Type`(`text/plain`, Map("charset" -> "UTF-8"))
-        ).flatMap(_ => text(s"${body.toBase64} ${Command.end}"))).run(req)
+        ).flatMap(_ => text(s"${body.toBase64UTF8Mime} ${Command.end}"))).run(req)
 
       case _ => Error.smtpError[F, Unit]("not mime email")
     }

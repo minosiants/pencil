@@ -19,7 +19,7 @@ object In {
   val inListDecoder: inListDecoder = new inListDecoder
   class inListDecoder extends Decoder[List[In]]() {
     val delimiter    = CRLF
-    val endEmailBits = Command.endEmail.toByteVector
+    val endEmailBits = Command.endEmail.toByteVector()
     override def decode(bits: BitVector): Attempt[DecodeResult[List[In]]] = {
 
       def go(vec: ByteVector): Attempt[List[In]] = {

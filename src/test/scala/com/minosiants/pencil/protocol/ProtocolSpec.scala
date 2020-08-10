@@ -1,11 +1,13 @@
 package com.minosiants.pencil
 package protocol
 
+import java.nio.charset.StandardCharsets
+
 import com.minosiants.pencil.data.Mailbox
 import org.scalacheck.Prop.forAll
 import org.specs2.ScalaCheck
 import org.specs2.mutable.Specification
-import scodec.{ Attempt, Codec, DecodeResult }
+import scodec.{Attempt, Codec, DecodeResult}
 import scodec.bits._
 import scodec.codecs._
 
@@ -20,7 +22,7 @@ class ProtocolSpec extends Specification with ScalaCheck with ProtocolGens {
       val is     = getClass().getResourceAsStream("/output.txt")
       val output = Source.fromInputStream(is).mkString
       val result =
-        DelimiterListCodec(CRLF, ascii).decode(output.toBitVector)
+        DelimiterListCodec(CRLF, ascii).decode(output.toBitVector())
       val expected = output.split("\r\n").toList
       result.toEither must beRight(DecodeResult(expected, BitVector.empty))
     }

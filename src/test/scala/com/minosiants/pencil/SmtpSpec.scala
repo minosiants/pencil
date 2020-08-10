@@ -104,7 +104,7 @@ class SmtpSpec extends SmtpBaseSpec {
       val result = testCommand(Smtp.subjectHeader(), email, codecs.ascii)
       result.map(_._2) must beRight(
         List(
-          s"Subject: =?utf-8?b?${email.subject.get.value.toBase64}?= ${Command.end}"
+          s"Subject: =?utf-8?b?${email.subject.get.value.toBase64UTF8}?= ${Command.end}"
         )
       )
     }
@@ -155,7 +155,7 @@ class SmtpSpec extends SmtpBaseSpec {
           s"To: ${email.to.show} ${Command.end}",
           s"Cc: ${email.cc.get.show} ${Command.end}",
           s"Bcc: ${email.bcc.get.show} ${Command.end}",
-          s"Subject: =?utf-8?b?${email.subject.get.value.toBase64}?= ${Command.end}"
+          s"Subject: =?utf-8?b?${email.subject.get.value.toBase64UTF8}?= ${Command.end}"
         )
       )
     }
@@ -242,7 +242,7 @@ class SmtpSpec extends SmtpBaseSpec {
         s"${Command.end}",
         s"${email.body
           .map {
-            case Utf8(value) => value.toBase64
+            case Utf8(value) => value.toBase64UTF8Mime
             case _           => ""
           }
           .getOrElse("")} ${Command.end}"
@@ -261,7 +261,7 @@ class SmtpSpec extends SmtpBaseSpec {
         s"${Command.end}",
         s"${email.body
           .map {
-            case Html(value) => value.toBase64
+            case Html(value) => value.toBase64UTF8Mime
             case _           => ""
           }
           .getOrElse("")} ${Command.end}"

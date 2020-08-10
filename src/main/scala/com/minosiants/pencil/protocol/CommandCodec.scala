@@ -17,11 +17,13 @@
 package com.minosiants.pencil
 package protocol
 
+import java.nio.charset.StandardCharsets
+
 import com.minosiants.pencil.data.Mailbox
 import com.minosiants.pencil.protocol.Command._
-import scodec.bits.{ BitVector, ByteVector }
+import scodec.bits.{BitVector, ByteVector}
 import scodec.codecs._
-import scodec.{ Attempt, Codec, DecodeResult, SizeBound }
+import scodec.{Attempt, Codec, DecodeResult, SizeBound}
 
 final case class CommandCodec() extends Codec[Command] {
 
@@ -68,11 +70,11 @@ final case class CommandCodec() extends Codec[Command] {
   }
 
   override def encode(v: Command): Attempt[BitVector] =
-    Attempt.successful(Command.CommandShow.show(v).toBitVector)
+    Attempt.successful(Command.CommandShow.show(v).toBitVector())
 
   override def sizeBound: SizeBound = SizeBound.unknown
 
-  private val END   = Command.end.toBitVector
+  private val END   = Command.end.toBitVector()
   private val SPACE = ByteVector(" ".getBytes).toBitVector
   private def extractText(bits: BitVector) =
     bits.drop(SPACE.size).dropRight(SPACE.size + END.size)

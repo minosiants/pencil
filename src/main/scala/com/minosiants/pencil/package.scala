@@ -16,6 +16,9 @@
 
 package com.minosiants
 
+import java.nio.charset.{ Charset, StandardCharsets }
+import java.util.Base64
+
 import cats.data.Kleisli
 import com.minosiants.pencil.syntax.LiteralsSyntax
 import scodec.bits.{ BitVector, ByteVector }
@@ -24,15 +27,22 @@ package object pencil extends LiteralsSyntax {
 
   type Smtp[F[_], A] = Kleisli[F, Request[F], A]
 
-  val CRLF: ByteVector = ByteVector("\r\n".getBytes)
-
   implicit class ExtraStringOps(str: String) {
-    def toBase64: String = {
-      BitVector.view(str.getBytes()).toBase64
-    }
-    def toBitVector: BitVector = BitVector(str.getBytes)
+    def toBase64Mime(charset: Charset): String =
+      Base64.getMimeEncoder.encodeToString(str.getBytes(charset))
+    def toBase64(charset: Charset): String =
+      ByteVector.view(str.getBytes(charset)).toBase64
+    def toBase64Ascii: String     = toBase64(StandardCharsets.US_ASCII)
+    def toBase64UTF8: String      = toBase64(StandardCharsets.UTF_8)
+    def toBase64UTF8Mime: String  = toBase64(StandardCharsets.UTF_8)
+    def toBase64AsciiMime: String = toBase64(StandardCharsets.US_ASCII)
 
-    def toByteVector: ByteVector = ByteVector(str.getBytes)
+    def toBitVector(charset: Charset = StandardCharsets.US_ASCII): BitVector =
+      BitVector(str.getBytes(charset))
+    def toByteVector(charset: Charset = StandardCharsets.US_ASCII): ByteVector =
+      ByteVector(str.getBytes(charset))
   }
+
+  val CRLF: ByteVector = "\r\n".toByteVector()
 
 }
