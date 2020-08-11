@@ -47,13 +47,19 @@ object Error {
   def authError[F[_]: ApplicativeError[*[_], Throwable], A](msg: String): F[A] =
     ApplicativeError[F, Throwable].raiseError[A](AuthError(msg))
 
-  def unableCloseResource[F[_]: ApplicativeError[*[_], Throwable],A](msg: String): F[A] =
+  def unableCloseResource[F[_]: ApplicativeError[*[_], Throwable], A](
+      msg: String
+  ): F[A] =
     ApplicativeError[F, Throwable].raiseError(UnableCloseResource(msg))
 
-  def resourceNotFound[F[_]: ApplicativeError[*[_], Throwable],A](msg: String): F[A] =
+  def resourceNotFound[F[_]: ApplicativeError[*[_], Throwable], A](
+      msg: String
+  ): F[A] =
     ApplicativeError[F, Throwable].raiseError(ResourceNotFound(msg))
 
-  def tikaException[F[_]: ApplicativeError[*[_], Throwable],A](msg: String)(e: Throwable): F[A] = {
+  def tikaException[F[_]: ApplicativeError[*[_], Throwable], A](
+      msg: String
+  )(e: Throwable): F[A] = {
     val m = if (e.getMessage != null) s"Message: ${e.getMessage}" else ""
     ApplicativeError[F, Throwable].raiseError(TikaException(s"$msg $m"))
   }

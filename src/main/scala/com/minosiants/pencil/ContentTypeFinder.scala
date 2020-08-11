@@ -30,11 +30,15 @@ object ContentTypeFinder {
   lazy val tika = new Tika()
 
   def findType[F[_]: Sync](is: InputStream): F[ContentType] =
-    Sync[F].delay {
-      val ct = tika.detect(is)
-      ContentType
-        .findType(ct)
-        .getOrElse(ContentType.`application/octet-stream`)
-    }.handleErrorWith(Error.tikaException[F, ContentType]("Unable to read input stream"))
+    Sync[F]
+      .delay {
+        val ct = tika.detect(is)
+        ContentType
+          .findType(ct)
+          .getOrElse(ContentType.`application/octet-stream`)
+      }
+      .handleErrorWith(
+        Error.tikaException[F, ContentType]("Unable to read input stream")
+      )
 
 }

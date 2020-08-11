@@ -1,5 +1,5 @@
 package com.minosiants.pencil
-import java.nio.file.{Path, Paths}
+import java.nio.file.{ Path, Paths }
 
 import cats.effect.IO
 import com.minosiants.pencil.data._

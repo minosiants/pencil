@@ -19,18 +19,20 @@ package data
 
 import java.nio.file.Path
 import cats.implicits._
-import cats.effect.{Sync, IO}
+import cats.effect.{ Sync, IO }
 
 final case class Attachment(file: Path) extends Product with Serializable
 
 object Attachment {
 
   def fromString[F[_]: Sync](file: String): F[Either[Error, Attachment]] = {
-    Files.pathFrom[F](file)
-      .flatMap{ 
-        case Left(_) => Files.pathFromClassLoader[F](file)
+    Files
+      .pathFrom[F](file)
+      .flatMap {
+        case Left(_)  => Files.pathFromClassLoader[F](file)
         case Right(f) => f.asRight[Error].pure[F]
-      }.map(_.map(Attachment(_)))
+      }
+      .map(_.map(Attachment(_)))
   }
 
   def unsafeFromString(file: String): Attachment =
