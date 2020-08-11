@@ -1,7 +1,8 @@
 package com.minosiants.pencil
 
-import cats.effect.{ IO, Blocker }
+import cats.effect.{ Blocker, IO }
 import cats.syntax.show._
+import com.minosiants.pencil.SmtpSpec.body
 import com.minosiants.pencil.data.Body.{ Ascii, Html, Utf8 }
 import com.minosiants.pencil.data.Email._
 import com.minosiants.pencil.data._
@@ -10,6 +11,8 @@ import com.minosiants.pencil.protocol.Encoding.`base64`
 import com.minosiants.pencil.protocol.Header.`Content-Type`
 import com.minosiants.pencil.protocol._
 import scodec.codecs
+
+import scala.Function.const
 
 class SmtpSpec extends SmtpBaseSpec {
 
@@ -239,14 +242,10 @@ class SmtpSpec extends SmtpBaseSpec {
         s"--${email.boundary.value} ${Command.end}",
         s"Content-Type: text/plain; charset=UTF-8 ${Command.end}",
         s"Content-Transfer-Encoding: base64 ${Command.end}",
-        s"${Command.end}",
-        s"${email.body
-          .map {
-            case Utf8(value) => value.toBase64
-            case _           => ""
-          }
-          .getOrElse("")} ${Command.end}"
-      )
+        s"${Command.end}"
+      ) ++ body(email.body) {
+        case Utf8(value) => value.toBase64
+      }
     )
   }
 
@@ -258,14 +257,10 @@ class SmtpSpec extends SmtpBaseSpec {
         s"--${email.boundary.value} ${Command.end}",
         s"Content-Type: text/html; charset=UTF-8 ${Command.end}",
         s"Content-Transfer-Encoding: base64 ${Command.end}",
-        s"${Command.end}",
-        s"${email.body
-          .map {
-            case Html(value) => value.toBase64
-            case _           => ""
-          }
-          .getOrElse("")} ${Command.end}"
-      )
+        s"${Command.end}"
+      ) ++ body(email.body) {
+        case Html(value) => value.toBase64
+      }
     )
   }
   "send mime ascii body" in {
@@ -276,14 +271,10 @@ class SmtpSpec extends SmtpBaseSpec {
         s"--${email.boundary.value} ${Command.end}",
         s"Content-Type: text/plain; charset=US-ASCII ${Command.end}",
         s"Content-Transfer-Encoding: 7bit ${Command.end}",
-        s"${Command.end}",
-        s"${email.body
-          .map {
-            case Ascii(value) => value
-            case _            => ""
-          }
-          .getOrElse("")} ${Command.end}"
-      )
+        s"${Command.end}"
+      ) ++ body(email.body) {
+        case Ascii(value) => value
+      }
     )
   }
 
@@ -307,7 +298,7 @@ class SmtpSpec extends SmtpBaseSpec {
         s"Content-Type: image/png; name=${attachment.file.getFileName.toString} ${Command.end}",
         s"Content-Transfer-Encoding: base64 ${Command.end}",
         s"${Command.end}"
-      ) ++ encodedFile.map(v => s"$v ${Command.end}")
+      ) ++ encodedFile.flatMap(SmtpSpec.lines)
     )
   }
 
@@ -315,6 +306,17 @@ class SmtpSpec extends SmtpBaseSpec {
 
 object SmtpSpec {
 
+  def lines(str: String): List[String] =
+    str.grouped(76).map(_ + Command.end).toList
+
+  def body(
+      value: Option[Body]
+  )(pf: PartialFunction[Body, String]): List[String] = {
+    value.map(pf).getOrElse("") match {
+      case ""  => List.empty
+      case str => lines(str)
+    }
+  }
   val text: TextEmail = {
     Email.text(
       From(mailbox"user1@mydomain.tld"),
