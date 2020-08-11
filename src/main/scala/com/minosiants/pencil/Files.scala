@@ -30,9 +30,13 @@ object Files {
   def inputStream[F[_]: Sync](file: Path): Resource[F, InputStream] = {
     Resource
       .make {
-        Sync[F].delay {
-          JFiles.newInputStream(file)
-        }.handleErrorWith(const(Error.resourceNotFound[F, InputStream](file.toString)))
+        Sync[F]
+          .delay {
+            JFiles.newInputStream(file)
+          }
+          .handleErrorWith(
+            const(Error.resourceNotFound[F, InputStream](file.toString))
+          )
       } { is =>
         if (is != null)
           Sync[F].delay(is.close())
@@ -41,14 +45,16 @@ object Files {
       }
   }
 
-  def pathFrom[F[_]: Sync](file: String): F[Either[Error, Path]] = Sync[F].delay{
-    val path = Paths.get(file)
-    Either.cond(JFiles.exists(path), path, Error.ResourceNotFound(file))
-  }
+  def pathFrom[F[_]: Sync](file: String): F[Either[Error, Path]] =
+    Sync[F].delay {
+      val path = Paths.get(file)
+      Either.cond(JFiles.exists(path), path, Error.ResourceNotFound(file))
+    }
 
-  def pathFromClassLoader[F[_]: Sync](file: String): F[Either[Error, Path]] = Sync[F].delay{
-    val resource = getClass.getClassLoader.getResource(file)
-    val cond     = resource != null && JFiles.exists(Paths.get(resource.toURI))
-    Either.cond(cond, Paths.get(resource.toURI), Error.ResourceNotFound(file))
-  }
+  def pathFromClassLoader[F[_]: Sync](file: String): F[Either[Error, Path]] =
+    Sync[F].delay {
+      val resource = getClass.getClassLoader.getResource(file)
+      val cond     = resource != null && JFiles.exists(Paths.get(resource.toURI))
+      Either.cond(cond, Paths.get(resource.toURI), Error.ResourceNotFound(file))
+    }
 }

@@ -25,7 +25,9 @@ trait SmtpBaseSpec extends SpecificationLike with CatsIO {
 
   type ServerState = Ref[IO, List[BitVector]]
 
-  def withSocket[A](run: (SmtpSocket[IO], Blocker, ServerState) => IO[A]): IO[A] = {
+  def withSocket[A](
+      run: (SmtpSocket[IO], Blocker, ServerState) => IO[A]
+  ): IO[A] = {
     val localBindAddress =
       Deferred[IO, InetSocketAddress].unsafeRunSync()
 

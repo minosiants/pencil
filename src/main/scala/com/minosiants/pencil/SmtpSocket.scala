@@ -46,9 +46,12 @@ trait SmtpSocket[F[_]] {
 
 object SmtpSocket {
 
-  def bytesToReply[F[_]: ApplicativeError[*[_], Throwable]](bytes: Array[Byte]): F[Replies] =
+  def bytesToReply[F[_]: ApplicativeError[*[_], Throwable]](
+      bytes: Array[Byte]
+  ): F[Replies] =
     Replies.codec.decode(BitVector(bytes)) match {
-      case Attempt.Successful(DecodeResult(value, _)) => Applicative[F].pure(value)
+      case Attempt.Successful(DecodeResult(value, _)) =>
+        Applicative[F].pure(value)
       case Attempt.Failure(cause) =>
         data.Error.smtpError[F, Replies](cause.messageWithContext)
     }
@@ -57,7 +60,7 @@ object SmtpSocket {
       s: Socket[F],
       readTimeout: FiniteDuration,
       writeTimeout: FiniteDuration
-  ): SmtpSocket[F] = new SmtpSocket[F]{
+  ): SmtpSocket[F] = new SmtpSocket[F] {
 
     override def read(): F[Replies] =
       s.read(8192, Some(readTimeout)).flatMap {

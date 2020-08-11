@@ -79,7 +79,10 @@ object LiteralSyntaxMacros {
     singlePartInterpolator(c)(
       args,
       "Attachment",
-      Attachment.fromString[cats.effect.IO](_).unsafeRunSync.isRight, // We're touching files in macros?
+      Attachment
+        .fromString[cats.effect.IO](_)
+        .unsafeRunSync
+        .isRight, // We're touching files in macros?
       s => c.universe.reify(Attachment.unsafeFromString(s.splice))
     )
 
