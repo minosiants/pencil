@@ -34,8 +34,8 @@ package object pencil extends LiteralsSyntax {
       ByteVector.view(str.getBytes(charset)).toBase64
     def toBase64Ascii: String     = toBase64(StandardCharsets.US_ASCII)
     def toBase64UTF8: String      = toBase64(StandardCharsets.UTF_8)
-    def toBase64UTF8Mime: String  = toBase64(StandardCharsets.UTF_8)
-    def toBase64AsciiMime: String = toBase64(StandardCharsets.US_ASCII)
+    def toBase64UTF8Mime: String  = toBase64Mime(StandardCharsets.UTF_8)
+    def toBase64AsciiMime: String = toBase64Mime(StandardCharsets.US_ASCII)
 
     def toBitVector(charset: Charset = StandardCharsets.US_ASCII): BitVector =
       BitVector(str.getBytes(charset))
