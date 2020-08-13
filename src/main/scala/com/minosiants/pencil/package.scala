@@ -16,6 +16,8 @@
 
 package com.minosiants
 
+import java.nio.charset.StandardCharsets
+
 import cats.data.Kleisli
 import com.minosiants.pencil.syntax.LiteralsSyntax
 import scodec.bits.{ BitVector, ByteVector }
@@ -28,7 +30,7 @@ package object pencil extends LiteralsSyntax {
 
   implicit class ExtraStringOps(str: String) {
     def toBase64: String = {
-      BitVector.view(str.getBytes()).toBase64
+      BitVector.view(str.getBytes(StandardCharsets.UTF_8)).toBase64
     }
     def toBitVector: BitVector = BitVector(str.getBytes)
 

@@ -168,7 +168,7 @@ object Smtp {
     Smtp[F] { req =>
       req.email match {
         case TextEmail(_, _, _, _, _, Some(Ascii(body))) =>
-          (text(s"$body ${Command.end}").flatMap(_ => endEmail[F]())).run(req)
+          (text(s"$body${Command.end}").flatMap(_ => endEmail[F]())).run(req)
         case _ => Error.smtpError[F, Replies]("Body is not ascii")
       }
     }
@@ -177,9 +177,9 @@ object Smtp {
       : Smtp[F, Option[Unit]] = Smtp[F] { req =>
     req.email match {
       case TextEmail(_, _, _, _, Some(Subject(sub)), _) =>
-        text(s"Subject: $sub ${Command.end}").run(req).map(Some(_))
+        text(s"Subject: $sub${Command.end}").run(req).map(Some(_))
       case MimeEmail(_, _, _, _, Some(Subject(sub)), _, _, _) =>
-        text(s"Subject: =?utf-8?b?${sub.toBase64}?= ${Command.end}")
+        text(s"Subject: =?utf-8?b?${sub.toBase64}?=${Command.end}")
           .run(req)
           .map(Some(_))
       case _ => Applicative[F].pure(None)
@@ -188,16 +188,16 @@ object Smtp {
   }
 
   def fromHeader[F[_]](): Smtp[F, Unit] = Smtp[F] { req =>
-    text(s"From: ${req.email.from.show} ${Command.end}").run(req)
+    text(s"From: ${req.email.from.show}${Command.end}").run(req)
   }
   def toHeader[F[_]](): Smtp[F, Unit] = Smtp[F] { req =>
-    text(s"To: ${req.email.to.show} ${Command.end}").run(req)
+    text(s"To: ${req.email.to.show}${Command.end}").run(req)
   }
 
   def ccHeader[F[_]: Applicative](): Smtp[F, Option[Unit]] = Smtp[F] { req =>
     req.email.cc match {
       case Some(v) =>
-        text(s"Cc: ${v.show} ${Command.end}").run(req).map(Some(_))
+        text(s"Cc: ${v.show}${Command.end}").run(req).map(Some(_))
       case None => Applicative[F].pure(None)
     }
   }
@@ -205,7 +205,7 @@ object Smtp {
   def bccHeader[F[_]: Applicative](): Smtp[F, Option[Unit]] = Smtp[F] { req =>
     req.email.bcc match {
       case Some(v) =>
-        text(s"Bcc: ${v.show} ${Command.end}").run(req).map(Some(_))
+        text(s"Bcc: ${v.show}${Command.end}").run(req).map(Some(_))
       case None => Applicative[F].pure(None)
     }
   }
@@ -219,16 +219,16 @@ object Smtp {
     } yield ()
 
   def mimeHeader[F[_]](): Smtp[F, Unit] = {
-    text(s"${headerShow.show(`MIME-Version`())} ${Command.end}")
+    text(s"${headerShow.show(`MIME-Version`())}${Command.end}")
   }
 
   def contentTypeHeader[F[_]](
       ct: `Content-Type`
-  ): Smtp[F, Unit] = text(s"${headerShow.show(ct)} ${Command.end}")
+  ): Smtp[F, Unit] = text(s"${headerShow.show(ct)}${Command.end}")
 
   def contentTransferEncoding[F[_]](encoding: Encoding): Smtp[F, Unit] =
     text(
-      s"${headerShow.show(`Content-Transfer-Encoding`(encoding))} ${Command.end}"
+      s"${headerShow.show(`Content-Transfer-Encoding`(encoding))}${Command.end}"
     )
 
   def boundary[F[_]: ApplicativeError[*[_], Throwable]](
@@ -238,7 +238,7 @@ object Smtp {
       case e @ MimeEmail(_, _, _, _, _, _, _, Boundary(b)) =>
         val end = if (isFinal) "--" else ""
         if (e.isMultipart)
-          text(s"--$b$end ${Command.end}").run(req)
+          text(s"--$b$end${Command.end}").run(req)
         else
           Applicative[F].unit
       case TextEmail(_, _, _, _, _, _) => Error.smtpError[F, Unit]("not mime")

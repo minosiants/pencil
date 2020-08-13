@@ -38,19 +38,19 @@ object Command {
   case object StartTls                    extends Command
 
   implicit lazy val CommandShow: Show[Command] = Show.show {
-    case Ehlo(domain) => s"EHLO $domain $end"
+    case Ehlo(domain) => s"EHLO $domain$end"
     case Mail(Mailbox(localPart, domain)) =>
-      s"MAIL FROM: <$localPart@$domain> $end"
+      s"MAIL FROM: <$localPart@$domain>$end"
     case Rcpt(Mailbox(localPart, domain)) =>
-      s"RCPT TO: <$localPart@$domain> $end"
-    case Data      => s"DATA $end"
-    case Rset      => s"RSET $end"
-    case Vrfy(str) => s"VRFY $str $end"
-    case Noop      => s"NOOP $end"
-    case Quit      => s"QUIT $end"
+      s"RCPT TO: <$localPart@$domain>$end"
+    case Data      => s"DATA$end"
+    case Rset      => s"RSET$end"
+    case Vrfy(str) => s"VRFY $str$end"
+    case Noop      => s"NOOP$end"
+    case Quit      => s"QUIT$end"
     case Text(txt) => s"$txt"
-    case AuthLogin => s"AUTH LOGIN $end"
-    case StartTls  => s"STARTTLS $end"
+    case AuthLogin => s"AUTH LOGIN$end"
+    case StartTls  => s"STARTTLS$end"
 
   }
 

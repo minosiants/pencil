@@ -75,6 +75,6 @@ final case class CommandCodec() extends Codec[Command] {
   private val END   = Command.end.toBitVector
   private val SPACE = ByteVector(" ".getBytes).toBitVector
   private def extractText(bits: BitVector) =
-    bits.drop(SPACE.size).dropRight(SPACE.size + END.size)
+    bits.drop(SPACE.size).dropRight(END.size)
 
 }
