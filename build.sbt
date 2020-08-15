@@ -15,7 +15,7 @@ lazy val root = (project in file("."))
     organization := "com.minosiants",
     name := "pencil",
     scalaVersion := "2.12.11",
-    crossScalaVersions := Seq("2.12.11", "2.13.1"),
+    crossScalaVersions := Seq("2.12.11", "2.13.3"),
     scalacOptions ++= Seq(
       "-language:experimental.macros",
       "-Yrangepos",
@@ -39,7 +39,7 @@ lazy val root = (project in file("."))
       "org.scodec"      %% "scodec-stream"              % scodecStreamVersion % "test",
       "ch.qos.logback"  % "logback-classic"             % logbackVersion
     ),
-    addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3"),
+    addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.11.0" cross CrossVersion.full),
     addCompilerPlugin(scalafixSemanticdb),
     publishTo := sonatypePublishToBundle.value
   )
