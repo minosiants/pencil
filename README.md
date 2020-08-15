@@ -16,7 +16,7 @@ It is build on top of [cats](https://typelevel.org/cats/), [cats-effect](https:/
 Add dependency to your `build.sbt`
 
 ```scala
-libraryDependencies += "com.minosiants" %% "pencil" % "0.2.3"
+libraryDependencies += "com.minosiants" %% "pencil" % "0.3.0"
 ```
 
 ### Examples how to use it
@@ -56,7 +56,7 @@ object Main extends IOApp {
                               Username("user1@example.com"),
                               Password("12345678")
                             )
-          val client = Client("localhost", 25, Some(credentials))(blocker, sg, tls)
+          val client = Client[IO]("localhost", 25, Some(credentials))(blocker, sg, tls)
           val result = client.send(email)
 
           result.attempt
