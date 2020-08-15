@@ -27,6 +27,7 @@ import scodec.codecs._
 import scodec.{ Attempt, DecodeResult }
 
 import scala.concurrent.duration.FiniteDuration
+import com.minosiants.pencil.data.Error
 
 /**
   * Wraps [[Socket[IO]]] with smtp specific protocol
@@ -53,7 +54,7 @@ object SmtpSocket {
       case Attempt.Successful(DecodeResult(value, _)) =>
         Applicative[F].pure(value)
       case Attempt.Failure(cause) =>
-        data.Error.smtpError[F, Replies](cause.messageWithContext)
+        Error.smtpError[F, Replies](cause.messageWithContext)
     }
 
   def fromSocket[F[_]: MonadError[*[_], Throwable]](
@@ -65,7 +66,7 @@ object SmtpSocket {
     override def read(): F[Replies] =
       s.read(8192, Some(readTimeout)).flatMap {
         case Some(chunk) => bytesToReply[F](chunk.toArray)
-        case None        => data.Error.smtpError[F, Replies]("Nothing to read")
+        case None        => Error.smtpError[F, Replies]("Nothing to read")
       }
 
     override def write(command: Command): F[Unit] =
@@ -73,7 +74,7 @@ object SmtpSocket {
         case Attempt.Successful(value) =>
           s.write(Chunk.array(value.toByteArray), Some(writeTimeout))
         case Attempt.Failure(cause) =>
-          data.Error.smtpError[F, Unit](cause.messageWithContext)
+          Error.smtpError[F, Unit](cause.messageWithContext)
       }
 
   }
