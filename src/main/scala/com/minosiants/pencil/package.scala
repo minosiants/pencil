@@ -29,12 +29,9 @@ package object pencil extends LiteralsSyntax {
   val CRLF: ByteVector = ByteVector("\r\n".getBytes)
 
   implicit class ExtraStringOps(str: String) {
-    def toBase64: String = {
-      BitVector.view(str.getBytes(StandardCharsets.UTF_8)).toBase64
-    }
-    def toBitVector: BitVector = BitVector(str.getBytes)
-
-    def toByteVector: ByteVector = ByteVector(str.getBytes)
+    def toBase64: String         = toBitVector.toBase64
+    def toBitVector: BitVector   = BitVector(str.getBytes(StandardCharsets.UTF_8))
+    def toByteVector: ByteVector = toBitVector.bytes
   }
 
 }
