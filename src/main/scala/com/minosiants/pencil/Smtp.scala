@@ -69,13 +69,13 @@ object Smtp {
     if (replies.success) Applicative[F].pure(replies)
     else Error.smtpError[F, Replies](replies.show)
 
-  def read[F[_]: MonadError[*[_], Throwable]](): Smtp[F, Replies] =
+  def read[F[_]: MonadError[*[_], Throwable]]: Smtp[F, Replies] =
     Smtp[F](_.socket.read()).flatMapF(processErrors[F])
 
   def command1[F[_]: MonadError[*[_], Throwable]](
       run: Email => Command
   ): Smtp[F, Replies] =
-    write[F](run).flatMap(_ => read[F]())
+    write[F](run).flatMap(_ => read[F])
 
   def command[F[_]: MonadError[*[_], Throwable]](c: Command): Smtp[F, Replies] =
     command1(const(c))
@@ -158,7 +158,7 @@ object Smtp {
           for {
             _ <- boundary[F](true)
             _ <- text[F](Command.endEmail)
-            r <- read[F]()
+            r <- read[F]
           } yield r
       }
       p.run(req)

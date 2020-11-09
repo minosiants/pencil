@@ -81,7 +81,7 @@ object LiteralSyntaxMacros {
       "Attachment",
       Attachment
         .fromString[cats.effect.IO](_)
-        .unsafeRunSync
+        .unsafeRunSync()
         .isRight, // We're touching files in macros?
       s => c.universe.reify(Attachment.unsafeFromString(s.splice))
     )
