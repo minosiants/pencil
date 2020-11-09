@@ -39,8 +39,8 @@ object Header {
     case `MIME-Version`(value) => s"MIME-Version: $value"
     case `Content-Type`(ct, params) =>
       val values = params
-        .foldRight(List.empty[String]) { (item, acc) =>
-          acc :+ s"${item._1}=${item._2}"
+        .foldLeft(List.empty[String]) { (acc, item) =>
+          s"${item._1}=${item._2}" :: acc
         }
         .mkString(";")
       s"Content-Type: ${ct.show}; $values"
