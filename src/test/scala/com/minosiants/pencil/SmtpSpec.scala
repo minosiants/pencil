@@ -293,7 +293,7 @@ class SmtpSpec extends SmtpBaseSpec {
     result.map(_._2) must beRight(
       List(
         s"--${email.boundary.value}${Command.end}",
-        s"Content-Type: image/png; name=${attachment.file.getFileName.toString}${Command.end}",
+        s"Content-Type: image/png; name==?utf-8?b?${attachment.file.getFileName.toString.toBase64}?=${Command.end}",
         s"Content-Transfer-Encoding: base64${Command.end}",
         s"${Command.end}"
       ) ++ encodedFile.flatMap(SmtpSpec.lines)

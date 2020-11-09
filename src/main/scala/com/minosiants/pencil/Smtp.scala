@@ -319,7 +319,7 @@ object Smtp {
                 .use(ContentTypeFinder.findType[F])
               _ <- mimePart[F](
                 `base64`,
-                `Content-Type`(ct, Map("name" -> a.file.getFileName.toString))
+                `Content-Type`(ct, Map("name" -> s"=?utf-8?b?${a.file.getFileName.toString.toBase64}?="))
               ).run(req)
               _ <- readAll[F](a.file, req.blocker, 1024)
                 .through(fs2.text.base64Encode[F])
