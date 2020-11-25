@@ -20,9 +20,9 @@ import cats.implicits._
 import java.io.InputStream
 import java.nio.file.{ Path, Paths, Files => JFiles }
 
-import cats.effect.{ Sync, Resource }
+import cats.MonadError
+import cats.effect.{ Resource, Sync }
 import com.minosiants.pencil.data.Error
-
 import Function._
 
 object Files {
@@ -45,16 +45,28 @@ object Files {
       }
   }
 
-  def pathFrom[F[_]: Sync](file: String): F[Either[Error, Path]] =
-    Sync[F].delay {
-      val path = Paths.get(file)
-      Either.cond(JFiles.exists(path), path, Error.ResourceNotFound(file))
+  def pathFrom[F[_]: MonadError[*[_], Throwable]](file: String): F[Path] =
+    MonadError[F, Throwable].ensure {
+      Paths.get(file).pure[F]
+    } {
+      Error.ResourceNotFound(file)
+    } { path =>
+      JFiles.exists(path)
     }
 
-  def pathFromClassLoader[F[_]: Sync](file: String): F[Either[Error, Path]] =
-    Sync[F].delay {
-      val resource = getClass.getClassLoader.getResource(file)
-      val cond     = resource != null && JFiles.exists(Paths.get(resource.toURI))
-      Either.cond(cond, Paths.get(resource.toURI), Error.ResourceNotFound(file))
-    }
+  def pathFromClassLoader[F[_]: Sync](file: String): F[Path] = {
+    Sync[F]
+      .delay {
+        getClass.getClassLoader.getResource(file)
+      }
+      .flatMap { resource =>
+        if (resource != null && JFiles.exists(Paths.get(resource.toURI)))
+          Paths.get(resource.toURI).pure[F]
+        else Error.resourceNotFound[F, Path](file)
+      }
+      .handleErrorWith { _ =>
+        Error.resourceNotFound[F, Path](file)
+      }
+
+  }
 }
