@@ -73,18 +73,6 @@ object LiteralSyntaxMacros {
       Mailbox.fromString(_).isRight,
       s => c.universe.reify(Bcc(Mailbox.unsafeFromString(s.splice)))
     )
-  def attachmentInterpolator(
-      c: blackbox.Context
-  )(args: c.Expr[Any]*): c.Expr[Attachment] =
-    singlePartInterpolator(c)(
-      args,
-      "Attachment",
-      Attachment
-        .fromString[cats.effect.IO](_)
-        .unsafeRunSync()
-        .isRight, // We're touching files in macros?
-      s => c.universe.reify(Attachment.unsafeFromString(s.splice))
-    )
 
   private def singlePartInterpolator[A](c: Context)(
       args: Seq[c.Expr[Any]],

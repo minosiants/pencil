@@ -18,24 +18,21 @@ package com.minosiants.pencil
 package data
 
 import java.nio.file.Path
+
+import cats.effect.Sync
 import cats.implicits._
-import cats.effect.{ Sync, IO }
 
 final case class Attachment(file: Path) extends Product with Serializable
 
 object Attachment {
 
-  def fromString[F[_]: Sync](file: String): F[Either[Error, Attachment]] = {
+  def fromString[F[_]: Sync](file: String): F[Attachment] = {
     Files
       .pathFrom[F](file)
-      .flatMap {
-        case Left(_)  => Files.pathFromClassLoader[F](file)
-        case Right(f) => f.asRight[Error].pure[F]
+      .handleErrorWith { _ =>
+        Files.pathFromClassLoader[F](file)
       }
-      .map(_.map(Attachment(_)))
+      .map(Attachment(_))
   }
-
-  def unsafeFromString(file: String): Attachment =
-    fromString[IO](file).rethrow.unsafeRunSync
 
 }

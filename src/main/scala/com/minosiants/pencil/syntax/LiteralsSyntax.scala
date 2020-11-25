@@ -17,6 +17,7 @@
 package com.minosiants.pencil
 package syntax
 
+import cats.effect.IO
 import com.minosiants.pencil.data._
 
 trait LiteralsSyntax {
@@ -35,7 +36,8 @@ class LiteralsOps(val sc: StringContext) extends AnyVal {
   def bcc(args: Any*): Bcc = macro LiteralSyntaxMacros.bccInterpolator
   def subject(): Subject = Subject(sc.s())
 
-  def attachment(args: Any*): Attachment =
-    macro LiteralSyntaxMacros.attachmentInterpolator
+  def attachment(args: Any*): IO[Attachment] =
+    Attachment
+      .fromString[IO](sc.s())
 
 }
