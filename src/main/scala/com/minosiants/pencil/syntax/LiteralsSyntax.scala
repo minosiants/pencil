@@ -17,7 +17,7 @@
 package com.minosiants.pencil
 package syntax
 
-import cats.effect.IO
+import java.nio.file.Paths
 import com.minosiants.pencil.data._
 
 trait LiteralsSyntax {
@@ -35,9 +35,6 @@ class LiteralsOps(val sc: StringContext) extends AnyVal {
   def cc(args: Any*): Cc = macro LiteralSyntaxMacros.ccInterpolator
   def bcc(args: Any*): Bcc = macro LiteralSyntaxMacros.bccInterpolator
   def subject(): Subject = Subject(sc.s())
-
-  def attachment(args: Any*): IO[Attachment] =
-    Attachment
-      .fromString[IO](sc.s())
+  def attachment(): Attachment = Attachment(Paths.get(sc.s()))
 
 }
