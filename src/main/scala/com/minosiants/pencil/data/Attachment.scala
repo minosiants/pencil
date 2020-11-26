@@ -18,11 +18,12 @@ package com.minosiants.pencil
 package data
 
 import java.nio.file.Path
-
-import cats.effect.Sync
 import cats.implicits._
+import cats.effect.Sync
 
-final case class Attachment(file: Path) extends Product with Serializable
+final case class Attachment(private[pencil] val file: Path)
+    extends Product
+    with Serializable
 
 object Attachment {
 
