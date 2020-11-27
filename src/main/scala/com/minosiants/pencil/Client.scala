@@ -23,11 +23,11 @@ import com.minosiants.pencil.data._
 import com.minosiants.pencil.protocol._
 import com.minosiants.pencil.data.Email.{ MimeEmail, TextEmail }
 import fs2.io.tcp.{ Socket, SocketGroup }
+import fs2.io.tls.TLSContext
+import io.chrisdavenport.log4cats.Logger
 
 import scala.concurrent.duration._
-import fs2.io.tls.TLSContext
 import Function.const
-import cats.effect.Blocker
 
 /**
   * Smtp client
@@ -53,45 +53,52 @@ object Client {
       credentials: Option[Credentials] = None,
       readTimeout: FiniteDuration = 5.minutes,
       writeTimeout: FiniteDuration = 5.minutes
-  )(blocker: Blocker, sg: SocketGroup, tlsContext: TLSContext): Client[F] =
+  )(
+      blocker: Blocker,
+      sg: SocketGroup,
+      tlsContext: TLSContext,
+      logger: Logger[F]
+  ): Client[F] =
     new Client[F] {
-
-      lazy val socket: Resource[F, Socket[F]] =
+      val socket: Resource[F, Socket[F]] =
         sg.client[F](new InetSocketAddress(host, port))
 
-      lazy val tlsSocket: Socket[F] => Resource[F, SmtpSocket[F]] =
-        (s: Socket[F]) =>
-          tlsContext
-            .client[F](s)
-            .map(SmtpSocket.fromSocket(_, readTimeout, writeTimeout))
+      def tlsSmtpSocket(s: Socket[F]): Resource[F, SmtpSocket[F]] =
+        tlsContext.client(s).map { cs =>
+          SmtpSocket.fromSocket(cs, logger, readTimeout, writeTimeout)
+        }
 
       override def send(
           email: Email
       ): F[Replies] = {
+        val sockets = for {
+          s   <- socket
+          tls <- tlsSmtpSocket(s)
+        } yield (s, tls)
 
-        socket.use { s =>
-          tlsSocket(s).use { tls =>
-            (for {
+        sockets.use {
+          case (s, tls) =>
+            val request = for {
               _   <- Smtp.init[F]()
               rep <- Smtp.ehlo[F]()
               r <- if (supportTLS(rep)) sendEmailViaTls(tls)
               else login(rep).flatMap(_ => sender)
-            } yield r).run(
+            } yield r
+
+            request.run(
               Request(
                 email,
-                SmtpSocket.fromSocket(s, readTimeout, writeTimeout),
+                SmtpSocket.fromSocket(s, logger, readTimeout, writeTimeout),
                 blocker
               )
             )
-
-          }
         }
       }
 
       def login(rep: Replies): Smtp[F, Unit] =
         credentials
           .filter(const(supportLogin(rep)))
-          .fold(Smtp.pure[F, Unit](()))(Smtp.login[F])
+          .fold(Smtp.unit)(Smtp.login[F])
 
       def supportTLS(rep: Replies): Boolean =
         rep.replies.exists(r => r.text.contains("STARTTLS"))
@@ -124,6 +131,7 @@ object Client {
               r <- Smtp.asciiBody[F]()
               _ <- Smtp.quit[F]()
             } yield r
+
           case MimeEmail(_, _, _, _, _, _, _, _) =>
             for {
               _ <- Smtp.mail[F]()
@@ -139,7 +147,5 @@ object Client {
             } yield r
         }
       }
-
     }
-
 }

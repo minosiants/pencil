@@ -9,6 +9,7 @@ import cats.instances.list._
 import cats.syntax.traverse._
 import com.minosiants.pencil.data.{ Email, Error }
 import fs2.io.tcp.SocketGroup
+import io.chrisdavenport.log4cats.slf4j.Slf4jLogger
 import org.specs2.mutable.SpecificationLike
 import scodec.bits.BitVector
 import scodec.{ Codec, DecodeResult }
@@ -16,12 +17,14 @@ import scodec.{ Codec, DecodeResult }
 import scala.concurrent.duration._
 
 trait SmtpBaseSpec extends SpecificationLike with CatsIO {
+  val logger = Slf4jLogger.getLogger[IO]
 
   def socket(
       address: InetSocketAddress,
       sg: SocketGroup
   ): Resource[IO, SmtpSocket[IO]] =
-    sg.client[IO](address).map(SmtpSocket.fromSocket(_, 5.seconds, 5.seconds))
+    sg.client[IO](address)
+      .map(SmtpSocket.fromSocket(_, logger, 5.seconds, 5.seconds))
 
   type ServerState = Ref[IO, List[BitVector]]
 
