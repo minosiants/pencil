@@ -49,6 +49,9 @@ object Smtp {
   def pure[F[_]: Applicative, A](a: A): Smtp[F, A] =
     Kleisli.pure(a)
 
+  def unit[F[_]: Applicative]: Smtp[F, Unit] =
+    Kleisli.pure(())
+
   def liftF[F[_], A](a: F[A]): Smtp[F, A] =
     Kleisli.liftF(a)
 
@@ -134,6 +137,7 @@ object Smtp {
         )
       )
     )
+
   def login[F[_]: MonadError[*[_], Throwable]](
       credentials: Credentials
   ): Smtp[F, Unit] =
@@ -190,6 +194,7 @@ object Smtp {
   def fromHeader[F[_]](): Smtp[F, Unit] = Smtp[F] { req =>
     text(s"From: ${req.email.from.show}${Command.end}").run(req)
   }
+
   def toHeader[F[_]](): Smtp[F, Unit] = Smtp[F] { req =>
     text(s"To: ${req.email.to.show}${Command.end}").run(req)
   }
@@ -209,6 +214,7 @@ object Smtp {
       case None => Applicative[F].pure(None)
     }
   }
+
   def mainHeaders[F[_]: MonadError[*[_], Throwable]](): Smtp[F, Unit] =
     for {
       _ <- fromHeader[F]()
@@ -225,6 +231,10 @@ object Smtp {
   def contentTypeHeader[F[_]](
       ct: `Content-Type`
   ): Smtp[F, Unit] = text(s"${headerShow.show(ct)}${Command.end}")
+
+  def contentDispositionHeader[F[_]](
+      cd: `Content-Disposition`
+  ): Smtp[F, Unit] = text(s"${headerShow.show(cd)}${Command.end}")
 
   def contentTransferEncoding[F[_]](encoding: Encoding): Smtp[F, Unit] =
     text(
@@ -247,11 +257,13 @@ object Smtp {
 
   def mimePart[F[_]: MonadError[*[_], Throwable]](
       mech: Encoding,
-      ct: `Content-Type`
+      ct: `Content-Type`,
+      cdO: Option[`Content-Disposition`] = None
   ): Smtp[F, Unit] =
     for {
       _ <- boundary[F]()
       _ <- contentTypeHeader[F](ct)
+      _ <- cdO.fold(ifEmpty = unit[F])(cd => contentDispositionHeader(cd))
       _ <- contentTransferEncoding[F](mech)
       _ <- text(Command.end)
     } yield ()
@@ -311,20 +323,19 @@ object Smtp {
       req.email match {
         case TextEmail(_, _, _, _, _, _) =>
           Error.smtpError[F, Unit]("attachments not supported")
+
         case MimeEmail(_, _, _, _, _, _, attach, _) =>
           val result = attach.map { a =>
+            val encodedAttachmentName = s"=?utf-8?b?${a.file.getFileName.toString.toBase64}?="
+
             for {
               ct <- Files
                 .inputStream[F](a.file)
                 .use(ContentTypeFinder.findType[F])
               _ <- mimePart[F](
                 `base64`,
-                `Content-Type`(
-                  ct,
-                  Map(
-                    "name" -> s"=?utf-8?b?${a.file.getFileName.toString.toBase64}?="
-                  )
-                )
+                `Content-Type`(ct, params = Map("name" -> encodedAttachmentName)),
+                Some(`Content-Disposition`(ContentDisposition.Attachment, params = Map("filename" -> encodedAttachmentName)))
               ).run(req)
               _ <- readAll[F](a.file, req.blocker, 1024)
                 .through(fs2.text.base64Encode[F])
@@ -336,9 +347,9 @@ object Smtp {
 
             } yield ()
           }
+
           result.sequence.void
       }
     }
   }
-
 }

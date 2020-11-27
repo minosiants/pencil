@@ -8,7 +8,7 @@ import com.minosiants.pencil.data.Email._
 import com.minosiants.pencil.data._
 import com.minosiants.pencil.protocol.ContentType.`application/pdf`
 import com.minosiants.pencil.protocol.Encoding.`base64`
-import com.minosiants.pencil.protocol.Header.`Content-Type`
+import com.minosiants.pencil.protocol.Header._
 import com.minosiants.pencil.protocol._
 import scodec.codecs
 
@@ -186,7 +186,26 @@ class SmtpSpec extends SmtpBaseSpec {
     )
     result.map(_._2) must beRight(
       List(
-        s"Content-Type: application/pdf; param2=value2;param1=value1${Command.end}"
+        s"Content-Type: application/pdf; param1=value1;param2=value2${Command.end}"
+      )
+    )
+  }
+
+  "send contentDispositionHeader" in {
+    val email = SmtpSpec.mime
+    val result = testCommand(
+      Smtp.contentDispositionHeader(
+        `Content-Disposition`(
+          ContentDisposition.Attachment,
+          Map("param1" -> "value1", "param2" -> "value2")
+        )
+      ),
+      email,
+      codecs.ascii
+    )
+    result.map(_._2) must beRight(
+      List(
+        s"Content-Disposition: attachment; param1=value1;param2=value2${Command.end}"
       )
     )
   }
@@ -290,10 +309,13 @@ class SmtpSpec extends SmtpBaseSpec {
       .unsafeRunSync()
 
     val result = testCommand(Smtp.attachments(), email, codecs.ascii)
+
+    val encodedAttachmentName = s"=?utf-8?b?${attachment.file.getFileName.toString.toBase64}?="
     result.map(_._2) must beRight(
       List(
         s"--${email.boundary.value}${Command.end}",
-        s"Content-Type: image/png; name==?utf-8?b?${attachment.file.getFileName.toString.toBase64}?=${Command.end}",
+        s"Content-Type: image/png; name=${encodedAttachmentName}${Command.end}",
+        s"Content-Disposition: attachment; filename=${encodedAttachmentName}${Command.end}",
         s"Content-Transfer-Encoding: base64${Command.end}",
         s"${Command.end}"
       ) ++ encodedFile.flatMap(SmtpSpec.lines)
