@@ -31,21 +31,23 @@ object Header {
       params: Map[String, String] = Map.empty
   ) extends Header
 
-  final case class `Content-Transfer-Encoding`(mechanism: Encoding)
-      extends Header
+  final case class `Content-Transfer-Encoding`(
+      mechanism: Encoding
+  ) extends Header
 
   implicit lazy val headerShow: Show[Header] = Show.show {
+    case `MIME-Version`(value) =>
+      s"MIME-Version: $value"
 
-    case `MIME-Version`(value) => s"MIME-Version: $value"
     case `Content-Type`(ct, params) =>
-      val values = params
-        .foldLeft(List.empty[String]) { (acc, item) =>
-          s"${item._1}=${item._2}" :: acc
-        }
-        .mkString(";")
+      val values =
+        params
+          .iterator
+          .map { case (key, value) => s"${key}=${value}" }
+          .mkString(";")
       s"Content-Type: ${ct.show}; $values"
+
     case `Content-Transfer-Encoding`(mechanism) =>
       s"Content-Transfer-Encoding: ${mechanism.show}"
-
   }
 }

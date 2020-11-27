@@ -46,7 +46,7 @@ final case class DelimiterListCodec[A](
   }
 
   override def encode(value: List[A]): Attempt[BitVector] =
-    valueCodec.encodeAll(value)
+    Codec.encodeSeq(valueCodec)(value)
 
   override def sizeBound: SizeBound = SizeBound.unknown
 }
