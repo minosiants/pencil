@@ -23,10 +23,10 @@ import com.minosiants.pencil.protocol.Command._
 import com.minosiants.pencil.protocol._
 import fs2.Chunk
 import fs2.io.tcp.Socket
+import io.chrisdavenport.log4cats.Logger
 import scodec.bits.BitVector
 import scodec.codecs._
-import scodec.{Attempt, DecodeResult}
-import io.chrisdavenport.log4cats.slf4j.Slf4jLogger
+import scodec.{ Attempt, DecodeResult }
 
 import scala.concurrent.duration.FiniteDuration
 import com.minosiants.pencil.data.Error
@@ -42,51 +42,44 @@ trait SmtpSocket[F[_]] {
   def read(): F[Replies]
 
   /**
-    * Semd [[Command]] to smtp server
+    * Send [[Command]] to smtp server
     */
   def write(command: Command): F[Unit]
 }
 
 object SmtpSocket {
-  implicit def logger[F[_]: Sync] = Slf4jLogger.getLogger[F]
-
-  def bytesToReply[F[_]: Sync: ApplicativeError[*[_], Throwable]](
-      bytes: Array[Byte]
-  ): F[Replies] =
-    Replies.codec.decode(BitVector(bytes)) match {
-
-      case Attempt.Successful(DecodeResult(value, _)) =>
-        logger[F].debug(s"Getting Replies: ${value.show}") *>
-        Applicative[F].pure(value)
-
-      case Attempt.Failure(cause) =>
-        logger[F].debug(s" Getting Error: ${cause.messageWithContext}") *>
-        Error.smtpError[F, Replies](cause.messageWithContext)
-    }
-
   def fromSocket[F[_]: Sync: MonadError[*[_], Throwable]](
       s: Socket[F],
+      logger: Logger[F],
       readTimeout: FiniteDuration,
       writeTimeout: FiniteDuration
   ): SmtpSocket[F] = new SmtpSocket[F] {
+    def bytesToReply(bytes: Array[Byte]): F[Replies] =
+      Replies.codec.decode(BitVector(bytes)) match {
+        case Attempt.Successful(DecodeResult(value, _)) =>
+          logger.debug(s"Getting Replies: ${value.show}") *>
+            Applicative[F].pure(value)
+
+        case Attempt.Failure(cause) =>
+          logger.debug(s" Getting Error: ${cause.messageWithContext}") *>
+            Error.smtpError[F, Replies](cause.messageWithContext)
+      }
 
     override def read(): F[Replies] =
       s.read(8192, Some(readTimeout)).flatMap {
-        case Some(chunk) => bytesToReply[F](chunk.toArray)
+        case Some(chunk) => bytesToReply(chunk.toArray)
         case None        => Error.smtpError[F, Replies]("Nothing to read")
       }
 
     override def write(command: Command): F[Unit] = {
-
       ascii.encode(command.show) match {
         case Attempt.Successful(value) =>
-          logger[F].debug(s"Sending command: ${command.show}") *>
-          s.write(Chunk.array(value.toByteArray), Some(writeTimeout))
+          logger.debug(s"Sending command: ${command.show}") *>
+            s.write(Chunk.array(value.toByteArray), Some(writeTimeout))
+
         case Attempt.Failure(cause) =>
           Error.smtpError[F, Unit](cause.messageWithContext)
       }
     }
-
   }
-
 }

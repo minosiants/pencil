@@ -15,8 +15,8 @@ lazy val root = (project in file("."))
   .settings(
     organization := "com.minosiants",
     name := "pencil",
-    scalaVersion := "2.12.11",
-    crossScalaVersions := Seq("2.12.11", "2.13.3"),
+    scalaVersion := "2.12.12",
+    crossScalaVersions := Seq("2.12.12", "2.13.4"),
     scalacOptions ++= Seq(
       "-language:experimental.macros",
       "-Yrangepos",
@@ -31,6 +31,7 @@ lazy val root = (project in file("."))
       "co.fs2"            %% "fs2-io"                     % fs2Version,
       "org.scodec"        %% "scodec-core"                % scodecCoreVersion,
       "org.scodec"        %% "scodec-cats"                % scodecCatsVersion,
+      "io.chrisdavenport" %% "log4cats-core"              % log4catsVersion,
       "org.apache.tika"   % "tika-core"                   % tikaVersion,
       "org.scala-lang"    % "scala-reflect"               % scalaVersion.value,
       "org.specs2"        %% "specs2-core"                % specs2Version % "test",
@@ -38,12 +39,11 @@ lazy val root = (project in file("."))
       "org.scalacheck"    %% "scalacheck"                 % scalacheckVersion % "test",
       "com.codecommit"    %% "cats-effect-testing-specs2" % catsEffectTestVersion % "test",
       "org.scodec"        %% "scodec-stream"              % scodecStreamVersion % "test",
-      "ch.qos.logback"    % "logback-classic"             % logbackVersion,
-      "io.chrisdavenport" %% "log4cats-core"              % log4catsVersion,
-      "io.chrisdavenport" %% "log4cats-slf4j"             % log4catsVersion
+      "ch.qos.logback"    % "logback-classic"             % logbackVersion % "test",
+      "io.chrisdavenport" %% "log4cats-slf4j"             % log4catsVersion % "test"
     ),
     addCompilerPlugin(
-      "org.typelevel" %% "kind-projector" % "0.11.0" cross CrossVersion.full
+      "org.typelevel" %% "kind-projector" % "0.11.1" cross CrossVersion.full
     ),
     addCompilerPlugin(scalafixSemanticdb),
     publishTo := sonatypePublishToBundle.value
