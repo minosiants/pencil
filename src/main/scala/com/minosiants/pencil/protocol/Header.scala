@@ -40,9 +40,11 @@ object Header {
       s"MIME-Version: $value"
 
     case `Content-Type`(ct, params) =>
-      val values = params.iterator
-        .map { case (key, value) => s"${key}=${value}" }
-        .mkString(";")
+      val values =
+        params
+          .iterator
+          .map { case (key, value) => s"${key}=${value}" }
+          .mkString(";")
       s"Content-Type: ${ct.show}; $values"
 
     case `Content-Transfer-Encoding`(mechanism) =>
