@@ -49,8 +49,7 @@ object Smtp {
   def pure[F[_]: Applicative, A](a: A): Smtp[F, A] =
     Kleisli.pure(a)
 
-  def unit[F[_]: Applicative]: Smtp[F, Unit] =
-    Kleisli.pure(())
+  def unit[F[_]: Applicative]: Smtp[F, Unit] = pure(())
 
   def liftF[F[_], A](a: F[A]): Smtp[F, A] =
     Kleisli.liftF(a)
