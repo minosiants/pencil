@@ -19,9 +19,10 @@ class SmtpSpec extends SmtpBaseSpec {
   "Smtp" should {
 
     "get response on EHLO" in {
-      val result = testCommand(Smtp.ehlo(), SmtpSpec.mime, codecs.ascii)
+      val host   = Host.local()
+      val result = testCommand(Smtp.ehlo(host), SmtpSpec.mime, codecs.ascii)
       result.map(_._1) must beRight(DataSamples.ehloReplies)
-      result.map(_._2) must beRight(List(s"EHLO pencil${Command.end}"))
+      result.map(_._2) must beRight(List(s"EHLO ${host.name}${Command.end}"))
     }
 
     "get response on RCPT" in {
