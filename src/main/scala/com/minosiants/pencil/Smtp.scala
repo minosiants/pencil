@@ -33,7 +33,7 @@ import Email._
 import Command._
 import com.minosiants.pencil.protocol.Code._
 import cats.effect.ContextShift
-import fs2.{Stream, Chunk}
+import fs2.{ Stream, Chunk }
 import fs2.io.file.readAll
 
 object Smtp {
@@ -284,7 +284,7 @@ object Smtp {
         case MimeEmail(_, _, _, _, _, _, _, _) =>
           Applicative[F].unit
 
-        case _                                 =>
+        case _ =>
           Error.smtpError[F, Unit]("Does not support multipart")
       }
     }
@@ -351,9 +351,8 @@ object Smtp {
                 .through(fs2.text.base64.encode)
                 .flatMap(s => Stream.chunk(Chunk.chars(s.toCharArray)))
                 .chunkN(n = 76)
-                .evalMap { chunk =>
-                  text(s"${chunk.iterator.mkString}${Command.end}").run(req)
-                }
+                .map(chunk => chunk.iterator.mkString)
+                .evalMap(line => text(s"${line}${Command.end}").run(req))
                 .compile
                 .drain
             } yield ()
