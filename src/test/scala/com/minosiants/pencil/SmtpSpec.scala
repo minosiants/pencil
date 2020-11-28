@@ -19,9 +19,10 @@ class SmtpSpec extends SmtpBaseSpec {
   "Smtp" should {
 
     "get response on EHLO" in {
-      val result = testCommand(Smtp.ehlo(), SmtpSpec.mime, codecs.ascii)
+      val host   = Host.local()
+      val result = testCommand(Smtp.ehlo(host), SmtpSpec.mime, codecs.ascii)
       result.map(_._1) must beRight(DataSamples.ehloReplies)
-      result.map(_._2) must beRight(List(s"EHLO pencil${Command.end}"))
+      result.map(_._2) must beRight(List(s"EHLO ${host.name}${Command.end}"))
     }
 
     "get response on RCPT" in {
@@ -298,34 +299,35 @@ class SmtpSpec extends SmtpBaseSpec {
   "send attachments" in {
     val email      = SmtpSpec.mime
     val attachment = email.attachments.head
+    val result     = testCommand(Smtp.attachments(), email, codecs.ascii)
+
     val encodedFile = Blocker[IO]
       .use { blocker =>
         fs2.io.file
           .readAll[IO](attachment.file, blocker, 1024)
-          .through(fs2.text.base64Encode)
+          .through(fs2.text.base64.encode)
           .compile
           .toList
+          .map { list =>
+            SmtpSpec.lines(list.mkString)
+          }
       }
       .unsafeRunSync()
+    val encodedAttachmentName =
+      s"=?utf-8?b?${attachment.file.getFileName.toString.toBase64}?="
 
-    val result = testCommand(Smtp.attachments(), email, codecs.ascii)
-
-    val encodedAttachmentName = s"=?utf-8?b?${attachment.file.getFileName.toString.toBase64}?="
     result.map(_._2) must beRight(
-      List(
-        s"--${email.boundary.value}${Command.end}",
-        s"Content-Type: image/png; name=${encodedAttachmentName}${Command.end}",
-        s"Content-Disposition: attachment; filename=${encodedAttachmentName}${Command.end}",
-        s"Content-Transfer-Encoding: base64${Command.end}",
-        s"${Command.end}"
-      ) ++ encodedFile.flatMap(SmtpSpec.lines)
+      s"--${email.boundary.value}${Command.end}" ::
+      s"Content-Type: image/png; name=${encodedAttachmentName}${Command.end}" ::
+      s"Content-Disposition: attachment; filename=${encodedAttachmentName}${Command.end}" ::
+      s"Content-Transfer-Encoding: base64${Command.end}" ::
+      s"${Command.end}" ::
+      encodedFile
     )
   }
-
 }
 
 object SmtpSpec {
-
   def lines(str: String): List[String] =
     str.grouped(76).map(_ + Command.end).toList
 

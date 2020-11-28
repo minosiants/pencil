@@ -23,7 +23,6 @@ import cats.syntax.show._
 sealed trait Header extends Product with Serializable
 
 object Header {
-
   final case class `MIME-Version`(value: String = "1.0") extends Header
 
   final case class `Content-Type`(

@@ -1,5 +1,5 @@
 # Pencil 
-
+[![Join the chat at https://gitter.im/minosiants/pencil](https://badges.gitter.im/minosiants/pencil.svg)](https://gitter.im/minosiants/pencil?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 ![build](https://github.com/minosiants/pencil/workflows/build/badge.svg)
 
 ### Overview 

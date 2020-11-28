@@ -19,3 +19,4 @@ tests.iml
 .metals
 .vscode
 project/metals.sbt
+.bsp

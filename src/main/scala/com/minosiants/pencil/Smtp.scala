@@ -33,15 +33,17 @@ import Email._
 import Command._
 import com.minosiants.pencil.protocol.Code._
 import cats.effect.ContextShift
+import fs2.{ Stream, Chunk }
 import fs2.io.file.readAll
 
 object Smtp {
-
   // Used for easier type inference
   def apply[F[_]]: SmtpPartiallyApplied[F] =
-    new SmtpPartiallyApplied[F] {}
+    new SmtpPartiallyApplied(dummy = true)
 
-  class SmtpPartiallyApplied[F[_]] {
+  private[pencil] final class SmtpPartiallyApplied[F[_]](
+      private val dummy: Boolean
+  ) extends AnyVal {
     def apply[A](run: Request[F] => F[A]): Smtp[F, A] =
       Kleisli(req => run(req))
   }
@@ -49,8 +51,7 @@ object Smtp {
   def pure[F[_]: Applicative, A](a: A): Smtp[F, A] =
     Kleisli.pure(a)
 
-  def unit[F[_]: Applicative]: Smtp[F, Unit] =
-    Kleisli.pure(())
+  def unit[F[_]: Applicative]: Smtp[F, Unit] = pure(())
 
   def liftF[F[_], A](a: F[A]): Smtp[F, A] =
     Kleisli.liftF(a)
@@ -85,8 +86,8 @@ object Smtp {
 
   def init[F[_]: MonadError[*[_], Throwable]](): Smtp[F, Replies] = read[F]
 
-  def ehlo[F[_]: MonadError[*[_], Throwable]](): Smtp[F, Replies] =
-    command(Ehlo("pencil"))
+  def ehlo[F[_]: MonadError[*[_], Throwable]](host: Host): Smtp[F, Replies] =
+    command(Ehlo(host.name))
 
   def mail[F[_]: MonadError[*[_], Throwable]](): Smtp[F, Replies] =
     command1(m => Mail(m.from.box))
@@ -173,7 +174,9 @@ object Smtp {
       req.email match {
         case TextEmail(_, _, _, _, _, Some(Ascii(body))) =>
           (text(s"$body${Command.end}").flatMap(_ => endEmail[F]())).run(req)
-        case _ => Error.smtpError[F, Replies]("Body is not ascii")
+
+        case _ =>
+          Error.smtpError[F, Replies]("Body is not ascii")
       }
     }
 
@@ -182,13 +185,15 @@ object Smtp {
     req.email match {
       case TextEmail(_, _, _, _, Some(Subject(sub)), _) =>
         text(s"Subject: $sub${Command.end}").run(req).map(Some(_))
+
       case MimeEmail(_, _, _, _, Some(Subject(sub)), _, _, _) =>
         text(s"Subject: =?utf-8?b?${sub.toBase64}?=${Command.end}")
           .run(req)
           .map(Some(_))
-      case _ => Applicative[F].pure(None)
-    }
 
+      case _ =>
+        Applicative[F].pure(None)
+    }
   }
 
   def fromHeader[F[_]](): Smtp[F, Unit] = Smtp[F] { req =>
@@ -203,7 +208,9 @@ object Smtp {
     req.email.cc match {
       case Some(v) =>
         text(s"Cc: ${v.show}${Command.end}").run(req).map(Some(_))
-      case None => Applicative[F].pure(None)
+
+      case None =>
+        Applicative[F].pure(None)
     }
   }
 
@@ -211,7 +218,9 @@ object Smtp {
     req.email.bcc match {
       case Some(v) =>
         text(s"Bcc: ${v.show}${Command.end}").run(req).map(Some(_))
-      case None => Applicative[F].pure(None)
+
+      case None =>
+        Applicative[F].pure(None)
     }
   }
 
@@ -251,7 +260,9 @@ object Smtp {
           text(s"--$b$end${Command.end}").run(req)
         else
           Applicative[F].unit
-      case TextEmail(_, _, _, _, _, _) => Error.smtpError[F, Unit]("not mime")
+
+      case TextEmail(_, _, _, _, _, _) =>
+        Error.smtpError[F, Unit]("not mime")
     }
   }
 
@@ -275,20 +286,22 @@ object Smtp {
           contentTypeHeader(
             `Content-Type`(`multipart/mixed`, Map("boundary" -> b))
           ).run(req)
-        case MimeEmail(_, _, _, _, _, _, _, _) => Applicative[F].unit
-        case _                                 => Error.smtpError[F, Unit]("Does not support multipart")
-      }
 
+        case MimeEmail(_, _, _, _, _, _, _, _) =>
+          Applicative[F].unit
+
+        case _ =>
+          Error.smtpError[F, Unit]("Does not support multipart")
+      }
     }
 
   def lines[F[_]: Applicative](txt: String): Smtp[F, Unit] = Smtp[F] { req =>
     txt
       .grouped(76)
       .toList
-      .traverse { ln =>
+      .traverse_ { ln =>
         text(s"$ln${Command.end}").run(req)
       }
-      .void
   }
 
   def mimeBody[F[_]: MonadError[*[_], Throwable]](): Smtp[F, Unit] = Smtp[F] {
@@ -313,9 +326,9 @@ object Smtp {
             `Content-Type`(`text/plain`, Map("charset" -> "UTF-8"))
           ).flatMap(_ => lines[F](body.toBase64)).run(req)
 
-        case _ => Error.smtpError[F, Unit]("not mime email")
+        case _ =>
+          Error.smtpError[F, Unit]("not mime email")
       }
-
   }
 
   def attachments[F[_]: Sync: ContextShift: Applicative](): Smtp[F, Unit] = {
@@ -324,31 +337,30 @@ object Smtp {
         case TextEmail(_, _, _, _, _, _) =>
           Error.smtpError[F, Unit]("attachments not supported")
 
-        case MimeEmail(_, _, _, _, _, _, attach, _) =>
-          val result = attach.map { a =>
-            val encodedAttachmentName = s"=?utf-8?b?${a.file.getFileName.toString.toBase64}?="
+        case MimeEmail(_, _, _, _, _, _, attachments, _) =>
+          attachments.traverse_ { a =>
+            val attachment = a.file
+            val encodedAttachmentName = s"=?utf-8?b?${attachment.getFileName.toString.toBase64}?="
 
             for {
               ct <- Files
-                .inputStream[F](a.file)
+                .inputStream[F](attachment)
                 .use(ContentTypeFinder.findType[F])
               _ <- mimePart[F](
                 `base64`,
                 `Content-Type`(ct, params = Map("name" -> encodedAttachmentName)),
                 Some(`Content-Disposition`(ContentDisposition.Attachment, params = Map("filename" -> encodedAttachmentName)))
               ).run(req)
-              _ <- readAll[F](a.file, req.blocker, 1024)
-                .through(fs2.text.base64Encode[F])
-                .evalMap { part =>
-                  lines[F](part).run(req)
-                }
+              _ <- readAll[F](attachment, req.blocker, 1024)
+                .through(fs2.text.base64.encode)
+                .flatMap(s => Stream.chunk(Chunk.chars(s.toCharArray)))
+                .chunkN(n = 76)
+                .map(chunk => chunk.iterator.mkString)
+                .evalMap(line => text(s"${line}${Command.end}").run(req))
                 .compile
                 .drain
-
             } yield ()
           }
-
-          result.sequence.void
       }
     }
   }
