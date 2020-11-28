@@ -10,7 +10,7 @@ object In {
 
   lazy val codec: Codec[In] = Codec[In](
     (in: In) => Command.codec.encode(in.command),
-    (bits: scodec.bits.BitVector) =>
+    bits =>
       for {
         command <- Command.codec.decode(bits)
       } yield DecodeResult(In(bits, command.value), BitVector.empty)

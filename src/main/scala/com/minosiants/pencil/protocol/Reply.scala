@@ -44,18 +44,23 @@ object Replies {
   implicit val codec: Codec[Replies] = (
     ("replies" | DelimiterListCodec(CRLF, Reply.codec))
   ).as[Replies]
+
 }
 
 object Reply {
+
   implicit lazy val ReplyShow: Show[Reply] = Show.fromToString
 
-  val textCodec = Codec[String](
-    (s: String) => ascii.encode(s + "\r\n"),
-    (bits: scodec.bits.BitVector) => {
-      if (bits.toByteVector.endsWith(CRLF))
-        ascii.decode(bits.dropRight(CRLF.bits.size))
-      else
-        ascii.decode(bits)
+  val textCodec: Codec[String] = Codec[String](
+    { (s: String) =>
+      ascii.encode(s + "\r\n")
+    }, { bits =>
+      {
+        if (bits.toByteVector.endsWith(CRLF))
+          ascii.decode(bits.dropRight(CRLF.bits.size))
+        else
+          ascii.decode(bits)
+      }
     }
   )
 
@@ -64,4 +69,5 @@ object Reply {
       ("sep" | limitedSizeBits(8, ascii)) ::
       ("text" | textCodec)
   ).as[Reply]
+
 }
