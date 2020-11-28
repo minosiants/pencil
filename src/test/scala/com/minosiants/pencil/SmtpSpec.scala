@@ -318,11 +318,11 @@ class SmtpSpec extends SmtpBaseSpec {
 
     result.map(_._2) must beRight(
       s"--${email.boundary.value}${Command.end}" ::
-      s"Content-Type: image/png; name=${encodedAttachmentName}${Command.end}" ::
-      s"Content-Disposition: attachment; filename=${encodedAttachmentName}${Command.end}" ::
-      s"Content-Transfer-Encoding: base64${Command.end}" ::
-      s"${Command.end}" ::
-      encodedFile
+        s"Content-Type: image/png; name=${encodedAttachmentName}${Command.end}" ::
+        s"Content-Disposition: attachment; filename=${encodedAttachmentName}${Command.end}" ::
+        s"Content-Transfer-Encoding: base64${Command.end}" ::
+        s"${Command.end}" ::
+        encodedFile
     )
   }
 }

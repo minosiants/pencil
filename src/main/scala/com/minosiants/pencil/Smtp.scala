@@ -340,7 +340,8 @@ object Smtp {
         case MimeEmail(_, _, _, _, _, _, attachments, _) =>
           attachments.traverse_ { a =>
             val attachment = a.file
-            val encodedAttachmentName = s"=?utf-8?b?${attachment.getFileName.toString.toBase64}?="
+            val encodedAttachmentName =
+              s"=?utf-8?b?${attachment.getFileName.toString.toBase64}?="
 
             for {
               ct <- Files
@@ -348,8 +349,16 @@ object Smtp {
                 .use(ContentTypeFinder.findType[F])
               _ <- mimePart[F](
                 `base64`,
-                `Content-Type`(ct, params = Map("name" -> encodedAttachmentName)),
-                Some(`Content-Disposition`(ContentDisposition.Attachment, params = Map("filename" -> encodedAttachmentName)))
+                `Content-Type`(
+                  ct,
+                  params = Map("name" -> encodedAttachmentName)
+                ),
+                Some(
+                  `Content-Disposition`(
+                    ContentDisposition.Attachment,
+                    params = Map("filename" -> encodedAttachmentName)
+                  )
+                )
               ).run(req)
               _ <- readAll[F](attachment, req.blocker, 1024)
                 .through(fs2.text.base64.encode)

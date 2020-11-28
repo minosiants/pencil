@@ -22,7 +22,7 @@ import cats.Show
 sealed trait ContentDisposition
 
 object ContentDisposition {
-  final case object Inline extends ContentDisposition
+  final case object Inline     extends ContentDisposition
   final case object Attachment extends ContentDisposition
 
   implicit lazy val contentTypeShow: Show[ContentDisposition] = Show {

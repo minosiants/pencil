@@ -40,11 +40,11 @@ object Header {
   ) extends Header
 
   private def paramsToValues(params: Map[String, String]): String =
-    params
-      .iterator
+    params.iterator
       .map {
         case (key, value) => s"${key}=${value}"
-      }.mkString(";")
+      }
+      .mkString(";")
 
   implicit lazy val headerShow: Show[Header] = Show.show {
     case `MIME-Version`(value) =>
