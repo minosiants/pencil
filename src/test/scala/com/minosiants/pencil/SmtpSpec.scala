@@ -280,27 +280,29 @@ class SmtpSpec extends SmtpBaseSpec {
   "send attachments" in {
     val email      = SmtpSpec.mime
     val attachment = email.attachments.head
+    val result = testCommand(Smtp.attachments(), email, codecs.ascii)
+
     val encodedFile = Blocker[IO]
       .use { blocker =>
         fs2.io.file
           .readAll[IO](attachment.file, blocker, 1024)
-          .through(fs2.text.base64Encode)
+          .through(fs2.text.base64.encode)
           .compile
           .toList
+          .map { list =>
+            SmtpSpec.lines(list.mkString)
+          }
       }
       .unsafeRunSync()
-
-    val result = testCommand(Smtp.attachments(), email, codecs.ascii)
-
     val encodedAttachmentName =
       s"=?utf-8?b?${attachment.file.getFileName.toString.toBase64}?="
+
     result.map(_._2) must beRight(
-      List(
-        s"--${email.boundary.value}${Command.end}",
-        s"Content-Type: image/png; name=${encodedAttachmentName}${Command.end}",
-        s"Content-Transfer-Encoding: base64${Command.end}",
-        s"${Command.end}"
-      ) ++ encodedFile.flatMap(SmtpSpec.lines)
+      s"--${email.boundary.value}${Command.end}" ::
+      s"Content-Type: image/png; name=${encodedAttachmentName}${Command.end}" ::
+      s"Content-Transfer-Encoding: base64${Command.end}" ::
+      s"${Command.end}" ::
+      encodedFile
     )
   }
 
