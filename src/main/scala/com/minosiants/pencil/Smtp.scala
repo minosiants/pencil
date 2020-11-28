@@ -33,7 +33,6 @@ import Email._
 import Command._
 import com.minosiants.pencil.protocol.Code._
 import cats.effect.ContextShift
-import fs2.{Stream, Chunk}
 import fs2.io.file.readAll
 
 object Smtp {
@@ -349,10 +348,8 @@ object Smtp {
               ).run(req)
               _ <- readAll[F](attachment, req.blocker, 1024)
                 .through(fs2.text.base64.encode)
-                .flatMap(s => Stream.chunk(Chunk.chars(s.toCharArray)))
-                .chunkN(n = 76)
-                .evalMap { chunk =>
-                  text(s"${chunk.iterator.mkString}${Command.end}").run(req)
+                .evalMap { part =>
+                  lines[F](part).run(req)
                 }
                 .compile
                 .drain
