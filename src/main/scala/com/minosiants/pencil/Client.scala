@@ -80,7 +80,7 @@ object Client {
           case (s, tls) =>
             val request = for {
               _   <- Smtp.init[F]()
-              rep <- Smtp.ehlo[F]()
+              rep <- Smtp.ehlo[F](Host.local())
               r <- if (supportTLS(rep)) sendEmailViaTls(tls)
               else login(rep).flatMap(_ => sender)
             } yield r
@@ -114,7 +114,7 @@ object Client {
           r <- Smtp.local { req: Request[F] =>
             Request(req.email, tls, req.blocker)
           }(for {
-            rep <- Smtp.ehlo[F]()
+            rep <- Smtp.ehlo[F](Host.local())
             _   <- login(rep)
             r   <- sender
           } yield r)

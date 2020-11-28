@@ -84,8 +84,8 @@ object Smtp {
 
   def init[F[_]: MonadError[*[_], Throwable]](): Smtp[F, Replies] = read[F]
 
-  def ehlo[F[_]: MonadError[*[_], Throwable]](): Smtp[F, Replies] =
-    command(Ehlo("pencil"))
+  def ehlo[F[_]: MonadError[*[_], Throwable]](host: Host): Smtp[F, Replies] =
+    command(Ehlo(host.name))
 
   def mail[F[_]: MonadError[*[_], Throwable]](): Smtp[F, Replies] =
     command1(m => Mail(m.from.box))
