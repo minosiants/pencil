@@ -17,18 +17,18 @@
 package com.minosiants.pencil
 
 import java.net.InetSocketAddress
-import java.time.{ Instant, LocalDateTime }
+import java.time.Instant
 
 import cats.effect._
+import com.minosiants.pencil.data.Email.{ MimeEmail, TextEmail }
 import com.minosiants.pencil.data._
 import com.minosiants.pencil.protocol._
-import com.minosiants.pencil.data.Email.{ MimeEmail, TextEmail }
 import fs2.io.tcp.{ Socket, SocketGroup }
 import fs2.io.tls.TLSContext
 import io.chrisdavenport.log4cats.Logger
 
+import scala.Function.const
 import scala.concurrent.duration._
-import Function.const
 
 /**
   * Smtp client

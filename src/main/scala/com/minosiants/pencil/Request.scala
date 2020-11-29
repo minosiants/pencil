@@ -1,6 +1,6 @@
 package com.minosiants.pencil
 
-import java.time.{ Clock, Instant, LocalDateTime }
+import java.time.Instant
 
 import cats.effect.Blocker
 import com.minosiants.pencil.data.{ Email, Host }

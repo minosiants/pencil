@@ -74,15 +74,22 @@ object Smtp {
   def email[F[_]: MonadError[*[_], Throwable]]: Smtp[F, Email] =
     ask[F].map(_.email)
 
+  def socket[F[_]: MonadError[*[_], Throwable]]: Smtp[F, SmtpSocket[F]] =
+    ask[F].map(_.socket)
+
   def smtpError[F[_]: ApplicativeError[*[_], Throwable]](
       msg: String
   ): Smtp[F, Unit] = {
     pure(Error.smtpError[F, Replies](msg))
   }
 
-  def write[F[_]](run: Email => Command): Smtp[F, Unit] = Smtp[F] { req =>
-    req.socket.write(run(req.email))
-  }
+  def write[F[_]: MonadError[*[_], Throwable]](
+      run: Email => Command
+  ): Smtp[F, Unit] =
+    for {
+      em <- email[F]
+      s  <- socket[F]
+    } yield s.write(run(em))
 
   def processErrors[F[_]: ApplicativeError[*[_], Throwable]](
       replies: Replies
@@ -131,7 +138,8 @@ object Smtp {
   def quit[F[_]: MonadError[*[_], Throwable]](): Smtp[F, Replies] =
     command(Quit)
 
-  def text[F[_]](txt: String): Smtp[F, Unit] = write(const(Text(txt)))
+  def text[F[_]: MonadError[*[_], Throwable]](txt: String): Smtp[F, Unit] =
+    write[F](const(Text(txt)))
 
   def startTls[F[_]: MonadError[*[_], Throwable]](): Smtp[F, Replies] =
     command(StartTls)
@@ -173,25 +181,22 @@ object Smtp {
     } yield ()
 
   def endEmail[F[_]: MonadError[*[_], Throwable]](): Smtp[F, Replies] =
-    Smtp[F] { req =>
-      val p = req.email match {
-        case TextEmail(_, _, _, _, _, _) =>
-          text[F](Command.endEmail).flatMap(_ => read[F])
-        case _ =>
-          for {
-            _ <- boundary[F](true)
-            _ <- text[F](Command.endEmail)
-            r <- read[F]
-          } yield r
-      }
-      p.run(req)
+    email[F].flatMap {
+      case TextEmail(_, _, _, _, _, _) =>
+        text[F](Command.endEmail).flatMap(_ => read[F])
+      case _ =>
+        for {
+          _ <- boundary[F](true)
+          _ <- text[F](Command.endEmail)
+          r <- read[F]
+        } yield r
     }
 
   def asciiBody[F[_]: MonadError[*[_], Throwable]](): Smtp[F, Replies] =
     Smtp[F] { req =>
       req.email match {
         case TextEmail(_, _, _, _, _, Some(Ascii(body))) =>
-          (text(s"$body${Command.end}").flatMap(_ => endEmail[F]())).run(req)
+          text[F](s"$body${Command.end}").flatMap(_ => endEmail[F]()).run(req)
 
         case _ =>
           Error.smtpError[F, Replies]("Body is not ascii")
@@ -202,10 +207,10 @@ object Smtp {
       : Smtp[F, Option[Unit]] = Smtp[F] { req =>
     req.email match {
       case TextEmail(_, _, _, _, Some(Subject(sub)), _) =>
-        text(s"Subject: $sub${Command.end}").run(req).map(Some(_))
+        text[F](s"Subject: $sub${Command.end}").run(req).map(Some(_))
 
       case MimeEmail(_, _, _, _, Some(Subject(sub)), _, _, _) =>
-        text(s"Subject: =?utf-8?b?${sub.toBase64}?=${Command.end}")
+        text[F](s"Subject: =?utf-8?b?${sub.toBase64}?=${Command.end}")
           .run(req)
           .map(Some(_))
 
@@ -214,33 +219,39 @@ object Smtp {
     }
   }
 
-  def fromHeader[F[_]](): Smtp[F, Unit] = Smtp[F] { req =>
-    text(s"From: ${req.email.from.show}${Command.end}").run(req)
-  }
+  def fromHeader[F[_]: MonadError[*[_], Throwable]](): Smtp[F, Unit] =
+    for {
+      from <- email[F].map(_.from)
+      _    <- text[F](s"From: ${from.show}${Command.end}")
+    } yield ()
 
-  def toHeader[F[_]](): Smtp[F, Unit] = Smtp[F] { req =>
-    text(s"To: ${req.email.to.show}${Command.end}").run(req)
-  }
+  def toHeader[F[_]: MonadError[*[_], Throwable]](): Smtp[F, Unit] =
+    for {
+      to <- email[F].map(_.to)
+      _  <- text[F](s"To: ${to.show}${Command.end}")
+    } yield ()
 
-  def ccHeader[F[_]: Applicative](): Smtp[F, Option[Unit]] = Smtp[F] { req =>
-    req.email.cc match {
-      case Some(v) =>
-        text(s"Cc: ${v.show}${Command.end}").run(req).map(Some(_))
+  def ccHeader[F[_]: MonadError[*[_], Throwable]](): Smtp[F, Option[Unit]] =
+    Smtp[F] { req =>
+      req.email.cc match {
+        case Some(v) =>
+          text[F](s"Cc: ${v.show}${Command.end}").run(req).map(Some(_))
 
-      case None =>
-        Applicative[F].pure(None)
+        case None =>
+          Applicative[F].pure(None)
+      }
     }
-  }
 
-  def bccHeader[F[_]: Applicative](): Smtp[F, Option[Unit]] = Smtp[F] { req =>
-    req.email.bcc match {
-      case Some(v) =>
-        text(s"Bcc: ${v.show}${Command.end}").run(req).map(Some(_))
+  def bccHeader[F[_]: MonadError[*[_], Throwable]](): Smtp[F, Option[Unit]] =
+    Smtp[F] { req =>
+      req.email.bcc match {
+        case Some(v) =>
+          text[F](s"Bcc: ${v.show}${Command.end}").run(req).map(Some(_))
 
-      case None =>
-        Applicative[F].pure(None)
+        case None =>
+          Applicative[F].pure(None)
+      }
     }
-  }
 
   val dateFormatter: DateTimeFormatter = DateTimeFormatter
     .ofPattern("EEE, d MMM yyyy HH:mm:ss Z (z)")
@@ -249,7 +260,7 @@ object Smtp {
   def dateHeader[F[_]: MonadError[*[_], Throwable]](): Smtp[F, Unit] =
     for {
       time <- timestamp[F].map(dateFormatter.format(_))
-      _    <- text(s"Date: ${time}${Command.end}")
+      _    <- text[F](s"Date: ${time}${Command.end}")
     } yield ()
 
   def messageIdHeader[F[_]: MonadError[*[_], Throwable]](): Smtp[F, Unit] =
@@ -257,7 +268,7 @@ object Smtp {
       hostName <- host[F].map(_.name)
       seconds  <- timestamp[F].map(_.getEpochSecond)
       uuid = UUID.randomUUID().toString
-      _ <- text(s"Message-ID: <$uuid.$seconds@$hostName${Command.end}>")
+      _ <- text[F](s"Message-ID: <$uuid.$seconds@$hostName${Command.end}>")
     } yield ()
 
   def mainHeaders[F[_]: MonadError[*[_], Throwable]](): Smtp[F, Unit] =
@@ -271,27 +282,28 @@ object Smtp {
       _ <- messageIdHeader[F]()
     } yield ()
 
-  def mimeHeader[F[_]](): Smtp[F, Unit] = {
-    text(s"${headerShow.show(`MIME-Version`())}${Command.end}")
-  }
+  def mimeHeader[F[_]: MonadError[*[_], Throwable]](): Smtp[F, Unit] =
+    text[F](s"${headerShow.show(`MIME-Version`())}${Command.end}")
 
-  def contentTypeHeader[F[_]](
+  def contentTypeHeader[F[_]: MonadError[*[_], Throwable]](
       ct: `Content-Type`
-  ): Smtp[F, Unit] = text(s"${headerShow.show(ct)}${Command.end}")
+  ): Smtp[F, Unit] = text[F](s"${headerShow.show(ct)}${Command.end}")
 
-  def contentTransferEncoding[F[_]](encoding: Encoding): Smtp[F, Unit] =
-    text(
+  def contentTransferEncoding[F[_]: MonadError[*[_], Throwable]](
+      encoding: Encoding
+  ): Smtp[F, Unit] =
+    text[F](
       s"${headerShow.show(`Content-Transfer-Encoding`(encoding))}${Command.end}"
     )
 
-  def boundary[F[_]: ApplicativeError[*[_], Throwable]](
+  def boundary[F[_]: MonadError[*[_], Throwable]](
       isFinal: Boolean = false
   ): Smtp[F, Unit] = Smtp[F] { req =>
     req.email match {
       case e @ MimeEmail(_, _, _, _, _, _, _, Boundary(b)) =>
         val end = if (isFinal) "--" else ""
         if (e.isMultipart)
-          text(s"--$b$end${Command.end}").run(req)
+          text[F](s"--$b$end${Command.end}").run(req)
         else
           Applicative[F].unit
 
@@ -308,7 +320,7 @@ object Smtp {
       _ <- boundary[F]()
       _ <- contentTypeHeader[F](ct)
       _ <- contentTransferEncoding[F](mech)
-      _ <- text(Command.end)
+      _ <- text[F](Command.end)
     } yield ()
 
   def multipart[F[_]: MonadError[*[_], Throwable]](): Smtp[F, Unit] =
@@ -323,14 +335,15 @@ object Smtp {
         smtpError[F]("Does not support multipart")
     }
 
-  def lines[F[_]: Applicative](txt: String): Smtp[F, Unit] = Smtp[F] { req =>
-    txt
-      .grouped(76)
-      .toList
-      .traverse_ { ln =>
-        text(s"$ln${Command.end}").run(req)
-      }
-  }
+  def lines[F[_]: MonadError[*[_], Throwable]](txt: String): Smtp[F, Unit] =
+    Smtp[F] { req =>
+      txt
+        .grouped(76)
+        .toList
+        .traverse_ { ln =>
+          text[F](s"$ln${Command.end}").run(req)
+        }
+    }
 
   def mimeBody[F[_]: MonadError[*[_], Throwable]](): Smtp[F, Unit] =
     email[F].flatMap {
@@ -383,7 +396,7 @@ object Smtp {
                 .flatMap(s => Stream.chunk(Chunk.chars(s.toCharArray)))
                 .chunkN(n = 76)
                 .map(chunk => chunk.iterator.mkString)
-                .evalMap(line => text(s"${line}${Command.end}").run(req))
+                .evalMap(line => text[F](s"${line}${Command.end}").run(req))
                 .compile
                 .drain
             } yield ()
