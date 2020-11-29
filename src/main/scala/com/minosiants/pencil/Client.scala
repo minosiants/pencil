@@ -17,12 +17,13 @@
 package com.minosiants.pencil
 
 import java.net.InetSocketAddress
+import java.time.LocalDateTime
 
 import cats.effect._
 import com.minosiants.pencil.data._
 import com.minosiants.pencil.protocol._
-import com.minosiants.pencil.data.Email.{ MimeEmail, TextEmail }
-import fs2.io.tcp.{ Socket, SocketGroup }
+import com.minosiants.pencil.data.Email.{MimeEmail, TextEmail}
+import fs2.io.tcp.{Socket, SocketGroup}
 import fs2.io.tls.TLSContext
 import io.chrisdavenport.log4cats.Logger
 
@@ -80,7 +81,7 @@ object Client {
           case (s, tls) =>
             val request = for {
               _   <- Smtp.init[F]()
-              rep <- Smtp.ehlo[F](Host.local())
+              rep <- Smtp.ehlo[F]()
               r <- if (supportTLS(rep)) sendEmailViaTls(tls)
               else login(rep).flatMap(_ => sender)
             } yield r
@@ -89,7 +90,9 @@ object Client {
               Request(
                 email,
                 SmtpSocket.fromSocket(s, logger, readTimeout, writeTimeout),
-                blocker
+                blocker,
+                Host.local(),
+                LocalDateTime.now()
               )
             )
         }
@@ -112,9 +115,9 @@ object Client {
         for {
           _ <- Smtp.startTls[F]()
           r <- Smtp.local { req: Request[F] =>
-            Request(req.email, tls, req.blocker)
+            Request(req.email, tls, req.blocker,Host.local(), LocalDateTime.now())
           }(for {
-            rep <- Smtp.ehlo[F](Host.local())
+            rep <- Smtp.ehlo[F]()
             _   <- login(rep)
             r   <- sender
           } yield r)

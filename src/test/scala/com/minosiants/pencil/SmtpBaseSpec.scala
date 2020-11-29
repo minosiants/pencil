@@ -1,20 +1,23 @@
 package com.minosiants.pencil
 
 import java.net.InetSocketAddress
+import java.time.LocalDateTime
 
-import cats.effect.concurrent.{ Deferred, Ref }
+import cats.effect.concurrent.{Deferred, Ref}
 import cats.effect.specs2.CatsIO
-import cats.effect.{ Blocker, IO, Resource, Timer }
+import cats.effect.{Blocker, IO, Resource, Timer}
 import cats.instances.list._
 import cats.syntax.traverse._
-import com.minosiants.pencil.data.{ Email, Error }
+import com.minosiants.pencil.data.{Email, Error, Host}
 import fs2.io.tcp.SocketGroup
 import io.chrisdavenport.log4cats.slf4j.Slf4jLogger
 import org.specs2.mutable.SpecificationLike
 import scodec.bits.BitVector
-import scodec.{ Codec, DecodeResult }
+import scodec.{Codec, DecodeResult}
 
 import scala.concurrent.duration._
+
+import  SmtpBaseSpec._
 
 trait SmtpBaseSpec extends SpecificationLike with CatsIO {
   val logger = Slf4jLogger.getLogger[IO]
@@ -69,8 +72,13 @@ trait SmtpBaseSpec extends SpecificationLike with CatsIO {
               }
           )
         )
-      } yield (v, r)).run(Request(email, s, blocker))
+      } yield (v, r)).run(Request(email, s, blocker,host, timestamp))
     }.attempt.unsafeRunSync()
 
   }
+}
+
+object SmtpBaseSpec {
+  val timestamp = LocalDateTime.now()
+  val host   = Host.local()
 }
