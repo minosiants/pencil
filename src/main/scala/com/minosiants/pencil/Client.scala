@@ -17,13 +17,13 @@
 package com.minosiants.pencil
 
 import java.net.InetSocketAddress
-import java.time.LocalDateTime
+import java.time.{ Instant, LocalDateTime }
 
 import cats.effect._
 import com.minosiants.pencil.data._
 import com.minosiants.pencil.protocol._
-import com.minosiants.pencil.data.Email.{MimeEmail, TextEmail}
-import fs2.io.tcp.{Socket, SocketGroup}
+import com.minosiants.pencil.data.Email.{ MimeEmail, TextEmail }
+import fs2.io.tcp.{ Socket, SocketGroup }
 import fs2.io.tls.TLSContext
 import io.chrisdavenport.log4cats.Logger
 
@@ -92,7 +92,7 @@ object Client {
                 SmtpSocket.fromSocket(s, logger, readTimeout, writeTimeout),
                 blocker,
                 Host.local(),
-                LocalDateTime.now()
+                Instant.now()
               )
             )
         }
@@ -115,7 +115,7 @@ object Client {
         for {
           _ <- Smtp.startTls[F]()
           r <- Smtp.local { req: Request[F] =>
-            Request(req.email, tls, req.blocker,Host.local(), LocalDateTime.now())
+            Request(req.email, tls, req.blocker, Host.local(), Instant.now())
           }(for {
             rep <- Smtp.ehlo[F]()
             _   <- login(rep)

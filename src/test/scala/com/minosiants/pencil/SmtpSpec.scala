@@ -12,7 +12,6 @@ import com.minosiants.pencil.protocol.Header.`Content-Type`
 import com.minosiants.pencil.protocol._
 import scodec.codecs
 
-import SmtpBaseSpec._
 class SmtpSpec extends SmtpBaseSpec {
 
   sequential
@@ -25,8 +24,8 @@ class SmtpSpec extends SmtpBaseSpec {
       result.map(_._2) must beRight(List(s"EHLO ${host.name}${Command.end}"))
     }
 
-  /*  "get response on RCPT" in {
-      val email = SmtpSpec.mime
+    "get response on RCPT" in {
+      val email  = SmtpSpec.mime
       val result = testCommand(Smtp.rcpt(), email, codecs.ascii)
       val rcpts = email.recipients
         .map(box => s"RCPT TO: ${box.show}${Command.end}")
@@ -35,16 +34,17 @@ class SmtpSpec extends SmtpBaseSpec {
       result.map(_._1) must beRight(List.fill(3)(DataSamples.`250 OK`))
       result.map(_._2) must beRight(rcpts)
     }
+
     "get response on MAIL" in {
       val result = testCommand(Smtp.mail(), SmtpSpec.mime, codecs.ascii)
-      val from = SmtpSpec.mime.from.box
+      val from   = SmtpSpec.mime.from.box
       result.map(_._1) must beRight(DataSamples.`250 OK`)
       result.map(_._2) must beRight(
         List(s"MAIL FROM: ${from.show}${Command.end}")
       )
-    }*/
+    }
 
-  /*  "get response on DATA" in {
+    "get response on DATA" in {
       val result = testCommand(Smtp.data(), SmtpSpec.mime, codecs.ascii)
       result.map(_._1) must beRight(DataSamples.`354 End data`)
       result.map(_._2) must beRight(List(s"DATA${Command.end}"))
@@ -54,18 +54,19 @@ class SmtpSpec extends SmtpBaseSpec {
       val result = testCommand(Smtp.quit(), SmtpSpec.mime, codecs.ascii)
       result.map(_._1) must beRight(DataSamples.`221 Buy`)
       result.map(_._2) must beRight(List(s"QUIT${Command.end}"))
-    }*/
+    }
 
-   /* "send text via Text command " in {
+    "send text via Text command " in {
       val result = testCommand(
         Smtp.text(s"Hello${Command.end}"),
         SmtpSpec.mime,
         codecs.ascii
       )
       result.map(_._2) must beRight(List(s"Hello${Command.end}"))
-    }*/
-   /* "send endEmail" in {
-      val email = SmtpSpec.mime
+    }
+
+    "send endEmail" in {
+      val email  = SmtpSpec.mime
       val result = testCommand(Smtp.endEmail(), email, codecs.ascii)
 
       result.map(_._1) must beRight(DataSamples.`250 OK`)
@@ -78,7 +79,7 @@ class SmtpSpec extends SmtpBaseSpec {
     }
 
     "send asciiBody" in {
-      val email = SmtpSpec.text
+      val email  = SmtpSpec.text
       val result = testCommand(Smtp.asciiBody(), email, codecs.ascii)
 
       result.map(_._1) must beRight(DataSamples.`250 OK`)
@@ -88,10 +89,10 @@ class SmtpSpec extends SmtpBaseSpec {
           s"${Command.endEmail}"
         )
       )
-    }*/
+    }
 
-   /* "send subjectHeader in ascii mail" in {
-      val email = SmtpSpec.text
+    "send subjectHeader in ascii mail" in {
+      val email  = SmtpSpec.text
       val result = testCommand(Smtp.subjectHeader(), email, codecs.ascii)
       result.map(_._2) must beRight(
         List(
@@ -100,7 +101,7 @@ class SmtpSpec extends SmtpBaseSpec {
       )
     }
     "send subjectHeader in mime mail" in {
-      val email = SmtpSpec.mime
+      val email  = SmtpSpec.mime
       val result = testCommand(Smtp.subjectHeader(), email, codecs.ascii)
       result.map(_._2) must beRight(
         List(
@@ -110,7 +111,7 @@ class SmtpSpec extends SmtpBaseSpec {
     }
 
     "send fromHeader" in {
-      val email = SmtpSpec.text
+      val email  = SmtpSpec.text
       val result = testCommand(Smtp.fromHeader(), email, codecs.ascii)
       result.map(_._2) must beRight(
         List(
@@ -119,7 +120,7 @@ class SmtpSpec extends SmtpBaseSpec {
       )
     }
     "send toHeader" in {
-      val email = SmtpSpec.text
+      val email  = SmtpSpec.text
       val result = testCommand(Smtp.toHeader(), email, codecs.ascii)
       result.map(_._2) must beRight(
         List(
@@ -129,7 +130,7 @@ class SmtpSpec extends SmtpBaseSpec {
     }
 
     "send ccHeader" in {
-      val email = SmtpSpec.mime
+      val email  = SmtpSpec.mime
       val result = testCommand(Smtp.ccHeader(), email, codecs.ascii)
       result.map(_._2) must beRight(
         List(
@@ -138,7 +139,7 @@ class SmtpSpec extends SmtpBaseSpec {
       )
     }
     "send bccHeader" in {
-      val email = SmtpSpec.mime
+      val email  = SmtpSpec.mime
       val result = testCommand(Smtp.bccHeader(), email, codecs.ascii)
       result.map(_._2) must beRight(
         List(
@@ -147,10 +148,12 @@ class SmtpSpec extends SmtpBaseSpec {
       )
     }
     "send mainHeaders" in {
-      val email = SmtpSpec.mime
+      val email  = SmtpSpec.mime
       val result = testCommand(Smtp.mainHeaders(), email, codecs.ascii)
-      result.map(_._2) must beRight(
+      result.map(_._2.size) must beRight(7)
+      result.map(_._2.take(6)) must beRight(
         List(
+          s"Date: ${Smtp.dateFormatter.format(timestamp)}${Command.end}",
           s"From: ${email.from.show}${Command.end}",
           s"To: ${email.to.show}${Command.end}",
           s"Cc: ${email.cc.get.show}${Command.end}",
@@ -158,188 +161,187 @@ class SmtpSpec extends SmtpBaseSpec {
           s"Subject: =?utf-8?b?${email.subject.get.value.toBase64}?=${Command.end}"
         )
       )
-    }*/
+    }
 
-    /*"send mimeHeader" in {
-    val email  = SmtpSpec.mime
-    val result = testCommand(Smtp.mimeHeader(), email, codecs.ascii)
-    result.map(_._2) must beRight(
-      List(
-        s"MIME-Version: 1.0${Command.end}"
-      )
-    )
-  }
-
-  "send contentTypeHeader" in {
-    val email = SmtpSpec.mime
-    val result = testCommand(
-      Smtp.contentTypeHeader(
-        `Content-Type`(
-          `application/pdf`,
-          Map("param1" -> "value1", "param2" -> "value2")
+    "send mimeHeader" in {
+      val email  = SmtpSpec.mime
+      val result = testCommand(Smtp.mimeHeader(), email, codecs.ascii)
+      result.map(_._2) must beRight(
+        List(
+          s"MIME-Version: 1.0${Command.end}"
         )
-      ),
-      email,
-      codecs.ascii
-    )
-    result.map(_._2) must beRight(
-      List(
-        s"Content-Type: application/pdf; param1=value1;param2=value2${Command.end}"
       )
-    )
-  }
+    }
 
-  "send contentTransferEncoding" in {
-    val email = SmtpSpec.mime
-    val result =
-      testCommand(Smtp.contentTransferEncoding(`base64`), email, codecs.ascii)
-    result.map(_._2) must beRight(
-      List(
-        s"Content-Transfer-Encoding: base64${Command.end}"
+    "send contentTypeHeader" in {
+      val email = SmtpSpec.mime
+      val result = testCommand(
+        Smtp.contentTypeHeader(
+          `Content-Type`(
+            `application/pdf`,
+            Map("param1" -> "value1", "param2" -> "value2")
+          )
+        ),
+        email,
+        codecs.ascii
       )
-    )
-  }*/
-
-    /*"send boundary" in {
-    val email  = SmtpSpec.mime
-    val result = testCommand(Smtp.boundary(), email, codecs.ascii)
-    result.map(_._2) must beRight(
-      List(
-        s"--${email.boundary.value}${Command.end}"
+      result.map(_._2) must beRight(
+        List(
+          s"Content-Type: application/pdf; param1=value1;param2=value2${Command.end}"
+        )
       )
-    )
-  }
+    }
 
-  "send final boundary" in {
-    val email  = SmtpSpec.mime
-    val result = testCommand(Smtp.boundary(true), email, codecs.ascii)
-    result.map(_._2) must beRight(
-      List(
-        s"--${email.boundary.value}--${Command.end}"
+    "send contentTransferEncoding" in {
+      val email = SmtpSpec.mime
+      val result =
+        testCommand(Smtp.contentTransferEncoding(`base64`), email, codecs.ascii)
+      result.map(_._2) must beRight(
+        List(
+          s"Content-Transfer-Encoding: base64${Command.end}"
+        )
       )
-    )
-  }
+    }
 
-  "send multipart" in {
-    val email  = SmtpSpec.mime
-    val result = testCommand(Smtp.multipart(), email, codecs.ascii)
-    result.map(_._2) must beRight(
-      List(
-        s"Content-Type: multipart/mixed; boundary=${email.boundary.value}${Command.end}"
+    "send boundary" in {
+      val email  = SmtpSpec.mime
+      val result = testCommand(Smtp.boundary(), email, codecs.ascii)
+      result.map(_._2) must beRight(
+        List(
+          s"--${email.boundary.value}${Command.end}"
+        )
       )
-    )
-  }
+    }
 
-  "send mime utf body" in {
-    val email  = SmtpSpec.mime
-    val result = testCommand(Smtp.mimeBody(), email, codecs.ascii)
-    result.map(_._2) must beRight(
-      List(
-        s"--${email.boundary.value}${Command.end}",
-        s"Content-Type: text/plain; charset=UTF-8${Command.end}",
-        s"Content-Transfer-Encoding: base64${Command.end}",
-        s"${Command.end}"
-      ) ++ body(email.body) {
-        case Utf8(value) => value.toBase64
-      }
-    )
-  }
+    "send final boundary" in {
+      val email  = SmtpSpec.mime
+      val result = testCommand(Smtp.boundary(true), email, codecs.ascii)
+      result.map(_._2) must beRight(
+        List(
+          s"--${email.boundary.value}--${Command.end}"
+        )
+      )
+    }
 
-  "send mime html body" in {
-    val email  = SmtpSpec.mime.setBody(Html("<h1>hello</h1>"))
-    val result = testCommand(Smtp.mimeBody(), email, codecs.ascii)
-    result.map(_._2) must beRight(
-      List(
-        s"--${email.boundary.value}${Command.end}",
-        s"Content-Type: text/html; charset=UTF-8${Command.end}",
-        s"Content-Transfer-Encoding: base64${Command.end}",
-        s"${Command.end}"
-      ) ++ body(email.body) {
-        case Html(value) => value.toBase64
-      }
-    )
-  }*/
-    /*"send mime ascii body" in {
-    val email  = SmtpSpec.mime.setBody(Ascii("hello"))
-    val result = testCommand(Smtp.mimeBody(), email, codecs.ascii)
-    result.map(_._2) must beRight(
-      List(
-        s"--${email.boundary.value}${Command.end}",
-        s"Content-Type: text/plain; charset=US-ASCII${Command.end}",
-        s"Content-Transfer-Encoding: 7bit${Command.end}",
-        s"${Command.end}"
-      ) ++ body(email.body) {
-        case Ascii(value) => value
-      }
-    )
-  }*/
+    "send multipart" in {
+      val email  = SmtpSpec.mime
+      val result = testCommand(Smtp.multipart(), email, codecs.ascii)
+      result.map(_._2) must beRight(
+        List(
+          s"Content-Type: multipart/mixed; boundary=${email.boundary.value}${Command.end}"
+        )
+      )
+    }
 
-    /* "send attachments" in {
-    val email      = SmtpSpec.mime
-    val attachment = email.attachments.head
-    val result = testCommand(Smtp.attachments(), email, codecs.ascii)
+    "send mime utf body" in {
+      val email  = SmtpSpec.mime
+      val result = testCommand(Smtp.mimeBody(), email, codecs.ascii)
+      result.map(_._2) must beRight(
+        List(
+          s"--${email.boundary.value}${Command.end}",
+          s"Content-Type: text/plain; charset=UTF-8${Command.end}",
+          s"Content-Transfer-Encoding: base64${Command.end}",
+          s"${Command.end}"
+        ) ++ body(email.body) {
+          case Utf8(value) => value.toBase64
+        }
+      )
+    }
 
-    val encodedFile = Blocker[IO]
-      .use { blocker =>
-        fs2.io.file
-          .readAll[IO](attachment.file, blocker, 1024)
-          .through(fs2.text.base64.encode)
-          .compile
-          .toList
-          .map { list =>
-            SmtpSpec.lines(list.mkString)
-          }
-      }
-      .unsafeRunSync()
-    val encodedAttachmentName =
-      s"=?utf-8?b?${attachment.file.getFileName.toString.toBase64}?="
+    "send mime html body" in {
+      val email  = SmtpSpec.mime.setBody(Html("<h1>hello</h1>"))
+      val result = testCommand(Smtp.mimeBody(), email, codecs.ascii)
+      result.map(_._2) must beRight(
+        List(
+          s"--${email.boundary.value}${Command.end}",
+          s"Content-Type: text/html; charset=UTF-8${Command.end}",
+          s"Content-Transfer-Encoding: base64${Command.end}",
+          s"${Command.end}"
+        ) ++ body(email.body) {
+          case Html(value) => value.toBase64
+        }
+      )
+    }
+    "send mime ascii body" in {
+      val email  = SmtpSpec.mime.setBody(Ascii("hello"))
+      val result = testCommand(Smtp.mimeBody(), email, codecs.ascii)
+      result.map(_._2) must beRight(
+        List(
+          s"--${email.boundary.value}${Command.end}",
+          s"Content-Type: text/plain; charset=US-ASCII${Command.end}",
+          s"Content-Transfer-Encoding: 7bit${Command.end}",
+          s"${Command.end}"
+        ) ++ body(email.body) {
+          case Ascii(value) => value
+        }
+      )
+    }
 
-    result.map(_._2) must beRight(
-      s"--${email.boundary.value}${Command.end}" ::
-      s"Content-Type: image/png; name=${encodedAttachmentName}${Command.end}" ::
-      s"Content-Transfer-Encoding: base64${Command.end}" ::
-      s"${Command.end}" ::
-      encodedFile
-    )
-  }*/
+    "send attachments" in {
+      val email      = SmtpSpec.mime
+      val attachment = email.attachments.head
+      val result     = testCommand(Smtp.attachments(), email, codecs.ascii)
 
+      val encodedFile = Blocker[IO]
+        .use { blocker =>
+          fs2.io.file
+            .readAll[IO](attachment.file, blocker, 1024)
+            .through(fs2.text.base64.encode)
+            .compile
+            .toList
+            .map { list =>
+              SmtpSpec.lines(list.mkString)
+            }
+        }
+        .unsafeRunSync()
+      val encodedAttachmentName =
+        s"=?utf-8?b?${attachment.file.getFileName.toString.toBase64}?="
+
+      result.map(_._2) must beRight(
+        s"--${email.boundary.value}${Command.end}" ::
+          s"Content-Type: image/png; name=${encodedAttachmentName}${Command.end}" ::
+          s"Content-Transfer-Encoding: base64${Command.end}" ::
+          s"${Command.end}" ::
+          encodedFile
+      )
+    }
   }
 }
-  object SmtpSpec {
 
-    def lines(str: String): List[String] =
-      str.grouped(76).map(_ + Command.end).toList
+object SmtpSpec {
 
-    def body(
-              value: Option[Body]
-            )(pf: PartialFunction[Body, String]): List[String] = {
-      value.map(pf).getOrElse("") match {
-        case "" => List.empty
-        case str => lines(str)
-      }
+  def lines(str: String): List[String] =
+    str.grouped(76).map(_ + Command.end).toList
+
+  def body(
+      value: Option[Body]
+  )(pf: PartialFunction[Body, String]): List[String] = {
+    value.map(pf).getOrElse("") match {
+      case ""  => List.empty
+      case str => lines(str)
     }
+  }
+  val text: TextEmail = {
+    Email.text(
+      From(mailbox"user1@mydomain.tld"),
+      To(mailbox"user1@example.com"),
+      subject"first email",
+      Body.Ascii("hello")
+    )
+  }
 
-    val text: TextEmail = {
-      Email.text(
+  val mime: MimeEmail =
+    Email
+      .mime(
         From(mailbox"user1@mydomain.tld"),
         To(mailbox"user1@example.com"),
-        subject"first email",
-        Body.Ascii("hello")
+        subject"привет",
+        Body.Utf8("hi there")
       )
-    }
+      .addAttachment(
+        Attachment.fromString[IO]("files/small.png").unsafeRunSync()
+      )
+      .addCc(mailbox"ccuser1@example.com")
+      .addBcc(mailbox"bccuser1@example.com")
 
-    val mime: MimeEmail =
-      Email
-        .mime(
-          From(mailbox"user1@mydomain.tld"),
-          To(mailbox"user1@example.com"),
-          subject"привет",
-          Body.Utf8("hi there")
-        )
-        .addAttachment(
-          Attachment.fromString[IO]("files/small.png").unsafeRunSync()
-        )
-        .addCc(mailbox"ccuser1@example.com")
-        .addBcc(mailbox"bccuser1@example.com")
-
-  }
+}

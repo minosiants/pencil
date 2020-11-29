@@ -20,7 +20,7 @@ import java.nio.charset.StandardCharsets
 
 import cats.data.Kleisli
 import com.minosiants.pencil.syntax.LiteralsSyntax
-import scodec.bits.{BitVector, ByteVector}
+import scodec.bits.{ BitVector, ByteVector }
 
 package object pencil extends LiteralsSyntax {
 
@@ -33,7 +33,5 @@ package object pencil extends LiteralsSyntax {
     def toBitVector: BitVector   = BitVector(str.getBytes(StandardCharsets.UTF_8))
     def toByteVector: ByteVector = toBitVector.bytes
   }
-
-
 
 }

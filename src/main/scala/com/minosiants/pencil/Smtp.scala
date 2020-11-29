@@ -16,25 +16,25 @@
 
 package com.minosiants.pencil
 
-import java.time.LocalDateTime
+import java.time.{ Instant, ZoneId, ZoneOffset }
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 import cats._
 import cats.data.Kleisli
-import cats.effect.{ContextShift, Sync}
+import cats.effect.{ ContextShift, Sync }
 import cats.implicits._
-import com.minosiants.pencil.data.Body.{Ascii, Html, Utf8}
+import com.minosiants.pencil.data.Body.{ Ascii, Html, Utf8 }
 import com.minosiants.pencil.data.Email._
-import com.minosiants.pencil.data.{Email, Mailbox, _}
+import com.minosiants.pencil.data.{ Email, Mailbox, _ }
 import com.minosiants.pencil.protocol.Code._
 import com.minosiants.pencil.protocol.Command._
 import com.minosiants.pencil.protocol.ContentType._
-import com.minosiants.pencil.protocol.Encoding.{`7bit`, `base64`}
+import com.minosiants.pencil.protocol.Encoding.{ `7bit`, `base64` }
 import com.minosiants.pencil.protocol.Header._
 import com.minosiants.pencil.protocol._
 import fs2.io.file.readAll
-import fs2.{Chunk, Stream}
+import fs2.{ Chunk, Stream }
 
 import scala.Function._
 object Smtp {
@@ -62,23 +62,27 @@ object Smtp {
   )(smtp: Smtp[F, A]): Smtp[F, A] =
     Kleisli.local(f)(smtp)
 
+  def ask[F[_]: MonadError[*[_], Throwable]]: Smtp[F, Request[F]] =
+    Kleisli.ask[F, Request[F]]
 
-  def ask[F[_]: MonadError[*[_], Throwable]]: Smtp[F, Request[F]] = Kleisli.ask[F, Request[F]]
+  def host[F[_]: MonadError[*[_], Throwable]]: Smtp[F, Host] =
+    ask[F].map(_.host)
 
-  def host[F[_] : MonadError[*[_], Throwable]]:Smtp[F, Host] = ask[F].map(_.host)
+  def timestamp[F[_]: MonadError[*[_], Throwable]]: Smtp[F, Instant] =
+    ask[F].map(_.timestamp)
 
-  def timestamp[F[_] : MonadError[*[_], Throwable]]:Smtp[F, LocalDateTime] = ask[F].map(_.timestamp)
+  def email[F[_]: MonadError[*[_], Throwable]]: Smtp[F, Email] =
+    ask[F].map(_.email)
 
-  def email[F[_]: MonadError[*[_], Throwable]]:Smtp[F, Email] = ask[F].map(_.email)
-
-  def smtpError[F[_]: ApplicativeError[*[_], Throwable]](msg:String):Smtp[F, Unit] = {
+  def smtpError[F[_]: ApplicativeError[*[_], Throwable]](
+      msg: String
+  ): Smtp[F, Unit] = {
     pure(Error.smtpError[F, Replies](msg))
   }
 
   def write[F[_]](run: Email => Command): Smtp[F, Unit] = Smtp[F] { req =>
     req.socket.write(run(req.email))
   }
-
 
   def processErrors[F[_]: ApplicativeError[*[_], Throwable]](
       replies: Replies
@@ -99,12 +103,8 @@ object Smtp {
 
   def init[F[_]: MonadError[*[_], Throwable]](): Smtp[F, Replies] = read[F]
 
-
-
-  def ehlo[F[_]: MonadError[*[_], Throwable]](): Smtp[F, Replies] = {
+  def ehlo[F[_]: MonadError[*[_], Throwable]](): Smtp[F, Replies] =
     host[F].flatMap(h => command(Ehlo(h.name)))
-  }
-
 
   def mail[F[_]: MonadError[*[_], Throwable]](): Smtp[F, Replies] =
     command1(m => Mail(m.from.box))
@@ -112,7 +112,7 @@ object Smtp {
   def rcpt[F[_]: MonadError[*[_], Throwable]](): Smtp[F, List[Replies]] =
     Smtp[F] { req =>
       val rcptCommand = (m: Mailbox) => command[F](Rcpt(m)).run(req)
-      val r = req.email.recipients.toList.traverse(rcptCommand)
+      val r           = req.email.recipients.toList.traverse(rcptCommand)
       r
     }
 
@@ -219,7 +219,7 @@ object Smtp {
   }
 
   def toHeader[F[_]](): Smtp[F, Unit] = Smtp[F] { req =>
-     text(s"To: ${req.email.to.show}${Command.end}").run(req)
+    text(s"To: ${req.email.to.show}${Command.end}").run(req)
   }
 
   def ccHeader[F[_]: Applicative](): Smtp[F, Option[Unit]] = Smtp[F] { req =>
@@ -242,29 +242,33 @@ object Smtp {
     }
   }
 
+  val dateFormatter: DateTimeFormatter = DateTimeFormatter
+    .ofPattern("EEE, d MMM yyyy HH:mm:ss Z (z)")
+    .withZone(ZoneId.from(ZoneOffset.UTC))
 
-  def dateFormatter =  DateTimeFormatter.ofPattern("EEE, d MMM yyyy HH:mm:ss Z (z)")
-  def dateHeader[F[_]:MonadError[*[_], Throwable]]():Smtp[F, Unit] = for {
-                           time <- timestamp[F].map(_.format(dateFormatter))
-    _ <- text(s"Date: ${time}${Command.end}")
-  } yield ()
+  def dateHeader[F[_]: MonadError[*[_], Throwable]](): Smtp[F, Unit] =
+    for {
+      time <- timestamp[F].map(dateFormatter.format(_))
+      _    <- text(s"Date: ${time}${Command.end}")
+    } yield ()
 
-  def messageIdHeader[F[_]:MonadError[*[_], Throwable]]():Smtp[F, Unit]= for {
-    h <- host[F]
-    uuid = UUID.randomUUID().toString
-    _ <- text(s"Message-ID: <$uuid.${System.currentTimeMillis()}@${h.name}${Command.end}>")
-  } yield ()
-
+  def messageIdHeader[F[_]: MonadError[*[_], Throwable]](): Smtp[F, Unit] =
+    for {
+      hostName <- host[F].map(_.name)
+      seconds  <- timestamp[F].map(_.getEpochSecond)
+      uuid = UUID.randomUUID().toString
+      _ <- text(s"Message-ID: <$uuid.$seconds@$hostName${Command.end}>")
+    } yield ()
 
   def mainHeaders[F[_]: MonadError[*[_], Throwable]](): Smtp[F, Unit] =
     for {
-    _ <- dateHeader[F]()
+      _ <- dateHeader[F]()
       _ <- fromHeader[F]()
       _ <- toHeader[F]()
       _ <- ccHeader[F]()
       _ <- bccHeader[F]()
-    _ <- messageIdHeader[F]()
       _ <- subjectHeader[F]()
+      _ <- messageIdHeader[F]()
     } yield ()
 
   def mimeHeader[F[_]](): Smtp[F, Unit] = {
@@ -308,17 +312,15 @@ object Smtp {
     } yield ()
 
   def multipart[F[_]: MonadError[*[_], Throwable]](): Smtp[F, Unit] =
-    email[F].flatMap { v =>
-      v match {
-        case m@MimeEmail(_, _, _, _, _, _, _, Boundary(b)) if m.isMultipart =>
-          contentTypeHeader(
-            `Content-Type`(`multipart/mixed`, Map("boundary" -> b))
-          )
-        case MimeEmail(_, _, _, _, _, _, _, _) =>
-          unit
-        case _ =>
-          smtpError[F]("Does not support multipart")
-      }
+    email[F].flatMap {
+      case m @ MimeEmail(_, _, _, _, _, _, _, Boundary(b)) if m.isMultipart =>
+        contentTypeHeader(
+          `Content-Type`(`multipart/mixed`, Map("boundary" -> b))
+        )
+      case MimeEmail(_, _, _, _, _, _, _, _) =>
+        unit
+      case _ =>
+        smtpError[F]("Does not support multipart")
     }
 
   def lines[F[_]: Applicative](txt: String): Smtp[F, Unit] = Smtp[F] { req =>
@@ -330,29 +332,27 @@ object Smtp {
       }
   }
 
-
-
   def mimeBody[F[_]: MonadError[*[_], Throwable]](): Smtp[F, Unit] =
-    email[F].flatMap{
-         case MimeEmail(_, _, _, _, _, Some(Ascii(body)), _, _) =>
-           mimePart[F](
-             `7bit`,
-             `Content-Type`(`text/plain`, Map("charset" -> "US-ASCII"))
-           ).flatMap(_ => lines[F](body))
+    email[F].flatMap {
+      case MimeEmail(_, _, _, _, _, Some(Ascii(body)), _, _) =>
+        mimePart[F](
+          `7bit`,
+          `Content-Type`(`text/plain`, Map("charset" -> "US-ASCII"))
+        ).flatMap(_ => lines[F](body))
 
-         case MimeEmail(_, _, _, _, _, Some(Html(body)), _, _) =>
-           mimePart[F](
-             `base64`,
-             `Content-Type`(`text/html`, Map("charset" -> "UTF-8"))
-           ).flatMap(_ => lines[F](body.toBase64))
+      case MimeEmail(_, _, _, _, _, Some(Html(body)), _, _) =>
+        mimePart[F](
+          `base64`,
+          `Content-Type`(`text/html`, Map("charset" -> "UTF-8"))
+        ).flatMap(_ => lines[F](body.toBase64))
 
-         case MimeEmail(_, _, _, _, _, Some(Utf8(body)), _, _) =>
-           mimePart[F](
-             `base64`,
-             `Content-Type`(`text/plain`, Map("charset" -> "UTF-8"))
-           ).flatMap(_ => lines[F](body.toBase64))
-         case _ =>
-           smtpError[F]("not mime email")
+      case MimeEmail(_, _, _, _, _, Some(Utf8(body)), _, _) =>
+        mimePart[F](
+          `base64`,
+          `Content-Type`(`text/plain`, Map("charset" -> "UTF-8"))
+        ).flatMap(_ => lines[F](body.toBase64))
+      case _ =>
+        smtpError[F]("not mime email")
 
     }
 

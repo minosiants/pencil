@@ -8,7 +8,7 @@ case class Host(private[pencil] val name: String)
 
 object Host {
   def local(): Host = Try(InetAddress.getLocalHost.getHostName).fold(
-      _ => Host("unknown"),
-      name => Host(name)
-    )
+    _ => Host("unknown"),
+    name => Host(name)
+  )
 }
