@@ -20,7 +20,7 @@ class SmtpSpec extends SmtpBaseSpec {
 
     "get response on EHLO" in {
       val host   = Host.local()
-      val result = testCommand(Smtp.ehlo(host), SmtpSpec.mime, codecs.ascii)
+      val result = testCommand(Smtp.ehlo(), SmtpSpec.mime, codecs.ascii)
       result.map(_._1) must beRight(DataSamples.ehloReplies)
       result.map(_._2) must beRight(List(s"EHLO ${host.name}${Command.end}"))
     }
@@ -151,8 +151,11 @@ class SmtpSpec extends SmtpBaseSpec {
     "send mainHeaders" in {
       val email  = SmtpSpec.mime
       val result = testCommand(Smtp.mainHeaders(), email, codecs.ascii)
-      result.map(_._2) must beRight(
+      result.map(_._2.size) must beRight(7)
+      //TODO refactor to test all headers
+      result.map(_._2.drop(1).take(5)) must beRight(
         List(
+          // s"Date: ${Smtp.dateFormatter.format(timestamp)}${Command.end}",
           s"From: ${email.from.show}${Command.end}",
           s"To: ${email.to.show}${Command.end}",
           s"Cc: ${email.cc.get.show}${Command.end}",
@@ -280,7 +283,7 @@ class SmtpSpec extends SmtpBaseSpec {
   "send attachments" in {
     val email      = SmtpSpec.mime
     val attachment = email.attachments.head
-    val result = testCommand(Smtp.attachments(), email, codecs.ascii)
+    val result     = testCommand(Smtp.attachments(), email, codecs.ascii)
 
     val encodedFile = Blocker[IO]
       .use { blocker =>
@@ -299,10 +302,10 @@ class SmtpSpec extends SmtpBaseSpec {
 
     result.map(_._2) must beRight(
       s"--${email.boundary.value}${Command.end}" ::
-      s"Content-Type: image/png; name=${encodedAttachmentName}${Command.end}" ::
-      s"Content-Transfer-Encoding: base64${Command.end}" ::
-      s"${Command.end}" ::
-      encodedFile
+        s"Content-Type: image/png; name=${encodedAttachmentName}${Command.end}" ::
+        s"Content-Transfer-Encoding: base64${Command.end}" ::
+        s"${Command.end}" ::
+        encodedFile
     )
   }
 
