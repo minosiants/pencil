@@ -16,26 +16,27 @@
 
 package com.minosiants.pencil
 
-import cats.data.Kleisli
-import cats.effect.Sync
-import protocol._
-import data._
+import java.time.{ Instant, ZoneId, ZoneOffset }
+import java.time.format.DateTimeFormatter
+import java.util.UUID
 
 import cats._
+import cats.data.Kleisli
+import cats.effect.{ ContextShift, Sync }
 import cats.implicits._
-import scala.Function._
-import com.minosiants.pencil.data.{ Email, Mailbox }
-import Header._
-import ContentType._
 import com.minosiants.pencil.data.Body.{ Ascii, Html, Utf8 }
-import com.minosiants.pencil.protocol.Encoding.{ `7bit`, `base64` }
-import Email._
-import Command._
+import com.minosiants.pencil.data.Email._
+import com.minosiants.pencil.data.{ Email, Mailbox, _ }
 import com.minosiants.pencil.protocol.Code._
-import cats.effect.ContextShift
-import fs2.{ Stream, Chunk }
+import com.minosiants.pencil.protocol.Command._
+import com.minosiants.pencil.protocol.ContentType._
+import com.minosiants.pencil.protocol.Encoding.{ `7bit`, `base64` }
+import com.minosiants.pencil.protocol.Header._
+import com.minosiants.pencil.protocol._
 import fs2.io.file.readAll
+import fs2.{ Chunk, Stream }
 
+import scala.Function._
 object Smtp {
   // Used for easier type inference
   def apply[F[_]]: SmtpPartiallyApplied[F] =
@@ -86,8 +87,8 @@ object Smtp {
 
   def init[F[_]: MonadError[*[_], Throwable]](): Smtp[F, Replies] = read[F]
 
-  def ehlo[F[_]: MonadError[*[_], Throwable]](host: Host): Smtp[F, Replies] =
-    command(Ehlo(host.name))
+  def ehlo[F[_]: MonadError[*[_], Throwable]](): Smtp[F, Replies] =
+    command(Ehlo(Host.local().name))
 
   def mail[F[_]: MonadError[*[_], Throwable]](): Smtp[F, Replies] =
     command1(m => Mail(m.from.box))
@@ -224,13 +225,33 @@ object Smtp {
     }
   }
 
+  val dateFormatter: DateTimeFormatter = DateTimeFormatter
+    .ofPattern("EEE, d MMM yyyy HH:mm:ss Z (z)")
+    .withZone(ZoneId.from(ZoneOffset.UTC))
+
+  def dateHeader[F[_]: MonadError[*[_], Throwable]](): Smtp[F, Unit] = Smtp[F] {
+    req =>
+      val time = dateFormatter.format(req.timestamp)
+      text(s"Date: ${time}${Command.end}").run(req)
+  }
+
+  def messageIdHeader[F[_]: MonadError[*[_], Throwable]](): Smtp[F, Unit] =
+    Smtp[F] { req =>
+      val hostName = req.host.name
+      val seconds  = req.timestamp.getEpochSecond
+      val uuid     = UUID.randomUUID().toString
+      text(s"Message-ID: <$uuid.$seconds@$hostName${Command.end}>").run(req)
+    }
+
   def mainHeaders[F[_]: MonadError[*[_], Throwable]](): Smtp[F, Unit] =
     for {
+      _ <- dateHeader[F]()
       _ <- fromHeader[F]()
       _ <- toHeader[F]()
       _ <- ccHeader[F]()
       _ <- bccHeader[F]()
       _ <- subjectHeader[F]()
+      _ <- messageIdHeader[F]()
     } yield ()
 
   def mimeHeader[F[_]](): Smtp[F, Unit] = {
