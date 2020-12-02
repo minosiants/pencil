@@ -1,7 +1,7 @@
 package com.minosiants.pencil
 
 import java.net.InetSocketAddress
-import java.time.Instant
+import java.time.{ Clock, Instant, ZoneId, ZoneOffset }
 
 import cats.effect.concurrent.{ Deferred, Ref }
 import cats.effect.specs2.CatsIO
@@ -20,6 +20,7 @@ import scala.concurrent.duration._
 trait SmtpBaseSpec extends SpecificationLike with CatsIO {
   val logger    = Slf4jLogger.getLogger[IO]
   val timestamp = Instant.now()
+  val clock     = Clock.fixed(timestamp, ZoneId.from(ZoneOffset.UTC))
   val host      = Host.local()
   def socket(
       address: InetSocketAddress,
@@ -72,7 +73,7 @@ trait SmtpBaseSpec extends SpecificationLike with CatsIO {
           )
         )
       } yield (v, r))
-        .run(Request(email, s, blocker, Host.local(), Instant.now()))
+        .run(Request(email, s, blocker, Host.local(), Instant.now(clock)))
     }.attempt.unsafeRunSync()
 
   }
