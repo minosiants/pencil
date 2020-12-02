@@ -16,9 +16,8 @@
 
 package com.minosiants.pencil
 
-import java.time.{ Instant, ZoneId, ZoneOffset }
 import java.time.format.DateTimeFormatter
-import java.util.UUID
+import java.time.{ Instant, ZoneId, ZoneOffset }
 
 import cats._
 import cats.data.Kleisli
@@ -76,6 +75,9 @@ object Smtp {
   def socket[F[_]: MonadError[*[_], Throwable]]: Smtp[F, SmtpSocket[F]] =
     ask[F].map(_.socket)
 
+  def uuid[F[_]: MonadError[*[_], Throwable]]: Smtp[F, String] =
+    ask[F].map(_.uuid())
+
   def write2[F[_]: MonadError[*[_], Throwable]](
       run: Email => Command
   ): Smtp[F, Unit] =
@@ -104,20 +106,12 @@ object Smtp {
     if (replies.success) Applicative[F].pure(replies)
     else Error.smtpError[F, Replies](replies.show)
 
-  def read2[F[_]: MonadError[*[_], Throwable]]: Smtp[F, Replies] =
-    Smtp[F](_.socket.read()).flatMapF(processErrors[F])
-
-  def command1_[F[_]: MonadError[*[_], Throwable]](
-      run: Email => Command
-  ): Smtp[F, Replies] =
-    write[F](run).flatMap(_ => read[F])
-
   def command1[F[_]: MonadError[*[_], Throwable]](
       run: Email => Command
   ): Smtp[F, Replies] =
     for {
       _   <- write[F](run)
-      res <- read2[F]
+      res <- read[F]
     } yield res
 
   def command[F[_]: MonadError[*[_], Throwable]](c: Command): Smtp[F, Replies] =
@@ -270,8 +264,8 @@ object Smtp {
     for {
       hostName <- host[F].map(_.name)
       seconds  <- timestamp[F].map(_.getEpochSecond)
-      uuid = UUID.randomUUID().toString
-      _ <- text[F](s"Message-ID: <$uuid.$seconds@$hostName${Command.end}>")
+      uuid_    <- uuid[F]
+      _        <- text[F](s"Message-ID: <$uuid_.$seconds@$hostName>${Command.end}")
     } yield ()
 
   def mainHeaders[F[_]: MonadError[*[_], Throwable]](): Smtp[F, Unit] =
@@ -281,8 +275,8 @@ object Smtp {
       _ <- toHeader[F]()
       _ <- ccHeader[F]()
       _ <- bccHeader[F]()
-      _ <- subjectHeader[F]()
       _ <- messageIdHeader[F]()
+      _ <- subjectHeader[F]()
     } yield ()
 
   def mimeHeader[F[_]](): Smtp[F, Unit] =
