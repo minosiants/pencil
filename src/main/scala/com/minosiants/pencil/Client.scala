@@ -18,6 +18,7 @@ package com.minosiants.pencil
 
 import java.net.InetSocketAddress
 import java.time.Instant
+import java.util.UUID
 
 import cats.effect._
 import com.minosiants.pencil.data.Email.{ MimeEmail, TextEmail }
@@ -92,7 +93,8 @@ object Client {
                 SmtpSocket.fromSocket(s, logger, readTimeout, writeTimeout),
                 blocker,
                 Host.local(),
-                Instant.now()
+                Instant.now(),
+                UUID.randomUUID().toString
               )
             )
         }
@@ -115,7 +117,14 @@ object Client {
         for {
           _ <- Smtp.startTls[F]()
           r <- Smtp.local { req: Request[F] =>
-            Request(req.email, tls, req.blocker, Host.local(), Instant.now())
+            Request(
+              req.email,
+              tls,
+              req.blocker,
+              Host.local(),
+              Instant.now(),
+              UUID.randomUUID().toString
+            )
           }(for {
             rep <- Smtp.ehlo[F]()
             _   <- login(rep)

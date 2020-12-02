@@ -10,5 +10,6 @@ final case class Request[F[_]](
     socket: SmtpSocket[F],
     blocker: Blocker,
     host: Host,
-    timestamp: Instant
+    timestamp: Instant,
+    uuid: () => String
 )

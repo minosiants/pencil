@@ -153,13 +153,14 @@ class SmtpSpec extends SmtpBaseSpec {
       val result = testCommand(Smtp.mainHeaders(), email, codecs.ascii)
       result.map(_._2.size) must beRight(7)
       //TODO refactor to test all headers
-      result.map(_._2.take(6)) must beRight(
+      result.map(_._2) must beRight(
         List(
           s"Date: ${Smtp.dateFormatter.format(timestamp)}${Command.end}",
           s"From: ${email.from.show}${Command.end}",
           s"To: ${email.to.show}${Command.end}",
           s"Cc: ${email.cc.get.show}${Command.end}",
           s"Bcc: ${email.bcc.get.show}${Command.end}",
+          s"Message-ID: <$uuid.${timestamp.getEpochSecond}@${host.name}>${Command.end}",
           s"Subject: =?utf-8?b?${email.subject.get.value.toBase64}?=${Command.end}"
         )
       )
