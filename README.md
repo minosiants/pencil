@@ -10,7 +10,21 @@ It is build on top of [cats](https://typelevel.org/cats/), [cats-effect](https:/
 * Text email (ascii)
 * Mime email 
 * TLS
-* Authorisation 
+* Authentication
+
+### Specifications
+
+* [RFC 5321 - Simple Mail Transfer Protocol](https://tools.ietf.org/html/rfc5321)
+* Multipurpose Internet Mail Extensions
+  * [RFC 2045 - Part one - Format of Internet message bodies](https://tools.ietf.org/html/rfc2045)
+  * [RFC 2046 - Part two - Media Types](https://tools.ietf.org/html/rfc2046)
+  * [RFC 2047 - Part three - Message Header Extensions for Non-ASCII Text](https://tools.ietf.org/html/rfc2047)
+  * [RFC 2049 - Part five - Confirmance criteria and examples](https://tools.ietf.org/html/rfc2049)
+  * [RFC 4288 - Media Type Specifications and Registration Procedures](https://tools.ietf.org/html/rfc4288)
+  * [RFC 1521 - MIME Part one - Mechanisms for Specifying and Describing the Format of Internet Message Bodies](https://tools.ietf.org/html/rfc1521)
+  * [RFC 1522 - MIME Part two - Message Header Extensions for Non-ASCII Text](https://tools.ietf.org/html/rfc1522)
+  * [RFC 4954 - SMTP Service Extension for Authentication](https://tools.ietf.org/html/rfc4954)
+
 
 ### Usage
 Add dependency to your `build.sbt`
