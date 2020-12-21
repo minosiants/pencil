@@ -109,7 +109,9 @@ object Client {
         rep.replies.exists(r => r.text.contains("STARTTLS"))
 
       def supportLogin(rep: Replies): Boolean =
-        rep.replies.exists(_.text.contains("AUTH LOGIN"))
+        rep.replies.exists(
+          reply => reply.text.contains("AUTH") && reply.text.contains("LOGIN")
+        )
 
       def sendEmailViaTls(
           tls: SmtpSocket[F]
