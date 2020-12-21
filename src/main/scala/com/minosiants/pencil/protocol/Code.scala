@@ -59,6 +59,7 @@ object Code {
   val `502`: Code = Code(502, "Command not implemented")
   val `503`: Code = Code(503, "Bad sequence of commands")
   val `504`: Code = Code(504, "Command parameter not implemented")
+  val `530`: Code = Code(530, "SMTP authentication is required")
   val `535`: Code = Code(535, "Incorrect authentication data")
   val `550`: Code = Code(550, "Requested action not taken: mailbox unavailable")
   val `551`: Code = Code(551, "User not local; please try <forward-path>")
