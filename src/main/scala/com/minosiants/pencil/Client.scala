@@ -18,6 +18,7 @@ package com.minosiants.pencil
 
 import java.net.InetSocketAddress
 import java.time.Instant
+import java.util.UUID
 
 import cats.effect._
 import com.minosiants.pencil.data.Email.{ MimeEmail, TextEmail }
@@ -92,7 +93,8 @@ object Client {
                 SmtpSocket.fromSocket(s, logger, readTimeout, writeTimeout),
                 blocker,
                 Host.local(),
-                Instant.now()
+                Instant.now(),
+                UUID.randomUUID().toString
               )
             )
         }
@@ -107,7 +109,9 @@ object Client {
         rep.replies.exists(r => r.text.contains("STARTTLS"))
 
       def supportLogin(rep: Replies): Boolean =
-        rep.replies.exists(_.text.contains("AUTH LOGIN"))
+        rep.replies.exists(
+          reply => reply.text.contains("AUTH") && reply.text.contains("LOGIN")
+        )
 
       def sendEmailViaTls(
           tls: SmtpSocket[F]
@@ -115,7 +119,14 @@ object Client {
         for {
           _ <- Smtp.startTls[F]()
           r <- Smtp.local { req: Request[F] =>
-            Request(req.email, tls, req.blocker, Host.local(), Instant.now())
+            Request(
+              req.email,
+              tls,
+              req.blocker,
+              Host.local(),
+              Instant.now(),
+              UUID.randomUUID().toString
+            )
           }(for {
             rep <- Smtp.ehlo[F]()
             _   <- login(rep)
@@ -143,6 +154,7 @@ object Client {
               _ <- Smtp.mimeHeader[F]()
               _ <- Smtp.mainHeaders[F]()
               _ <- Smtp.multipart[F]()
+              _ <- Smtp.emptyLine[F]()
               _ <- Smtp.mimeBody[F]()
               _ <- Smtp.attachments[F]()
               r <- Smtp.endEmail[F]()
