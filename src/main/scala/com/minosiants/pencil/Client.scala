@@ -154,6 +154,7 @@ object Client {
               _ <- Smtp.mimeHeader[F]()
               _ <- Smtp.mainHeaders[F]()
               _ <- Smtp.multipart[F]()
+              _ <- Smtp.emptyLine()
               _ <- Smtp.mimeBody[F]()
               _ <- Smtp.attachments[F]()
               r <- Smtp.endEmail[F]()
