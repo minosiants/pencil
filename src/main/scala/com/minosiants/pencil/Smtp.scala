@@ -282,7 +282,6 @@ object Smtp {
   def mimeHeader[F[_]](): Smtp[F, Unit] =
     text[F](s"${headerShow.show(`MIME-Version`())}${Command.end}")
 
-
   def emptyLine[F[_]](): Smtp[F, Unit] =
     text[F](Command.end)
 
