@@ -142,6 +142,7 @@ object Client {
               _ <- Smtp.rcpt[F]()
               _ <- Smtp.data[F]()
               _ <- Smtp.mainHeaders[F]()
+              _ <- Smtp.emptyLine[F]()
               r <- Smtp.asciiBody[F]()
               _ <- Smtp.quit[F]()
             } yield r
