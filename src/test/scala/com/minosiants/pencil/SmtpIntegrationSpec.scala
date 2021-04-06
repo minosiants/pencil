@@ -5,9 +5,9 @@ import cats.effect.testing.specs2.CatsIO
 import com.minosiants.pencil.data._
 import fs2.io.tcp.SocketGroup
 import fs2.io.tls.TLSContext
-import io.chrisdavenport.log4cats.slf4j.Slf4jLogger
 import org.specs2.execute.Pending
 import org.specs2.mutable.SpecificationLike
+import org.typelevel.log4cats.slf4j.Slf4jLogger
 
 class SmtpIntegrationSpec extends SpecificationLike with CatsIO {
   val logger = Slf4jLogger.getLogger[IO]

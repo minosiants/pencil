@@ -9,7 +9,7 @@ val specs2Version         = "4.10.6"
 val tikaVersion           = "1.24"
 val scalacheckVersion     = "1.14.1"
 val catsEffectTestVersion = "0.5.2"
-val log4catsVersion       = "1.1.1"
+val log4catsVersion       = "1.2.2"
 val logbackVersion        = "1.2.3"
 
 lazy val root = (project in file("."))
@@ -33,7 +33,7 @@ lazy val root = (project in file("."))
       "com.chuusai"       %% "shapeless"                  % shapelessVersion,
       "org.scodec"        %% "scodec-bits"                % scodecBitsVersion,
       "org.scodec"        %% "scodec-core"                % scodecCoreVersion,
-      "io.chrisdavenport" %% "log4cats-core"              % log4catsVersion,
+      "org.typelevel"     %% "log4cats-core"              % log4catsVersion,
       "org.apache.tika"   % "tika-core"                   % tikaVersion,
       "org.scala-lang"    % "scala-reflect"               % scalaVersion.value,
       "org.specs2"        %% "specs2-core"                % specs2Version % "test",
@@ -42,7 +42,7 @@ lazy val root = (project in file("."))
       "com.codecommit"    %% "cats-effect-testing-specs2" % catsEffectTestVersion % "test",
       "org.scodec"        %% "scodec-stream"              % scodecStreamVersion % "test",
       "ch.qos.logback"    % "logback-classic"             % logbackVersion % "test",
-      "io.chrisdavenport" %% "log4cats-slf4j"             % log4catsVersion % "test"
+      "org.typelevel"     %% "log4cats-slf4j"             % log4catsVersion % "test"
     ),
     addCompilerPlugin(
       "org.typelevel" %% "kind-projector" % "0.11.1" cross CrossVersion.full

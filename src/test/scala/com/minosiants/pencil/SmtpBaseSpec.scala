@@ -11,8 +11,8 @@ import cats.instances.list._
 import cats.syntax.traverse._
 import com.minosiants.pencil.data.{ Email, Error, Host }
 import fs2.io.tcp.SocketGroup
-import io.chrisdavenport.log4cats.slf4j.Slf4jLogger
 import org.specs2.mutable.SpecificationLike
+import org.typelevel.log4cats.slf4j.Slf4jLogger
 import scodec.bits.BitVector
 import scodec.{ Codec, DecodeResult }
 

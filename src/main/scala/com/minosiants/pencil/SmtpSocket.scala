@@ -23,7 +23,7 @@ import com.minosiants.pencil.protocol.Command._
 import com.minosiants.pencil.protocol._
 import fs2.Chunk
 import fs2.io.tcp.Socket
-import io.chrisdavenport.log4cats.Logger
+import org.typelevel.log4cats.Logger
 import scodec.bits.BitVector
 import scodec.codecs._
 import scodec.{ Attempt, DecodeResult }
