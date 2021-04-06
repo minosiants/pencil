@@ -5,8 +5,8 @@ import java.time.{ Clock, Instant, ZoneId, ZoneOffset }
 import java.util.UUID
 
 import cats.effect.concurrent.{ Deferred, Ref }
-import cats.effect.specs2.CatsIO
 import cats.effect.{ Blocker, IO, Resource, Timer }
+import cats.effect.testing.specs2.CatsIO
 import cats.instances.list._
 import cats.syntax.traverse._
 import com.minosiants.pencil.data.{ Email, Error, Host }

@@ -1,7 +1,7 @@
 package com.minosiants.pencil
 
-import cats.effect.specs2.CatsIO
 import cats.effect.{ Blocker, IO }
+import cats.effect.testing.specs2.CatsIO
 import com.minosiants.pencil.data._
 import fs2.io.tcp.SocketGroup
 import fs2.io.tls.TLSContext
