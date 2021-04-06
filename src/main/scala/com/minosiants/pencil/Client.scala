@@ -26,7 +26,7 @@ import com.minosiants.pencil.data._
 import com.minosiants.pencil.protocol._
 import fs2.io.tcp.{ Socket, SocketGroup }
 import fs2.io.tls.TLSContext
-import io.chrisdavenport.log4cats.Logger
+import org.typelevel.log4cats.Logger
 
 import scala.Function.const
 import scala.concurrent.duration._
