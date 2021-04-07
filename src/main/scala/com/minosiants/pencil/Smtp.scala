@@ -19,10 +19,10 @@ package com.minosiants.pencil
 import java.time.format.DateTimeFormatter
 import java.time.{ Instant, ZoneId, ZoneOffset }
 
-import cats._
+import cats.{Applicative, ApplicativeError, MonadError}
 import cats.data.Kleisli
-import cats.effect.{ ContextShift, Sync }
-import cats.implicits._
+import cats.effect.Sync
+import cats.syntax.all._
 import com.minosiants.pencil.data.Body.{ Ascii, Html, Utf8 }
 import com.minosiants.pencil.data.Email._
 import com.minosiants.pencil.data.{ Email, Mailbox, _ }
@@ -35,7 +35,6 @@ import com.minosiants.pencil.protocol._
 import fs2.io.file.readAll
 import fs2.{ Chunk, Stream }
 
-import scala.Function._
 object Smtp {
   // Used for easier type inference
   def apply[F[_]]: SmtpPartiallyApplied[F] =
@@ -115,7 +114,7 @@ object Smtp {
     } yield res
 
   def command[F[_]: MonadError[*[_], Throwable]](c: Command): Smtp[F, Replies] =
-    command1(const(c))
+    command1(_ => c)
 
   def init[F[_]: MonadError[*[_], Throwable]](): Smtp[F, Replies] = read[F]
 
@@ -152,7 +151,7 @@ object Smtp {
   def quit[F[_]: MonadError[*[_], Throwable]](): Smtp[F, Replies] =
     command(Quit)
 
-  def text[F[_]](txt: String): Smtp[F, Unit] = write(const(Text(txt)))
+  def text[F[_]](txt: String): Smtp[F, Unit] = write(_ => Text(txt))
 
   def startTls[F[_]: MonadError[*[_], Throwable]](): Smtp[F, Replies] =
     command(StartTls)
@@ -366,7 +365,7 @@ object Smtp {
         liftF(Error.smtpError[F, Unit]("not mime email"))
     }
 
-  def attachments[F[_]: Sync: ContextShift: Applicative](): Smtp[F, Unit] = {
+  def attachments[F[_] : Applicative : Sync](): Smtp[F, Unit] = {
     Smtp[F] { req =>
       req.email match {
         case TextEmail(_, _, _, _, _, _) =>

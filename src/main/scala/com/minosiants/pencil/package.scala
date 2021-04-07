@@ -23,7 +23,6 @@ import com.minosiants.pencil.syntax.LiteralsSyntax
 import scodec.bits.{ BitVector, ByteVector }
 
 package object pencil extends LiteralsSyntax {
-
   type Smtp[F[_], A] = Kleisli[F, Request[F], A]
 
   val CRLF: ByteVector = ByteVector("\r\n".getBytes)
@@ -33,5 +32,4 @@ package object pencil extends LiteralsSyntax {
     def toBitVector: BitVector   = BitVector(str.getBytes(StandardCharsets.UTF_8))
     def toByteVector: ByteVector = toBitVector.bytes
   }
-
 }

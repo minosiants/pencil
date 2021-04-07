@@ -26,8 +26,7 @@ import cats.effect.Sync
 import org.apache.tika.Tika
 
 object ContentTypeFinder {
-
-  lazy val tika = new Tika()
+  private lazy val tika = new Tika()
 
   def findType[F[_]: Sync](is: InputStream): F[ContentType] =
     Sync[F]
@@ -40,5 +39,4 @@ object ContentTypeFinder {
       .handleErrorWith(
         Error.tikaException[F, ContentType]("Unable to read input stream")
       )
-
 }

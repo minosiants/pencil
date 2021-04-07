@@ -16,26 +16,26 @@
 
 package com.minosiants.pencil
 
-import cats._
-import cats.effect.Sync
-import cats.implicits._
+import cats.MonadError
+import cats.effect.Temporal
+import cats.effect.syntax.all._
+import cats.syntax.all._
+import com.minosiants.pencil.data.Error
 import com.minosiants.pencil.protocol.Command._
 import com.minosiants.pencil.protocol._
 import fs2.Chunk
-import fs2.io.tcp.Socket
+import fs2.io.net.Socket
 import org.typelevel.log4cats.Logger
 import scodec.bits.BitVector
 import scodec.codecs._
 import scodec.{ Attempt, DecodeResult }
 
 import scala.concurrent.duration.FiniteDuration
-import com.minosiants.pencil.data.Error
 
 /**
   * Wraps [[Socket[IO]]] with smtp specific protocol
   */
 trait SmtpSocket[F[_]] {
-
   /**
     * Reads [[Replies]] from smtp server
     */
@@ -48,17 +48,17 @@ trait SmtpSocket[F[_]] {
 }
 
 object SmtpSocket {
-  def fromSocket[F[_]: Sync: MonadError[*[_], Throwable]](
-      s: Socket[F],
-      logger: Logger[F],
-      readTimeout: FiniteDuration,
-      writeTimeout: FiniteDuration
+  def fromSocket[F[_]: MonadError[*[_], Throwable] : Temporal](
+    s: Socket[F],
+    logger: Logger[F],
+    readTimeout: FiniteDuration,
+    writeTimeout: FiniteDuration
   ): SmtpSocket[F] = new SmtpSocket[F] {
     def bytesToReply(bytes: Array[Byte]): F[Replies] =
       Replies.codec.decode(BitVector(bytes)) match {
         case Attempt.Successful(DecodeResult(value, _)) =>
           logger.debug(s"Getting Replies: ${value.show}") *>
-            Applicative[F].pure(value)
+            value.pure[F]
 
         case Attempt.Failure(cause) =>
           logger.debug(s" Getting Error: ${cause.messageWithContext}") *>
@@ -66,7 +66,7 @@ object SmtpSocket {
       }
 
     override def read(): F[Replies] =
-      s.read(8192, Some(readTimeout)).flatMap {
+      s.read(8192).timeout(readTimeout).flatMap {
         case Some(chunk) => bytesToReply(chunk.toArray)
         case None        => Error.smtpError[F, Replies]("Nothing to read")
       }
@@ -75,7 +75,7 @@ object SmtpSocket {
       ascii.encode(command.show) match {
         case Attempt.Successful(value) =>
           logger.debug(s"Sending command: ${command.show}") *>
-            s.write(Chunk.array(value.toByteArray), Some(writeTimeout))
+            s.write(Chunk.array(value.toByteArray)).timeout(writeTimeout)
 
         case Attempt.Failure(cause) =>
           Error.smtpError[F, Unit](cause.messageWithContext)

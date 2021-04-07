@@ -26,7 +26,6 @@ import com.minosiants.pencil.data.Error
 import Function._
 
 object Files {
-
   def inputStream[F[_]: Sync](file: Path): Resource[F, InputStream] = {
     Resource
       .make {
@@ -67,6 +66,5 @@ object Files {
       .handleErrorWith { _ =>
         Error.resourceNotFound[F, Path](file)
       }
-
   }
 }
