@@ -282,8 +282,16 @@ object Smtp {
   def mimeHeader[F[_]](): Smtp[F, Unit] =
     text[F](s"${headerShow.show(`MIME-Version`())}${Command.end}")
 
-  def emptyLine[F[_]](): Smtp[F, Unit] =
-    text[F](Command.end)
+  def emptyLine[F[_]: MonadError[*[_], Throwable]](): Smtp[F, Unit] =
+    email[F].flatMap {
+      case e @ MimeEmail(_, _, _, _, _, _, _, _) =>
+        if (e.isMultipart)
+          text[F](Command.end)
+        else
+          unit[F]
+      case TextEmail(_, _, _, _, _, _) =>
+        text[F](Command.end)
+    }
 
   def contentTypeHeader[F[_]](
       ct: `Content-Type`
