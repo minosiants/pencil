@@ -16,16 +16,14 @@
 
 package com.minosiants.pencil
 
-import java.net.InetSocketAddress
 import java.time.Instant
 import java.util.UUID
 
-import cats.effect._
-import com.minosiants.pencil.data.Email.{ MimeEmail, TextEmail }
-import com.minosiants.pencil.data._
+import cats.effect.Temporal
+import com.comcast.ip4s._
 import com.minosiants.pencil.protocol._
-import fs2.io.tcp.{ Socket, SocketGroup }
-import fs2.io.tls.TLSContext
+import fs2.io.net.SocketGroup
+import fs2.io.net.tls.{ TLSContext, TLSParameters }
 import org.typelevel.log4cats.Logger
 
 import scala.Function.const
@@ -36,7 +34,6 @@ import scala.concurrent.duration._
   *
   */
 trait Client[F[_]] {
-
   /**
     * Sends `email` to a smtp server
     *
@@ -44,39 +41,32 @@ trait Client[F[_]] {
     * @param es - sender [[EmailSender]]
     * @return - IO of [[Replies]] from smtp server
     */
-  def send(email: Email): F[Replies]
-
+  def send(email: data.Email): F[Replies]
 }
 
 object Client {
-  def apply[F[_]: Concurrent: ContextShift](
-      host: String = "localhost",
-      port: Int = 25,
-      credentials: Option[Credentials] = None,
-      readTimeout: FiniteDuration = 5.minutes,
-      writeTimeout: FiniteDuration = 5.minutes
+  def apply[F[_]](
+    host: Host = host"localhost",
+    port: Port = port"25",
+    credentials: Option[data.Credentials] = None,
+    readTimeout: FiniteDuration = 5.minutes,
+    writeTimeout: FiniteDuration = 5.minutes
   )(
-      blocker: Blocker,
-      sg: SocketGroup,
-      tlsContext: TLSContext,
-      logger: Logger[F]
+    tlsContext: TLSContext[F],
+    tlsParameters: TLSParameters = TLSParameters.Default,
+    logger: Logger[F]
+  )(implicit
+    sg: SocketGroup[F],
+    ev: Temporal[F]
   ): Client[F] =
     new Client[F] {
-      val socket: Resource[F, Socket[F]] =
-        sg.client[F](new InetSocketAddress(host, port))
-
-      def tlsSmtpSocket(s: Socket[F]): Resource[F, SmtpSocket[F]] =
-        tlsContext.client(s).map { cs =>
-          SmtpSocket.fromSocket(cs, logger, readTimeout, writeTimeout)
-        }
-
       override def send(
-          email: Email
+        email: data.Email
       ): F[Replies] = {
         val sockets = for {
-          s   <- socket
-          tls <- tlsSmtpSocket(s)
-        } yield (s, tls)
+          rawSocket <- sg.client(SocketAddress(host, port))
+          tlsSocket <- tlsContext.client(rawSocket, tlsParameters, Some(msg => logger.debug(s"TLS Socket: ${msg}")))
+        } yield (rawSocket, SmtpSocket.fromSocket(tlsSocket, logger, readTimeout, writeTimeout))
 
         sockets.use {
           case (s, tls) =>
@@ -91,8 +81,7 @@ object Client {
               Request(
                 email,
                 SmtpSocket.fromSocket(s, logger, readTimeout, writeTimeout),
-                blocker,
-                Host.local(),
+                data.Host.local(),
                 Instant.now(),
                 UUID.randomUUID().toString
               )
@@ -113,17 +102,14 @@ object Client {
           reply => reply.text.contains("AUTH") && reply.text.contains("LOGIN")
         )
 
-      def sendEmailViaTls(
-          tls: SmtpSocket[F]
-      ): Smtp[F, Replies] =
+      def sendEmailViaTls(tls: SmtpSocket[F]): Smtp[F, Replies] =
         for {
           _ <- Smtp.startTls[F]()
           r <- Smtp.local { req: Request[F] =>
             Request(
               req.email,
               tls,
-              req.blocker,
-              Host.local(),
+              data.Host.local(),
               Instant.now(),
               UUID.randomUUID().toString
             )
@@ -136,7 +122,7 @@ object Client {
 
       def sender: Smtp[F, Replies] = Smtp.ask[F].flatMap { r =>
         r.email match {
-          case TextEmail(_, _, _, _, _, _) =>
+          case data.Email.TextEmail(_, _, _, _, _, _) =>
             for {
               _ <- Smtp.mail[F]()
               _ <- Smtp.rcpt[F]()
@@ -147,7 +133,7 @@ object Client {
               _ <- Smtp.quit[F]()
             } yield r
 
-          case MimeEmail(_, _, _, _, _, _, _, _) =>
+          case data.Email.MimeEmail(_, _, _, _, _, _, _, _) =>
             for {
               _ <- Smtp.mail[F]()
               _ <- Smtp.rcpt[F]()
