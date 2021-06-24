@@ -2,14 +2,14 @@ package com.minosiants.pencil
 
 import java.net.InetSocketAddress
 
-import cats.effect.concurrent.{ Deferred, Ref }
-import cats.effect.{ ContextShift, IO }
+import cats.effect.IO
 import com.minosiants.pencil.protocol._
 import fs2.Stream
 import fs2.io.tcp.{ Socket, SocketGroup }
 import scodec.bits.BitVector
 import scodec.stream.{ StreamDecoder, StreamEncoder }
 import Command._
+import cats.effect.{ Deferred, Ref }
 
 final case class SmtpServer(
     sg: SocketGroup,
@@ -19,7 +19,7 @@ final case class SmtpServer(
 
   def start(
       localBindAddress: Deferred[IO, InetSocketAddress]
-  )(implicit cs: ContextShift[IO]): IO[Unit] = {
+  ): IO[Unit] = {
     sg.serverWithLocalAddress[IO](new InetSocketAddress(5555))
       .flatMap {
         case Left(local) =>
