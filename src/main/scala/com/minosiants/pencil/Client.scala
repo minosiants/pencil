@@ -55,9 +55,7 @@ object Client {
       credentials: Option[Credentials] = None,
       readTimeout: FiniteDuration = 5.minutes,
       writeTimeout: FiniteDuration = 5.minutes
-  )(
-      blocker: Blocker,
-      sg: SocketGroup,
+  )(sg: SocketGroup,
       tlsContext: TLSContext,
       logger: Logger[F]
   ): Client[F] =

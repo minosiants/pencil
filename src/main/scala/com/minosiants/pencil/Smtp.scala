@@ -21,7 +21,7 @@ import java.time.{ Instant, ZoneId, ZoneOffset }
 
 import cats._
 import cats.data.Kleisli
-import cats.effect.{ ContextShift, Sync }
+import cats.effect.Sync
 import cats.implicits._
 import com.minosiants.pencil.data.Body.{ Ascii, Html, Utf8 }
 import com.minosiants.pencil.data.Email._

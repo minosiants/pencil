@@ -1,15 +1,14 @@
-val catsVersion           = "2.5.0"
-val catsEffectVersion     = "2.4.1"
-val fs2Version            = "2.5.4"
-val scodecBitsVersion     = "1.1.25"
-val scodecCoreVersion     = "1.11.7"
-val scodecStreamVersion   = "2.0.1"
-val shapelessVersion      = "2.3.3"
+val catsVersion           = "2.6.1"
+val catsEffectVersion     = "3.1.1"
+val fs2Version            = "3.0.4"
+val scodecBitsVersion     = "1.1.27"
+val scodecCoreVersion     = "1.11.8"
+val scodecStreamVersion   = "3.0.1"
 val specs2Version         = "4.10.6"
 val tikaVersion           = "1.24"
 val scalacheckVersion     = "1.14.1"
 val catsEffectTestVersion = "0.5.2"
-val log4catsVersion       = "1.2.2"
+val log4catsVersion       = "2.1.1"
 val logbackVersion        = "1.2.3"
 
 lazy val root = (project in file("."))
@@ -17,12 +16,13 @@ lazy val root = (project in file("."))
     organization := "com.minosiants",
     name := "pencil",
     scalaVersion := "2.12.12",
-    crossScalaVersions := Seq("2.12.12", "2.13.4"),
+    crossScalaVersions := Seq("2.12.12", "2.13.6"),
     scalacOptions ++= Seq(
       "-language:experimental.macros",
       "-Yrangepos",
       "-Ywarn-unused",
-      "-Xlint"
+      "-Xlint",
+      "-P:semanticdb:synthetics:on"
     ),
     javacOptions ++= Seq("-source", "1.11", "-target", "1.8"),
     libraryDependencies ++= Seq(
@@ -30,7 +30,6 @@ lazy val root = (project in file("."))
       "org.typelevel"     %% "cats-effect"                % catsEffectVersion,
       "co.fs2"            %% "fs2-core"                   % fs2Version,
       "co.fs2"            %% "fs2-io"                     % fs2Version,
-      "com.chuusai"       %% "shapeless"                  % shapelessVersion,
       "org.scodec"        %% "scodec-bits"                % scodecBitsVersion,
       "org.scodec"        %% "scodec-core"                % scodecCoreVersion,
       "org.typelevel"     %% "log4cats-core"              % log4catsVersion,

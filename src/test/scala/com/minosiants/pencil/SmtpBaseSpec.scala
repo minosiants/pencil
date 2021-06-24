@@ -4,8 +4,7 @@ import java.net.InetSocketAddress
 import java.time.{ Clock, Instant, ZoneId, ZoneOffset }
 import java.util.UUID
 
-import cats.effect.concurrent.{ Deferred, Ref }
-import cats.effect.{ Blocker, IO, Resource, Timer }
+import cats.effect.{ IO, Resource }
 import cats.effect.testing.specs2.CatsIO
 import cats.instances.list._
 import cats.syntax.traverse._
@@ -18,6 +17,7 @@ import scodec.{ Codec, DecodeResult }
 
 import scala.Function.const
 import scala.concurrent.duration._
+import cats.effect.{ Deferred, Ref, Temporal }
 
 trait SmtpBaseSpec extends SpecificationLike with CatsIO {
 
@@ -42,7 +42,7 @@ trait SmtpBaseSpec extends SpecificationLike with CatsIO {
     val localBindAddress =
       Deferred[IO, InetSocketAddress].unsafeRunSync()
 
-    Blocker[IO]
+    Resource.unit[IO]
       .use { blocker =>
         SocketGroup[IO](blocker).use { sg =>
           for {
@@ -65,7 +65,7 @@ trait SmtpBaseSpec extends SpecificationLike with CatsIO {
       (for {
         _ <- Smtp.init[IO]()
         v <- command
-        raw <- Smtp.liftF(Timer[IO].sleep(100.millis).flatMap { _ =>
+        raw <- Smtp.liftF(Temporal[IO].sleep(100.millis).flatMap { _ =>
           state.get
         })
         r <- Smtp.liftF(

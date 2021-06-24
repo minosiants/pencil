@@ -1,6 +1,6 @@
 package com.minosiants.pencil
 
-import cats.effect.{ Blocker, IO }
+import cats.effect.IO
 import cats.syntax.show._
 import com.minosiants.pencil.SmtpSpec.body
 import com.minosiants.pencil.data.Body.{ Ascii, Html, Utf8 }
@@ -11,6 +11,7 @@ import com.minosiants.pencil.protocol.Encoding.`base64`
 import com.minosiants.pencil.protocol.Header.`Content-Type`
 import com.minosiants.pencil.protocol._
 import scodec.codecs
+import cats.effect.Resource
 
 class SmtpSpec extends SmtpBaseSpec {
 
@@ -286,7 +287,7 @@ class SmtpSpec extends SmtpBaseSpec {
     val attachment = email.attachments.head
     val result     = testCommand(Smtp.attachments(), email, codecs.ascii)
 
-    val encodedFile = Blocker[IO]
+    val encodedFile = Resource.unit[IO]
       .use { blocker =>
         fs2.io.file
           .readAll[IO](attachment.file, blocker, 1024)
