@@ -16,25 +16,23 @@
 
 package com.minosiants.pencil
 
-import java.time.format.DateTimeFormatter
-import java.time.{ Instant, ZoneId, ZoneOffset }
-
 import cats._
 import cats.data.Kleisli
-import cats.effect.Sync
+import cats.effect.Async
 import cats.implicits._
-import com.minosiants.pencil.data.Body.{ Ascii, Html, Utf8 }
+import com.minosiants.pencil.data.Body.{Ascii, Html, Utf8}
 import com.minosiants.pencil.data.Email._
-import com.minosiants.pencil.data.{ Email, Mailbox, _ }
+import com.minosiants.pencil.data.{Email, Mailbox, _}
 import com.minosiants.pencil.protocol.Code._
 import com.minosiants.pencil.protocol.Command._
 import com.minosiants.pencil.protocol.ContentType._
-import com.minosiants.pencil.protocol.Encoding.{ `7bit`, `base64` }
+import com.minosiants.pencil.protocol.Encoding.{`7bit`, `base64`}
 import com.minosiants.pencil.protocol.Header._
 import com.minosiants.pencil.protocol._
-import fs2.io.file.readAll
-import fs2.{ Chunk, Stream }
+import fs2.{Chunk, Stream}
 
+import java.time.format.DateTimeFormatter
+import java.time.{Instant, ZoneId, ZoneOffset}
 import scala.Function._
 object Smtp {
   // Used for easier type inference
@@ -374,7 +372,7 @@ object Smtp {
         liftF(Error.smtpError[F, Unit]("not mime email"))
     }
 
-  def attachments[F[_]: Sync: ContextShift: Applicative](): Smtp[F, Unit] = {
+  def attachments[F[_]: Async: Applicative](): Smtp[F, Unit] = {
     Smtp[F] { req =>
       req.email match {
         case TextEmail(_, _, _, _, _, _) =>
@@ -396,9 +394,9 @@ object Smtp {
                   )
                 )
               ).run(req)
-              _ <- readAll[F](attachment, req.blocker, 1024)
+              _ <- fs2.io.file.readAll[F](attachment, 1024)
                 .through(fs2.text.base64.encode)
-                .flatMap(s => Stream.chunk(Chunk.chars(s.toCharArray)))
+                .flatMap(s => Stream.chunk(Chunk.array(s.toCharArray)))
                 .chunkN(n = 76)
                 .map(chunk => chunk.iterator.mkString)
                 .evalMap(line => text(s"${line}${Command.end}").run(req))

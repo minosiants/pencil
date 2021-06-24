@@ -44,8 +44,9 @@ lazy val root = (project in file("."))
       "org.typelevel"     %% "log4cats-slf4j"             % log4catsVersion % "test"
     ),
     addCompilerPlugin(
-      "org.typelevel" %% "kind-projector" % "0.11.1" cross CrossVersion.full
+      "org.typelevel" %% "kind-projector" % "0.13.0" cross CrossVersion.full
     ),
+    addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
     addCompilerPlugin(scalafixSemanticdb),
     publishTo := sonatypePublishToBundle.value
   )

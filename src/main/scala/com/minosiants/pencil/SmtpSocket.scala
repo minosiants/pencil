@@ -22,14 +22,14 @@ import cats.implicits._
 import com.minosiants.pencil.protocol.Command._
 import com.minosiants.pencil.protocol._
 import fs2.Chunk
-import fs2.io.tcp.Socket
 import org.typelevel.log4cats.Logger
 import scodec.bits.BitVector
 import scodec.codecs._
-import scodec.{ Attempt, DecodeResult }
+import scodec.{Attempt, DecodeResult}
 
 import scala.concurrent.duration.FiniteDuration
 import com.minosiants.pencil.data.Error
+import fs2.io.net.Socket
 
 /**
   * Wraps [[Socket[IO]]] with smtp specific protocol
@@ -66,7 +66,7 @@ object SmtpSocket {
       }
 
     override def read(): F[Replies] =
-      s.read(8192, Some(readTimeout)).flatMap {
+      s.read(8192).flatMap {
         case Some(chunk) => bytesToReply(chunk.toArray)
         case None        => Error.smtpError[F, Replies]("Nothing to read")
       }
@@ -75,7 +75,7 @@ object SmtpSocket {
       ascii.encode(command.show) match {
         case Attempt.Successful(value) =>
           logger.debug(s"Sending command: ${command.show}") *>
-            s.write(Chunk.array(value.toByteArray), Some(writeTimeout))
+            s.write(Chunk.array(value.toByteArray))
 
         case Attempt.Failure(cause) =>
           Error.smtpError[F, Unit](cause.messageWithContext)

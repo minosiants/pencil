@@ -15,19 +15,17 @@
  */
 
 package com.minosiants.pencil
-
-import java.net.InetSocketAddress
-import java.time.Instant
-import java.util.UUID
-
-import cats.effect._
-import com.minosiants.pencil.data.Email.{ MimeEmail, TextEmail }
-import com.minosiants.pencil.data._
+import cats.effect.{Async, Concurrent, Resource}
+import com.comcast.ip4s.{Host, IpLiteralSyntax, SocketAddress}
+import com.minosiants.pencil.data.Email.{MimeEmail, TextEmail}
+import com.minosiants.pencil.data.{Host => PHost, _}
 import com.minosiants.pencil.protocol._
-import fs2.io.tcp.{ Socket, SocketGroup }
-import fs2.io.tls.TLSContext
+import fs2.io.net.tls.TLSContext
+import fs2.io.net.{Socket, SocketGroup}
 import org.typelevel.log4cats.Logger
 
+import java.time.Instant
+import java.util.UUID
 import scala.Function.const
 import scala.concurrent.duration._
 
@@ -49,19 +47,18 @@ trait Client[F[_]] {
 }
 
 object Client {
-  def apply[F[_]: Concurrent: ContextShift](
-      host: String = "localhost",
-      port: Int = 25,
-      credentials: Option[Credentials] = None,
-      readTimeout: FiniteDuration = 5.minutes,
-      writeTimeout: FiniteDuration = 5.minutes
-  )(sg: SocketGroup,
-      tlsContext: TLSContext,
+
+  def apply[F[_]:Async: Concurrent ](
+                                      address :SocketAddress[Host] = SocketAddress(host"localhost", port"25"),
+                                     credentials: Option[Credentials] = None,
+                                     readTimeout: FiniteDuration = 5.minutes,
+                                     writeTimeout: FiniteDuration = 5.minutes
+  )(sg: SocketGroup[F],
+      tlsContext: TLSContext[F],
       logger: Logger[F]
   ): Client[F] =
     new Client[F] {
-      val socket: Resource[F, Socket[F]] =
-        sg.client[F](new InetSocketAddress(host, port))
+      val socket: Resource[F , Socket[F]] =  sg.client(address)
 
       def tlsSmtpSocket(s: Socket[F]): Resource[F, SmtpSocket[F]] =
         tlsContext.client(s).map { cs =>
@@ -89,12 +86,12 @@ object Client {
               Request(
                 email,
                 SmtpSocket.fromSocket(s, logger, readTimeout, writeTimeout),
-                blocker,
-                Host.local(),
+                PHost.local(),
                 Instant.now(),
                 UUID.randomUUID().toString
               )
             )
+
         }
       }
 
@@ -120,8 +117,7 @@ object Client {
             Request(
               req.email,
               tls,
-              req.blocker,
-              Host.local(),
+              PHost.local(),
               Instant.now(),
               UUID.randomUUID().toString
             )
