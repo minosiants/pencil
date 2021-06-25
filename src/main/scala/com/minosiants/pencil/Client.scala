@@ -15,13 +15,13 @@
  */
 
 package com.minosiants.pencil
-import cats.effect.{Async, Concurrent, Resource}
-import com.comcast.ip4s.{Host, IpLiteralSyntax, SocketAddress}
-import com.minosiants.pencil.data.Email.{MimeEmail, TextEmail}
-import com.minosiants.pencil.data.{Host => PHost, _}
+import cats.effect.{ Async, Concurrent, Resource }
+import com.comcast.ip4s.{ Host, IpLiteralSyntax, SocketAddress }
+import com.minosiants.pencil.data.Email.{ MimeEmail, TextEmail }
+import com.minosiants.pencil.data.{ Host => PHost, _ }
 import com.minosiants.pencil.protocol._
 import fs2.io.net.tls.TLSContext
-import fs2.io.net.{Socket, SocketGroup}
+import fs2.io.net.{ Socket, SocketGroup }
 import org.typelevel.log4cats.Logger
 
 import java.time.Instant
@@ -48,17 +48,18 @@ trait Client[F[_]] {
 
 object Client {
 
-  def apply[F[_]:Async: Concurrent ](
-                                      address :SocketAddress[Host] = SocketAddress(host"localhost", port"25"),
-                                     credentials: Option[Credentials] = None,
-                                     readTimeout: FiniteDuration = 5.minutes,
-                                     writeTimeout: FiniteDuration = 5.minutes
-  )(sg: SocketGroup[F],
+  def apply[F[_]: Async: Concurrent](
+      address: SocketAddress[Host] = SocketAddress(host"localhost", port"25"),
+      credentials: Option[Credentials] = None,
+      readTimeout: FiniteDuration = 5.minutes,
+      writeTimeout: FiniteDuration = 5.minutes
+  )(
+      sg: SocketGroup[F],
       tlsContext: TLSContext[F],
       logger: Logger[F]
   ): Client[F] =
     new Client[F] {
-      val socket: Resource[F , Socket[F]] =  sg.client(address)
+      val socket: Resource[F, Socket[F]] = sg.client(address)
 
       def tlsSmtpSocket(s: Socket[F]): Resource[F, SmtpSocket[F]] =
         tlsContext.client(s).map { cs =>

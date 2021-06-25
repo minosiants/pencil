@@ -1,16 +1,16 @@
 package com.minosiants.pencil
 
-import cats.effect.{Deferred, IO, Ref}
-import com.comcast.ip4s.{Host, IpLiteralSyntax, SocketAddress}
+import cats.effect.{ Deferred, IO, Ref }
+import com.comcast.ip4s.{ Host, IpLiteralSyntax, Port, SocketAddress }
 import com.minosiants.pencil.protocol.Command._
 import com.minosiants.pencil.protocol._
 import fs2.Stream
-import fs2.io.net.{Socket, SocketGroup}
+import fs2.io.net.{ Network, Socket }
+import org.typelevel.log4cats.slf4j.Slf4jLogger
 import scodec.bits.BitVector
-import scodec.stream.{StreamDecoder, StreamEncoder}
+import scodec.stream.{ StreamDecoder, StreamEncoder }
 
 final case class SmtpServer(
-    sg: SocketGroup[IO],
     state: Ref[IO, List[BitVector]],
     port: Int = 5555
 ) {
@@ -18,19 +18,25 @@ final case class SmtpServer(
   def start(
       localBindAddress: Deferred[IO, SocketAddress[Host]]
   ): IO[Unit] = {
-    val setup = for {
-      serverSetup <- sg.serverResource(Some(host"localhost"), Some(port"25"))
-      (localAddress, clients) = serverSetup
-       ba = Stream(Left(localAddress)) ++ clients.map(Right(_))
-    }yield ba.flatMap {
-       case Left(localAddress) => Stream.eval_(localBindAddress.complete(localAddress))
-       case Right(client) =>
-           val s = MessageSocket(client)
-           s.write(DataSamples.`220 Greeting`) ++
-             s.read.through(processCommand).through(s.writes)
+    val logger = Slf4jLogger.getLogger[IO]
+    println("before setup")
+    Stream
+      .resource(
+        Network[IO].serverResource(Some(ip"127.0.0.1"), Port.fromInt(port))
+      )
+      .flatMap {
+        case (localAddress, server) =>
+          Stream.eval(localBindAddress.complete(localAddress)).drain ++
+            server.flatMap {
+              case socket =>
+                val s = MessageSocket(socket)
+                s.write(DataSamples.`220 Greeting`) ++
+                  s.read.through(processCommand).through(s.writes)
+            }
 
-         }
-      Stream.resource(setup).compile.drain
+      }
+      .compile
+      .drain
 
   }
 
@@ -89,8 +95,7 @@ final case class MessageSocket(socket: Socket[IO])
     extends Product
     with Serializable {
   def read: Stream[IO, In] =
-    socket
-      .reads
+    socket.reads
       .through(decoder.toPipeByte[IO])
       .through { s =>
         s.flatMap(Stream.emits(_))

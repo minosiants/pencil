@@ -4,18 +4,18 @@ import cats.effect._
 import cats.effect.unsafe.implicits.global
 import cats.instances.list._
 import cats.syntax.traverse._
-import com.comcast.ip4s.{Host, IpLiteralSyntax, SocketAddress}
-import com.minosiants.pencil.data.{Email, Error, Host => PHost}
-import fs2.io.net.{Network, SocketGroup}
+import com.comcast.ip4s.{ Host, IpLiteralSyntax, SocketAddress }
+import com.minosiants.pencil.data.{ Email, Error, Host => PHost }
+import fs2.io.net.{ Network, SocketGroup }
 import org.specs2.mutable.SpecificationLike
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 import scodec.bits.BitVector
-import scodec.{Codec, DecodeResult}
+import scodec.{ Codec, DecodeResult }
 
-import java.time.{Clock, Instant, ZoneId, ZoneOffset}
+import java.time.{ Clock, Instant, ZoneId, ZoneOffset }
 import java.util.UUID
 import scala.concurrent.duration._
-
+import fs2.Stream
 trait SmtpBaseSpec extends SpecificationLike {
 
   val logger    = Slf4jLogger.getLogger[IO]
@@ -25,10 +25,10 @@ trait SmtpBaseSpec extends SpecificationLike {
   val uuid      = UUID.randomUUID().toString
 
   def socket(
-      address: SocketAddress[Host],
-      sg: SocketGroup[IO]
+      address: SocketAddress[Host]
   ): Resource[IO, SmtpSocket[IO]] =
-    sg.client(address)
+    Network[IO]
+      .client(address)
       .map(SmtpSocket.fromSocket(_, logger, 5.seconds, 5.seconds))
 
   type ServerState = Ref[IO, List[BitVector]]
@@ -39,14 +39,20 @@ trait SmtpBaseSpec extends SpecificationLike {
     val localBindAddress =
       Deferred[IO, SocketAddress[Host]].unsafeRunSync()
 
-    Resource.unit[IO]
+    Resource
+      .unit[IO]
       .use { _ =>
         Network[IO].socketGroup().use { sg =>
           for {
+            _       <- logger.info("withSocket")
             state   <- Ref[IO].of(List.empty[BitVector])
-            f       <- SmtpServer(sg, state).start(localBindAddress).start
+            _       <- logger.info("state")
+            f       <- SmtpServer(state).start(localBindAddress).start
+            _       <- logger.info("smtpServer")
             address <- localBindAddress.get
-            r       <- socket(address, sg).use(s => run(s, state))
+            _       <- logger.info("address")
+            r       <- socket(address).use(s => run(s, state))
+            _       <- logger.info("socket")
             _       <- f.cancel
           } yield r
         }

@@ -1,7 +1,7 @@
 package com.minosiants.pencil
 
 import cats.effect.unsafe.implicits.global
-import cats.effect.{IO, Resource}
+import cats.effect.{ IO, Resource }
 import com.minosiants.pencil.data._
 import fs2.io.net.Network
 import org.specs2.execute.Pending
@@ -21,7 +21,8 @@ class SmtpIntegrationSpec extends SpecificationLike {
         Body.Utf8("hi there")
       ) + attachment"files/jpeg-sample.jpg"
 
-      val result = Resource.unit[IO]
+      val result = Resource
+        .unit[IO]
         .use { _ =>
           Network[IO].socketGroup().use { sg =>
             Network[IO].tlsContext.system.flatMap { tls =>
