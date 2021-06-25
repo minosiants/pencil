@@ -11,6 +11,10 @@ val catsEffectTestVersion = "1.1.1"
 val log4catsVersion       = "2.1.1"
 val logbackVersion        = "1.2.3"
 
+ThisBuild / scalafixScalaBinaryVersion := (ThisBuild / scalaBinaryVersion).value
+ThisBuild / semanticdbEnabled := true
+ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
+
 lazy val root = (project in file("."))
   .settings(
     organization := "com.minosiants",
@@ -38,10 +42,9 @@ lazy val root = (project in file("."))
       "org.specs2"      %% "specs2-core"       % specs2Version % "test",
       "org.specs2"      %% "specs2-scalacheck" % specs2Version % Test,
       "org.scalacheck"  %% "scalacheck"        % scalacheckVersion % "test",
-      //"com.codecommit"    %% "cats-effect-testing-specs2" % catsEffectTestVersion % "test",
-      "org.scodec"     %% "scodec-stream"  % scodecStreamVersion % "test",
-      "ch.qos.logback" % "logback-classic" % logbackVersion      % "test",
-      "org.typelevel"  %% "log4cats-slf4j" % log4catsVersion     % "test"
+      "org.scodec"      %% "scodec-stream"     % scodecStreamVersion % "test",
+      "ch.qos.logback"  % "logback-classic"    % logbackVersion % "test",
+      "org.typelevel"   %% "log4cats-slf4j"    % log4catsVersion % "test"
     ),
     addCompilerPlugin(
       "org.typelevel" %% "kind-projector" % "0.13.0" cross CrossVersion.full
