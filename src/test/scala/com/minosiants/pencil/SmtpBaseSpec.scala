@@ -1,55 +1,52 @@
 package com.minosiants.pencil
 
-import java.net.InetSocketAddress
-import java.time.{ Clock, Instant, ZoneId, ZoneOffset }
-import java.util.UUID
-
-import cats.effect.{ IO, Resource }
-import cats.effect.testing.specs2.CatsIO
+import cats.effect._
+import cats.effect.unsafe.implicits.global
 import cats.instances.list._
 import cats.syntax.traverse._
-import com.minosiants.pencil.data.{ Email, Error, Host }
-import fs2.io.tcp.SocketGroup
+import com.comcast.ip4s.{Host, IpLiteralSyntax, SocketAddress}
+import com.minosiants.pencil.data.{Email, Error, Host => PHost}
+import fs2.io.net.{Network, SocketGroup}
 import org.specs2.mutable.SpecificationLike
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 import scodec.bits.BitVector
-import scodec.{ Codec, DecodeResult }
+import scodec.{Codec, DecodeResult}
 
-import scala.Function.const
+import java.time.{Clock, Instant, ZoneId, ZoneOffset}
+import java.util.UUID
 import scala.concurrent.duration._
-import cats.effect.{ Deferred, Ref, Temporal }
 
-trait SmtpBaseSpec extends SpecificationLike with CatsIO {
+trait SmtpBaseSpec extends SpecificationLike {
 
   val logger    = Slf4jLogger.getLogger[IO]
   val timestamp = Instant.now()
   val clock     = Clock.fixed(timestamp, ZoneId.from(ZoneOffset.UTC))
-  val host      = Host.local()
+  val host      = SocketAddress(host"localhost", port"25")
   val uuid      = UUID.randomUUID().toString
 
   def socket(
-      address: InetSocketAddress,
-      sg: SocketGroup
+      address: SocketAddress[Host],
+      sg: SocketGroup[IO]
   ): Resource[IO, SmtpSocket[IO]] =
-    sg.client[IO](address)
+    sg.client(address)
       .map(SmtpSocket.fromSocket(_, logger, 5.seconds, 5.seconds))
 
   type ServerState = Ref[IO, List[BitVector]]
 
   def withSocket[A](
-      run: (SmtpSocket[IO], Blocker, ServerState) => IO[A]
+      run: (SmtpSocket[IO], ServerState) => IO[A]
   ): IO[A] = {
     val localBindAddress =
-      Deferred[IO, InetSocketAddress].unsafeRunSync()
+      Deferred[IO, SocketAddress[Host]].unsafeRunSync()
 
     Resource.unit[IO]
-      .use { blocker =>
-        SocketGroup[IO](blocker).use { sg =>
+      .use { _ =>
+        Network[IO].socketGroup().use { sg =>
           for {
             state   <- Ref[IO].of(List.empty[BitVector])
             f       <- SmtpServer(sg, state).start(localBindAddress).start
             address <- localBindAddress.get
-            r       <- socket(address, sg).use(s => run(s, blocker, state))
+            r       <- socket(address, sg).use(s => run(s, state))
             _       <- f.cancel
           } yield r
         }
@@ -61,7 +58,7 @@ trait SmtpBaseSpec extends SpecificationLike with CatsIO {
       email: Email,
       codec: Codec[B]
   ): Either[Throwable, (A, List[B])] = {
-    withSocket { (s, blocker, state) =>
+    withSocket { (s, state) =>
       (for {
         _ <- Smtp.init[IO]()
         v <- command
@@ -82,8 +79,7 @@ trait SmtpBaseSpec extends SpecificationLike with CatsIO {
           Request(
             email,
             s,
-            blocker,
-            Host.local(),
+            PHost.local(),
             Instant.now(clock),
             () => uuid
           )

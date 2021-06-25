@@ -9,6 +9,7 @@ import org.scalacheck.Prop.forAll
 import org.scalacheck._
 import org.specs2.ScalaCheck
 import org.specs2.mutable.Specification
+import cats.effect.unsafe.implicits.global
 
 class ContentTypeFinderSpec extends Specification with ScalaCheck {
   import ContentTypeFinderSpec._

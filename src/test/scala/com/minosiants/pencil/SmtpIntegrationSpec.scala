@@ -1,16 +1,14 @@
 package com.minosiants.pencil
 
-import cats.effect.IO
-import cats.effect.testing.specs2.CatsIO
+import cats.effect.unsafe.implicits.global
+import cats.effect.{IO, Resource}
 import com.minosiants.pencil.data._
-import fs2.io.tcp.SocketGroup
-import fs2.io.tls.TLSContext
+import fs2.io.net.Network
 import org.specs2.execute.Pending
 import org.specs2.mutable.SpecificationLike
 import org.typelevel.log4cats.slf4j.Slf4jLogger
-import cats.effect.Resource
 
-class SmtpIntegrationSpec extends SpecificationLike with CatsIO {
+class SmtpIntegrationSpec extends SpecificationLike {
   val logger = Slf4jLogger.getLogger[IO]
 
   "Smtp integration" should {
@@ -24,10 +22,10 @@ class SmtpIntegrationSpec extends SpecificationLike with CatsIO {
       ) + attachment"files/jpeg-sample.jpg"
 
       val result = Resource.unit[IO]
-        .use { blocker =>
-          SocketGroup[IO](blocker).use { sg =>
-            TLSContext.system[IO](blocker).flatMap { tls =>
-              val client = Client[IO]()(blocker, sg, tls, logger)
+        .use { _ =>
+          Network[IO].socketGroup().use { sg =>
+            Network[IO].tlsContext.system.flatMap { tls =>
+              val client = Client[IO]()(sg, tls, logger)
               client.send(email)
             }
 

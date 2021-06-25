@@ -1,39 +1,37 @@
 package com.minosiants.pencil
 
-import java.net.InetSocketAddress
-
-import cats.effect.IO
+import cats.effect.{Deferred, IO, Ref}
+import com.comcast.ip4s.{Host, IpLiteralSyntax, SocketAddress}
+import com.minosiants.pencil.protocol.Command._
 import com.minosiants.pencil.protocol._
 import fs2.Stream
-import fs2.io.tcp.{ Socket, SocketGroup }
+import fs2.io.net.{Socket, SocketGroup}
 import scodec.bits.BitVector
-import scodec.stream.{ StreamDecoder, StreamEncoder }
-import Command._
-import cats.effect.{ Deferred, Ref }
+import scodec.stream.{StreamDecoder, StreamEncoder}
 
 final case class SmtpServer(
-    sg: SocketGroup,
+    sg: SocketGroup[IO],
     state: Ref[IO, List[BitVector]],
     port: Int = 5555
 ) {
 
   def start(
-      localBindAddress: Deferred[IO, InetSocketAddress]
+      localBindAddress: Deferred[IO, SocketAddress[Host]]
   ): IO[Unit] = {
-    sg.serverWithLocalAddress[IO](new InetSocketAddress(5555))
-      .flatMap {
-        case Left(local) =>
-          Stream.eval_(localBindAddress.complete(local))
-        case Right(socketHandle) =>
-          Stream.resource(socketHandle).flatMap { client =>
-            val s = MessageSocket(client)
-            s.write(DataSamples.`220 Greeting`) ++
-              s.read.through(processCommand).through(s.writes)
+    val setup = for {
+      serverSetup <- sg.serverResource(Some(host"localhost"), Some(port"25"))
+      (localAddress, clients) = serverSetup
+       ba = Stream(Left(localAddress)) ++ clients.map(Right(_))
+    }yield ba.flatMap {
+       case Left(localAddress) => Stream.eval_(localBindAddress.complete(localAddress))
+       case Right(client) =>
+           val s = MessageSocket(client)
+           s.write(DataSamples.`220 Greeting`) ++
+             s.read.through(processCommand).through(s.writes)
 
-          }
-      }
-      .compile
-      .drain
+         }
+      Stream.resource(setup).compile.drain
+
   }
 
   def processCommand(stream: Stream[IO, In]): Stream[IO, Replies] = {
@@ -92,7 +90,7 @@ final case class MessageSocket(socket: Socket[IO])
     with Serializable {
   def read: Stream[IO, In] =
     socket
-      .reads(1024)
+      .reads
       .through(decoder.toPipeByte[IO])
       .through { s =>
         s.flatMap(Stream.emits(_))
@@ -103,7 +101,7 @@ final case class MessageSocket(socket: Socket[IO])
   def writes(stream: Stream[IO, Replies]): Stream[IO, Unit] =
     stream
       .through(StreamEncoder.many(Replies.codec).toPipeByte)
-      .through(socket.writes())
+      .through(socket.writes)
 
   final val decoder: StreamDecoder[List[In]] =
     StreamDecoder.many(In.inListDecoder)

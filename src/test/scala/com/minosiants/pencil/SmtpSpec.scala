@@ -12,6 +12,8 @@ import com.minosiants.pencil.protocol.Header.`Content-Type`
 import com.minosiants.pencil.protocol._
 import scodec.codecs
 import cats.effect.Resource
+import cats.effect.unsafe.implicits.global
+
 
 class SmtpSpec extends SmtpBaseSpec {
 
@@ -161,7 +163,7 @@ class SmtpSpec extends SmtpBaseSpec {
           s"To: ${email.to.show}${Command.end}",
           s"Cc: ${email.cc.get.show}${Command.end}",
           s"Bcc: ${email.bcc.get.show}${Command.end}",
-          s"Message-ID: <$uuid.${timestamp.getEpochSecond}@${host.name}>${Command.end}",
+          s"Message-ID: <$uuid.${timestamp.getEpochSecond}@${host.host.toString}>${Command.end}",
           s"Subject: =?utf-8?b?${email.subject.get.value.toBase64}?=${Command.end}"
         )
       )
@@ -288,9 +290,9 @@ class SmtpSpec extends SmtpBaseSpec {
     val result     = testCommand(Smtp.attachments(), email, codecs.ascii)
 
     val encodedFile = Resource.unit[IO]
-      .use { blocker =>
+      .use { _ =>
         fs2.io.file
-          .readAll[IO](attachment.file, blocker, 1024)
+          .readAll[IO](attachment.file, 1024)
           .through(fs2.text.base64.encode)
           .compile
           .toList

@@ -7,7 +7,7 @@ val scodecStreamVersion   = "3.0.1"
 val specs2Version         = "4.10.6"
 val tikaVersion           = "1.24"
 val scalacheckVersion     = "1.14.1"
-val catsEffectTestVersion = "0.5.2"
+val catsEffectTestVersion = "1.1.1"
 val log4catsVersion       = "2.1.1"
 val logbackVersion        = "1.2.3"
 
@@ -38,7 +38,7 @@ lazy val root = (project in file("."))
       "org.specs2"        %% "specs2-core"                % specs2Version % "test",
       "org.specs2"        %% "specs2-scalacheck"          % specs2Version % Test,
       "org.scalacheck"    %% "scalacheck"                 % scalacheckVersion % "test",
-      "com.codecommit"    %% "cats-effect-testing-specs2" % catsEffectTestVersion % "test",
+      //"com.codecommit"    %% "cats-effect-testing-specs2" % catsEffectTestVersion % "test",
       "org.scodec"        %% "scodec-stream"              % scodecStreamVersion % "test",
       "ch.qos.logback"    % "logback-classic"             % logbackVersion % "test",
       "org.typelevel"     %% "log4cats-slf4j"             % log4catsVersion % "test"
