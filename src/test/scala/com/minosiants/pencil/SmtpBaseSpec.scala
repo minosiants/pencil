@@ -4,9 +4,9 @@ import cats.effect._
 import cats.effect.unsafe.implicits.global
 import cats.instances.list._
 import cats.syntax.traverse._
-import com.comcast.ip4s.{ Host, IpLiteralSyntax, SocketAddress }
+import com.comcast.ip4s.{ Host, SocketAddress }
 import com.minosiants.pencil.data.{ Email, Error, Host => PHost }
-import fs2.io.net.{ Network, SocketGroup }
+import fs2.io.net.Network
 import org.specs2.mutable.SpecificationLike
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 import scodec.bits.BitVector
@@ -15,13 +15,12 @@ import scodec.{ Codec, DecodeResult }
 import java.time.{ Clock, Instant, ZoneId, ZoneOffset }
 import java.util.UUID
 import scala.concurrent.duration._
-import fs2.Stream
 trait SmtpBaseSpec extends SpecificationLike {
 
   val logger    = Slf4jLogger.getLogger[IO]
   val timestamp = Instant.now()
   val clock     = Clock.fixed(timestamp, ZoneId.from(ZoneOffset.UTC))
-  val host      = SocketAddress(host"localhost", port"25")
+  val host      = PHost.local() //SocketAddress(host"localhost", port"25")
   val uuid      = UUID.randomUUID().toString
 
   def socket(
@@ -42,20 +41,13 @@ trait SmtpBaseSpec extends SpecificationLike {
     Resource
       .unit[IO]
       .use { _ =>
-        Network[IO].socketGroup().use { sg =>
-          for {
-            _       <- logger.info("withSocket")
-            state   <- Ref[IO].of(List.empty[BitVector])
-            _       <- logger.info("state")
-            f       <- SmtpServer(state).start(localBindAddress).start
-            _       <- logger.info("smtpServer")
-            address <- localBindAddress.get
-            _       <- logger.info("address")
-            r       <- socket(address).use(s => run(s, state))
-            _       <- logger.info("socket")
-            _       <- f.cancel
-          } yield r
-        }
+        for {
+          state   <- Ref[IO].of(List.empty[BitVector])
+          f       <- SmtpServer(state).start(localBindAddress).start
+          address <- localBindAddress.get
+          r       <- socket(address).use(s => run(s, state))
+          _       <- f.cancel
+        } yield r
       }
   }
 

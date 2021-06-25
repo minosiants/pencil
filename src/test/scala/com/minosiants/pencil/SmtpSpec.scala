@@ -162,7 +162,7 @@ class SmtpSpec extends SmtpBaseSpec {
           s"To: ${email.to.show}${Command.end}",
           s"Cc: ${email.cc.get.show}${Command.end}",
           s"Bcc: ${email.bcc.get.show}${Command.end}",
-          s"Message-ID: <$uuid.${timestamp.getEpochSecond}@${host.host.toString}>${Command.end}",
+          s"Message-ID: <$uuid.${timestamp.getEpochSecond}@${host.name}>${Command.end}",
           s"Subject: =?utf-8?b?${email.subject.get.value.toBase64}?=${Command.end}"
         )
       )
