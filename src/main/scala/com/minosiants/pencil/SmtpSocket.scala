@@ -19,17 +19,15 @@ package com.minosiants.pencil
 import cats._
 import cats.effect.Sync
 import cats.implicits._
+import com.minosiants.pencil.data.Error
 import com.minosiants.pencil.protocol.Command._
 import com.minosiants.pencil.protocol._
 import fs2.Chunk
+import fs2.io.net.Socket
 import org.typelevel.log4cats.Logger
 import scodec.bits.BitVector
 import scodec.codecs._
 import scodec.{ Attempt, DecodeResult }
-
-import scala.concurrent.duration.FiniteDuration
-import com.minosiants.pencil.data.Error
-import fs2.io.net.Socket
 
 /**
   * Wraps [[Socket[IO]]] with smtp specific protocol
@@ -50,9 +48,7 @@ trait SmtpSocket[F[_]] {
 object SmtpSocket {
   def fromSocket[F[_]: Sync: MonadError[*[_], Throwable]](
       s: Socket[F],
-      logger: Logger[F],
-      readTimeout: FiniteDuration,
-      writeTimeout: FiniteDuration
+      logger: Logger[F]
   ): SmtpSocket[F] = new SmtpSocket[F] {
     def bytesToReply(bytes: Array[Byte]): F[Replies] =
       Replies.codec.decode(BitVector(bytes)) match {

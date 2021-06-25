@@ -50,9 +50,7 @@ object Client {
 
   def apply[F[_]: Async: Concurrent](
       address: SocketAddress[Host] = SocketAddress(host"localhost", port"25"),
-      credentials: Option[Credentials] = None,
-      readTimeout: FiniteDuration = 5.minutes,
-      writeTimeout: FiniteDuration = 5.minutes
+      credentials: Option[Credentials] = None
   )(
       sg: SocketGroup[F],
       tlsContext: TLSContext[F],
@@ -63,7 +61,7 @@ object Client {
 
       def tlsSmtpSocket(s: Socket[F]): Resource[F, SmtpSocket[F]] =
         tlsContext.client(s).map { cs =>
-          SmtpSocket.fromSocket(cs, logger, readTimeout, writeTimeout)
+          SmtpSocket.fromSocket(cs, logger)
         }
 
       override def send(
@@ -86,7 +84,7 @@ object Client {
             request.run(
               Request(
                 email,
-                SmtpSocket.fromSocket(s, logger, readTimeout, writeTimeout),
+                SmtpSocket.fromSocket(s, logger),
                 PHost.local(),
                 Instant.now(),
                 UUID.randomUUID().toString

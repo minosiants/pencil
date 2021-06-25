@@ -20,7 +20,7 @@ trait SmtpBaseSpec extends SpecificationLike {
   val logger    = Slf4jLogger.getLogger[IO]
   val timestamp = Instant.now()
   val clock     = Clock.fixed(timestamp, ZoneId.from(ZoneOffset.UTC))
-  val host      = PHost.local() //SocketAddress(host"localhost", port"25")
+  val host      = PHost.local()
   val uuid      = UUID.randomUUID().toString
 
   def socket(
@@ -28,7 +28,7 @@ trait SmtpBaseSpec extends SpecificationLike {
   ): Resource[IO, SmtpSocket[IO]] =
     Network[IO]
       .client(address)
-      .map(SmtpSocket.fromSocket(_, logger, 5.seconds, 5.seconds))
+      .map(SmtpSocket.fromSocket(_, logger))
 
   type ServerState = Ref[IO, List[BitVector]]
 
