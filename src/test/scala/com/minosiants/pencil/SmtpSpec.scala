@@ -14,7 +14,6 @@ import scodec.codecs
 import cats.effect.Resource
 import cats.effect.unsafe.implicits.global
 
-
 class SmtpSpec extends SmtpBaseSpec {
 
   sequential
@@ -289,7 +288,8 @@ class SmtpSpec extends SmtpBaseSpec {
     val attachment = email.attachments.head
     val result     = testCommand(Smtp.attachments(), email, codecs.ascii)
 
-    val encodedFile = Resource.unit[IO]
+    val encodedFile = Resource
+      .unit[IO]
       .use { _ =>
         fs2.io.file
           .readAll[IO](attachment.file, 1024)

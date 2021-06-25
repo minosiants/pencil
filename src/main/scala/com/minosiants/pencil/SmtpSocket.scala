@@ -25,7 +25,7 @@ import fs2.Chunk
 import org.typelevel.log4cats.Logger
 import scodec.bits.BitVector
 import scodec.codecs._
-import scodec.{Attempt, DecodeResult}
+import scodec.{ Attempt, DecodeResult }
 
 import scala.concurrent.duration.FiniteDuration
 import com.minosiants.pencil.data.Error
