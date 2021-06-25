@@ -6,7 +6,6 @@ import com.minosiants.pencil.protocol.Command._
 import com.minosiants.pencil.protocol._
 import fs2.Stream
 import fs2.io.net.{ Network, Socket }
-import org.typelevel.log4cats.slf4j.Slf4jLogger
 import scodec.bits.BitVector
 import scodec.stream.{ StreamDecoder, StreamEncoder }
 
@@ -18,8 +17,6 @@ final case class SmtpServer(
   def start(
       localBindAddress: Deferred[IO, SocketAddress[Host]]
   ): IO[Unit] = {
-    val logger = Slf4jLogger.getLogger[IO]
-    println("before setup")
     Stream
       .resource(
         Network[IO].serverResource(Some(ip"127.0.0.1"), Port.fromInt(port))
@@ -27,11 +24,10 @@ final case class SmtpServer(
       .flatMap {
         case (localAddress, server) =>
           Stream.eval(localBindAddress.complete(localAddress)).drain ++
-            server.flatMap {
-              case socket =>
-                val s = MessageSocket(socket)
-                s.write(DataSamples.`220 Greeting`) ++
-                  s.read.through(processCommand).through(s.writes)
+            server.flatMap { socket =>
+              val s = MessageSocket(socket)
+              s.write(DataSamples.`220 Greeting`) ++
+                s.read.through(processCommand).through(s.writes)
             }
 
       }
