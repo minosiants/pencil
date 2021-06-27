@@ -21,16 +21,11 @@ class SmtpIntegrationSpec extends SpecificationLike {
         Body.Utf8("hi there")
       ) + attachment"files/jpeg-sample.jpg"
 
-      val result = Resource
-        .unit[IO]
-        .use { _ =>
-          Network[IO].socketGroup().use { sg =>
-            Network[IO].tlsContext.system.flatMap { tls =>
-              val client = Client[IO]()(sg, tls, logger)
+      Network[IO].tlsContext.system.flatMap { tls =>
+              val client = Client[IO]()(tls, logger)
               client.send(email)
-            }
-
-          }
+      }
+    }
         }
 
       result.attempt.unsafeRunSync() match {
