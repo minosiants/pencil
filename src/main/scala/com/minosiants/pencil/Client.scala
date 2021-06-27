@@ -21,13 +21,12 @@ import com.minosiants.pencil.data.Email.{ MimeEmail, TextEmail }
 import com.minosiants.pencil.data.{ Host => PHost, _ }
 import com.minosiants.pencil.protocol._
 import fs2.io.net.tls.TLSContext
-import fs2.io.net.{ Socket, SocketGroup }
+import fs2.io.net.{ Network, Socket }
 import org.typelevel.log4cats.Logger
 
 import java.time.Instant
 import java.util.UUID
 import scala.Function.const
-import scala.concurrent.duration._
 
 /**
   * Smtp client
@@ -48,16 +47,15 @@ trait Client[F[_]] {
 
 object Client {
 
-  def apply[F[_]: Async: Concurrent](
+  def apply[F[_]: Async: Concurrent: Network](
       address: SocketAddress[Host] = SocketAddress(host"localhost", port"25"),
       credentials: Option[Credentials] = None
   )(
-      sg: SocketGroup[F],
       tlsContext: TLSContext[F],
       logger: Logger[F]
   ): Client[F] =
     new Client[F] {
-      val socket: Resource[F, Socket[F]] = sg.client(address)
+      val socket: Resource[F, Socket[F]] = Network[F].client(address)
 
       def tlsSmtpSocket(s: Socket[F]): Resource[F, SmtpSocket[F]] =
         tlsContext.client(s).map { cs =>
