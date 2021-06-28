@@ -21,14 +21,13 @@ class SmtpIntegrationSpec extends SpecificationLike {
         Body.Utf8("hi there")
       ) + attachment"files/jpeg-sample.jpg"
 
-      Network[IO].tlsContext.system.flatMap { tls =>
-              val client = Client[IO]()(tls, logger)
-              client.send(email)
-      }
-    }
-        }
+          val sendEmail = for {
+            tls <- Network[IO].tlsContext.system
+              client = Client[IO]()(tls, logger)
+              response <- client.send(email)
+            }yield response
 
-      result.attempt.unsafeRunSync() match {
+      sendEmail.attempt.unsafeRunSync() match {
         case Right(value) =>
           println(value)
           IO(success)
