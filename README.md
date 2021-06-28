@@ -61,31 +61,31 @@ val email = Email.mime(
 ```scala
 object Main extends IOApp {
 
-  override def run(args: List[String]): IO[ExitCode] =
-    Blocker[IO]
-      .use { blocker =>
-        SocketGroup[IO](blocker).use { sg =>
-          TLSContext.system[IO](blocker).flatMap { tls =>
-          val credentials = Credentials(
-                              Username("user1@example.com"),
-                              Password("12345678")
-                            )
-          val client = Client[IO]("localhost", 25, Some(credentials))(blocker, sg, tls)
-          val result = client.send(email)
+  val logger    = Slf4jLogger.getLogger[IO]
+  override def run(args: List[String]): IO[ExitCode] = {
+    val credentials = Credentials(
+      Username("user1@mydomain.tld"),
+      Password("password")
+    )
+    val action = for {
+      tls <- Network[IO].tlsContext.system
+      client = Client[IO](SocketAddress(host"localhost", port"25"), Some(credentials))(tls,logger)
+      response <- client.send(email)
+    }yield response
 
-          result.attempt
+    action.attempt
             .map {
-              case Right(value) =>
+              case Right(replies) =>
+                println(replies)
                 ExitCode.Success
               case Left(error) =>
                 error match {
-                  case e: Error => println(e.show)
+                  case e: Error => println(e.toString)
                   case e: Throwable => println(e.getMessage)
                 }
                 ExitCode.Error
             }
-        }
-      }
+  }
 }
 
 ```
