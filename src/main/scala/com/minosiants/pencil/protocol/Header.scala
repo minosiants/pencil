@@ -23,7 +23,6 @@ import cats.syntax.show._
 sealed trait Header extends Product with Serializable
 
 object Header {
-
   final case class `MIME-Version`(value: String = "1.0") extends Header
 
   final case class `Content-Type`(
@@ -35,17 +34,29 @@ object Header {
       mechanism: Encoding
   ) extends Header
 
+  final case class `Content-Disposition`(
+      contentDisposition: ContentDisposition,
+      params: Map[String, String] = Map.empty
+  ) extends Header
+
+  private def paramsToValues(params: Map[String, String]): String =
+    params.iterator
+      .map {
+        case (key, value) => s"${key}=${value}"
+      }
+      .mkString(";")
+
   implicit lazy val headerShow: Show[Header] = Show.show {
     case `MIME-Version`(value) =>
       s"MIME-Version: $value"
 
     case `Content-Type`(ct, params) =>
-      val values = params.iterator
-        .map { case (key, value) => s"${key}=${value}" }
-        .mkString(";")
-      s"Content-Type: ${ct.show}; $values"
+      s"Content-Type: ${ct.show}; ${paramsToValues(params)}"
 
     case `Content-Transfer-Encoding`(mechanism) =>
       s"Content-Transfer-Encoding: ${mechanism.show}"
+
+    case `Content-Disposition`(contentDisposition, params) =>
+      s"Content-Disposition: ${contentDisposition.show}; ${paramsToValues(params)}"
   }
 }

@@ -295,6 +295,10 @@ object Smtp {
       ct: `Content-Type`
   ): Smtp[F, Unit] = text[F](s"${headerShow.show(ct)}${Command.end}")
 
+  def contentDispositionHeader[F[_]](
+      cd: `Content-Disposition`
+  ): Smtp[F, Unit] = text(s"${headerShow.show(cd)}${Command.end}")
+
   def contentTransferEncoding[F[_]](encoding: Encoding): Smtp[F, Unit] =
     text[F](
       s"${headerShow.show(`Content-Transfer-Encoding`(encoding))}${Command.end}"
@@ -316,11 +320,13 @@ object Smtp {
 
   def mimePart[F[_]: MonadError[*[_], Throwable]](
       mech: Encoding,
-      ct: `Content-Type`
+      ct: `Content-Type`,
+      cdO: Option[`Content-Disposition`] = None
   ): Smtp[F, Unit] =
     for {
       _ <- boundary[F]()
       _ <- contentTypeHeader[F](ct)
+      _ <- cdO.fold(ifEmpty = unit[F])(cd => contentDispositionHeader(cd))
       _ <- contentTransferEncoding[F](mech)
       _ <- text(Command.end)
     } yield ()
@@ -381,6 +387,9 @@ object Smtp {
         case MimeEmail(_, _, _, _, _, _, attachments, _) =>
           attachments.traverse_ { a =>
             val attachment = a.file
+            val encodedAttachmentName =
+              s"=?utf-8?b?${attachment.getFileName.toString.toBase64}?="
+
             for {
               ct <- Files
                 .inputStream[F](attachment)
@@ -389,8 +398,12 @@ object Smtp {
                 `base64`,
                 `Content-Type`(
                   ct,
-                  Map(
-                    "name" -> s"=?utf-8?b?${attachment.getFileName.toString.toBase64}?="
+                  params = Map("name" -> encodedAttachmentName)
+                ),
+                Some(
+                  `Content-Disposition`(
+                    ContentDisposition.Attachment,
+                    params = Map("filename" -> encodedAttachmentName)
                   )
                 )
               ).run(req)

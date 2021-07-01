@@ -8,7 +8,7 @@ import com.minosiants.pencil.data.Email._
 import com.minosiants.pencil.data._
 import com.minosiants.pencil.protocol.ContentType.`application/pdf`
 import com.minosiants.pencil.protocol.Encoding.`base64`
-import com.minosiants.pencil.protocol.Header.`Content-Type`
+import com.minosiants.pencil.protocol.Header._
 import com.minosiants.pencil.protocol._
 import scodec.codecs
 import cats.effect.Resource
@@ -198,6 +198,25 @@ class SmtpSpec extends SmtpBaseSpec {
     )
   }
 
+  "send contentDispositionHeader" in {
+    val email = SmtpSpec.mime
+    val result = testCommand(
+      Smtp.contentDispositionHeader(
+        `Content-Disposition`(
+          ContentDisposition.Attachment,
+          Map("param1" -> "value1", "param2" -> "value2")
+        )
+      ),
+      email,
+      codecs.ascii
+    )
+    result.map(_._2) must beRight(
+      List(
+        s"Content-Disposition: attachment; param1=value1;param2=value2${Command.end}"
+      )
+    )
+  }
+
   "send contentTransferEncoding" in {
     val email = SmtpSpec.mime
     val result =
@@ -307,16 +326,15 @@ class SmtpSpec extends SmtpBaseSpec {
     result.map(_._2) must beRight(
       s"--${email.boundary.value}${Command.end}" ::
         s"Content-Type: image/png; name=${encodedAttachmentName}${Command.end}" ::
+        s"Content-Disposition: attachment; filename=${encodedAttachmentName}${Command.end}" ::
         s"Content-Transfer-Encoding: base64${Command.end}" ::
         s"${Command.end}" ::
         encodedFile
     )
   }
-
 }
 
 object SmtpSpec {
-
   def lines(str: String): List[String] =
     str.grouped(76).map(_ + Command.end).toList
 
