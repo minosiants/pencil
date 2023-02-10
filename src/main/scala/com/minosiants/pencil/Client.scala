@@ -16,7 +16,7 @@
 
 package com.minosiants.pencil
 import cats.effect.{ Async, Concurrent, Resource }
-import com.comcast.ip4s.{ Host, IpLiteralSyntax, SocketAddress }
+import com.comcast.ip4s._
 import com.minosiants.pencil.data.Email.{ MimeEmail, TextEmail }
 import com.minosiants.pencil.data.{ Host => PHost, _ }
 import com.minosiants.pencil.protocol._
