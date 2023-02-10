@@ -41,23 +41,23 @@ object Error {
     case TikaException(msg)       => s"Tika exception: $msg"
   }
 
-  def smtpError[F[_]: ApplicativeError[*[_], Throwable], A](msg: String): F[A] =
+  def smtpError[F[_]: ApplicativeThrow, A](msg: String): F[A] =
     ApplicativeError[F, Throwable].raiseError[A](SmtpError(msg))
 
-  def authError[F[_]: ApplicativeError[*[_], Throwable], A](msg: String): F[A] =
+  def authError[F[_]: ApplicativeThrow, A](msg: String): F[A] =
     ApplicativeError[F, Throwable].raiseError[A](AuthError(msg))
 
-  def unableCloseResource[F[_]: ApplicativeError[*[_], Throwable], A](
+  def unableCloseResource[F[_]: ApplicativeThrow, A](
       msg: String
   ): F[A] =
     ApplicativeError[F, Throwable].raiseError(UnableCloseResource(msg))
 
-  def resourceNotFound[F[_]: ApplicativeError[*[_], Throwable], A](
+  def resourceNotFound[F[_]: ApplicativeThrow, A](
       msg: String
   ): F[A] =
     ApplicativeError[F, Throwable].raiseError(ResourceNotFound(msg))
 
-  def tikaException[F[_]: ApplicativeError[*[_], Throwable], A](
+  def tikaException[F[_]: ApplicativeThrow, A](
       msg: String
   )(e: Throwable): F[A] = {
     val m = if (e.getMessage != null) s"Message: ${e.getMessage}" else ""
