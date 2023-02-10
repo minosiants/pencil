@@ -14,27 +14,13 @@
  * limitations under the License.
  */
 
-package com.minosiants.pencil
-package syntax
+package com.minosiants.pencil.syntax
 
 import java.nio.file.Paths
 import com.minosiants.pencil.data._
+import org.typelevel.literally.Literally
+
 
 trait LiteralsSyntax {
-  implicit def pencilLiteralsSyntax(sc: StringContext): LiteralsOps =
-    new LiteralsOps(sc)
-}
-
-class LiteralsOps(val sc: StringContext) extends AnyVal {
-
-  def mailbox(args: Any*): Mailbox =
-    macro LiteralSyntaxMacros.mailboxInterpolator
-
-  def to(args: Any*): To = macro LiteralSyntaxMacros.toInterpolator
-  def from(args: Any*): From = macro LiteralSyntaxMacros.fromInterpolator
-  def cc(args: Any*): Cc = macro LiteralSyntaxMacros.ccInterpolator
-  def bcc(args: Any*): Bcc = macro LiteralSyntaxMacros.bccInterpolator
-  def subject(): Subject       = Subject(sc.s())
-  def attachment(): Attachment = Attachment(Paths.get(sc.s()))
 
 }

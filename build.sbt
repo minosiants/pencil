@@ -11,6 +11,7 @@ val scalacheckVersion       = "1.15.4"
 val catsEffectTestVersion   = "1.1.1"
 val log4catsVersion         = "2.1.1"
 val logbackVersion          = "1.2.3"
+val literallyVersion        = "1.1.0"
 
 ThisBuild / scalafixScalaBinaryVersion := (ThisBuild / scalaBinaryVersion).value
 ThisBuild / semanticdbEnabled := true
@@ -44,6 +45,7 @@ lazy val root = (project in file("."))
     libraryDependencies ++= Seq(
       "org.typelevel"   %% "cats-core"         % catsVersion,
       "org.typelevel"   %% "cats-effect"       % catsEffectVersion,
+      "org.typelevel"   %% "literally"         % literallyVersion,
       "co.fs2"          %% "fs2-core"          % fs2Version,
       "co.fs2"          %% "fs2-io"            % fs2Version,
       "org.scodec"      %% "scodec-bits"       % scodecBitsVersion,
