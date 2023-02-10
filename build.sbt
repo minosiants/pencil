@@ -1,15 +1,16 @@
-val catsVersion           = "2.6.1"
-val catsEffectVersion     = "3.1.1"
-val fs2Version            = "3.0.4"
-val scodecBitsVersion     = "1.1.27"
-val scodecCoreVersion     = "1.11.8"
-val scodecStreamVersion   = "3.0.1"
-val specs2Version         = "4.10.6"
-val tikaVersion           = "1.24"
-val scalacheckVersion     = "1.14.1"
-val catsEffectTestVersion = "1.1.1"
-val log4catsVersion       = "2.1.1"
-val logbackVersion        = "1.2.3"
+val catsVersion             = "2.6.1"
+val catsEffectVersion       = "3.1.1"
+val fs2Version              = "3.0.4"
+val scodecBitsVersion       = "1.1.27"
+val scodecCoreScala2Version = "1.11.10"
+val scodecCoreScala3Version = "2.2.1"
+val scodecStreamVersion     = "3.0.1"
+val specs2Version           = "4.19.2"
+val tikaVersion             = "1.24"
+val scalacheckVersion       = "1.15.4"
+val catsEffectTestVersion   = "1.1.1"
+val log4catsVersion         = "2.1.1"
+val logbackVersion          = "1.2.3"
 
 ThisBuild / scalafixScalaBinaryVersion := (ThisBuild / scalaBinaryVersion).value
 ThisBuild / semanticdbEnabled := true
@@ -20,14 +21,25 @@ lazy val root = (project in file("."))
     organization := "com.minosiants",
     name := "pencil",
     scalaVersion := "2.12.12",
-    crossScalaVersions := Seq("2.12.12", "2.13.6"),
-    scalacOptions ++= Seq(
-      "-language:experimental.macros",
-      "-Yrangepos",
-      "-Ywarn-unused",
-      "-Xlint",
-      "-P:semanticdb:synthetics:on"
-    ),
+    crossScalaVersions := Seq("2.12.12", "2.13.6", "3.2.2"),
+    scalacOptions ++= {
+      CrossVersion.partialVersion(scalaVersion.value) match {
+        case Some((3, _)) =>
+          Seq(
+            "-language:experimental.macros",
+            "-Ykind-projector"
+          )
+        case _ =>
+          Seq(
+            "-language:experimental.macros",
+            "-Yrangepos",
+            "-Ywarn-unused",
+            "-Xlint",
+            "-P:semanticdb:synthetics:on"
+          )
+
+      }
+    },
     javacOptions ++= Seq("-source", "1.11", "-target", "1.8"),
     libraryDependencies ++= Seq(
       "org.typelevel"   %% "cats-core"         % catsVersion,
@@ -35,22 +47,33 @@ lazy val root = (project in file("."))
       "co.fs2"          %% "fs2-core"          % fs2Version,
       "co.fs2"          %% "fs2-io"            % fs2Version,
       "org.scodec"      %% "scodec-bits"       % scodecBitsVersion,
-      "org.scodec"      %% "scodec-core"       % scodecCoreVersion,
       "org.typelevel"   %% "log4cats-core"     % log4catsVersion,
       "org.apache.tika" % "tika-core"          % tikaVersion,
-      "org.scala-lang"  % "scala-reflect"      % scalaVersion.value,
-      "org.specs2"      %% "specs2-core"       % specs2Version % "test",
-      "org.specs2"      %% "specs2-scalacheck" % specs2Version % Test,
       "org.scalacheck"  %% "scalacheck"        % scalacheckVersion % "test",
       "org.scodec"      %% "scodec-stream"     % scodecStreamVersion % "test",
       "ch.qos.logback"  % "logback-classic"    % logbackVersion % "test",
-      "org.typelevel"   %% "log4cats-slf4j"    % log4catsVersion % "test"
+      "org.typelevel"   %% "log4cats-slf4j"    % log4catsVersion % "test",
+      "org.specs2"      %% "specs2-core"       % specs2Version % "test",
+      "org.specs2"      %% "specs2-scalacheck" % specs2Version % Test
     ),
-    addCompilerPlugin(
-      "org.typelevel" %% "kind-projector" % "0.13.0" cross CrossVersion.full
-    ),
-    addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
-    addCompilerPlugin(scalafixSemanticdb),
+    libraryDependencies ++= {
+      CrossVersion.partialVersion(scalaVersion.value) match {
+        case Some((3, _)) =>
+          Seq(
+            "org.scodec" %% "scodec-core" % scodecCoreScala3Version
+          )
+        case _ =>
+          Seq(
+            "org.scodec"     %% "scodec-core"  % scodecCoreScala2Version,
+            "org.scala-lang" % "scala-reflect" % scalaVersion.value,
+            compilerPlugin(
+              "org.typelevel" %% "kind-projector" % "0.13.0" cross CrossVersion.full
+            ),
+            compilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
+            compilerPlugin(scalafixSemanticdb)
+          )
+      }
+    },
     publishTo := sonatypePublishToBundle.value
   )
   .settings(releaseProcessSettings)
