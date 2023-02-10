@@ -46,7 +46,7 @@ trait SmtpSocket[F[_]] {
 }
 
 object SmtpSocket {
-  def fromSocket[F[_]: Sync: MonadError[*[_], Throwable]](
+  def fromSocket[F[_]: Sync: MonadThrow](
       s: Socket[F],
       logger: Logger[F]
   ): SmtpSocket[F] = new SmtpSocket[F] {

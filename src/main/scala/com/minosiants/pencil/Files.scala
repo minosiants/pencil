@@ -21,6 +21,7 @@ import java.io.InputStream
 import java.nio.file.{ Path, Paths, Files => JFiles }
 
 import cats.MonadError
+import cats.MonadThrow
 import cats.effect.{ Resource, Sync }
 import com.minosiants.pencil.data.Error
 import Function._
@@ -45,7 +46,7 @@ object Files {
       }
   }
 
-  def pathFrom[F[_]: MonadError[*[_], Throwable]](file: String): F[Path] =
+  def pathFrom[F[_]: MonadThrow](file: String): F[Path] =
     MonadError[F, Throwable].ensure {
       Paths.get(file).pure[F]
     } {
