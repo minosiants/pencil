@@ -85,7 +85,7 @@ object Client {
                 SmtpSocket.fromSocket(s, logger),
                 PHost.local(),
                 Instant.now(),
-                UUID.randomUUID().toString
+                () => UUID.randomUUID().toString()
               )
             )
 
@@ -110,13 +110,13 @@ object Client {
       ): Smtp[F, Replies] =
         for {
           _ <- Smtp.startTls[F]()
-          r <- Smtp.local { req: Request[F] =>
+          r <- Smtp.local { (req: Request[F]) =>
             Request(
               req.email,
               tls,
               PHost.local(),
               Instant.now(),
-              UUID.randomUUID().toString
+              () => UUID.randomUUID().toString()
             )
           }(for {
             rep <- Smtp.ehlo[F]()
