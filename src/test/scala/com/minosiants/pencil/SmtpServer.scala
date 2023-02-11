@@ -1,7 +1,7 @@
 package com.minosiants.pencil
 
 import cats.effect.{ Deferred, IO, Ref }
-import com.comcast.ip4s.{ Host, IpLiteralSyntax, Port, SocketAddress }
+import com.comcast.ip4s._
 import com.minosiants.pencil.protocol.Command._
 import com.minosiants.pencil.protocol._
 import fs2.Stream
