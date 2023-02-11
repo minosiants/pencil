@@ -24,7 +24,9 @@ class SmtpSpec extends SmtpBaseSpec {
       val host   = Host.local()
       val result = testCommand(Smtp.ehlo(), SmtpSpec.mime, codecs.ascii)
       result.map(_._1) must beRight(DataSamples.ehloReplies)
-      result.map(_._2) must beRight(List(s"EHLO ${host.name}${Command.end}"))
+      result.map(_._2) must beRight(
+        beEqualTo(List(s"EHLO ${host.name}${Command.end}"))
+      )
     }
 
     "get response on RCPT" in {
@@ -34,8 +36,10 @@ class SmtpSpec extends SmtpBaseSpec {
         .map(box => s"RCPT TO: ${box.show}${Command.end}")
         .toList
 
-      result.map(_._1) must beRight(List.fill(3)(DataSamples.`250 OK`))
-      result.map(_._2) must beRight(rcpts)
+      result.map(_._1) must beRight(
+        beEqualTo(List.fill(3)(DataSamples.`250 OK`))
+      )
+      result.map(_._2) must beRight(beEqualTo(rcpts))
     }
 
     "get response on MAIL" in {
@@ -43,20 +47,20 @@ class SmtpSpec extends SmtpBaseSpec {
       val from   = SmtpSpec.mime.from.box
       result.map(_._1) must beRight(DataSamples.`250 OK`)
       result.map(_._2) must beRight(
-        List(s"MAIL FROM: ${from.show}${Command.end}")
+        beEqualTo(List(s"MAIL FROM: ${from.show}${Command.end}"))
       )
     }
 
     "get response on DATA" in {
       val result = testCommand(Smtp.data(), SmtpSpec.mime, codecs.ascii)
       result.map(_._1) must beRight(DataSamples.`354 End data`)
-      result.map(_._2) must beRight(List(s"DATA${Command.end}"))
+      result.map(_._2) must beRight(beEqualTo(List(s"DATA${Command.end}")))
     }
 
     "get response on QUIT" in {
       val result = testCommand(Smtp.quit(), SmtpSpec.mime, codecs.ascii)
       result.map(_._1) must beRight(DataSamples.`221 Buy`)
-      result.map(_._2) must beRight(List(s"QUIT${Command.end}"))
+      result.map(_._2) must beRight(beEqualTo(List(s"QUIT${Command.end}")))
     }
 
     "send text via Text command " in {
@@ -65,7 +69,7 @@ class SmtpSpec extends SmtpBaseSpec {
         SmtpSpec.mime,
         codecs.ascii
       )
-      result.map(_._2) must beRight(List(s"Hello${Command.end}"))
+      result.map(_._2) must beRight(beEqualTo(List(s"Hello${Command.end}")))
     }
 
     "send endEmail" in {
@@ -74,9 +78,11 @@ class SmtpSpec extends SmtpBaseSpec {
 
       result.map(_._1) must beRight(DataSamples.`250 OK`)
       result.map(_._2) must beRight(
-        List(
-          s"--${email.boundary.value}--${Command.end}",
-          s"${Command.endEmail}"
+        beEqualTo(
+          List(
+            s"--${email.boundary.value}--${Command.end}",
+            s"${Command.endEmail}"
+          )
         )
       )
     }
@@ -87,9 +93,11 @@ class SmtpSpec extends SmtpBaseSpec {
 
       result.map(_._1) must beRight(DataSamples.`250 OK`)
       result.map(_._2) must beRight(
-        List(
-          s"${email.body.get.value}${Command.end}",
-          s"${Command.endEmail}"
+        beEqualTo(
+          List(
+            s"${email.body.get.value}${Command.end}",
+            s"${Command.endEmail}"
+          )
         )
       )
     }
@@ -98,8 +106,10 @@ class SmtpSpec extends SmtpBaseSpec {
       val email  = SmtpSpec.text
       val result = testCommand(Smtp.subjectHeader(), email, codecs.ascii)
       result.map(_._2) must beRight(
-        List(
-          s"Subject: ${email.subject.get.value}${Command.end}"
+        beEqualTo(
+          List(
+            s"Subject: ${email.subject.get.value}${Command.end}"
+          )
         )
       )
     }
@@ -107,8 +117,10 @@ class SmtpSpec extends SmtpBaseSpec {
       val email  = SmtpSpec.mime
       val result = testCommand(Smtp.subjectHeader(), email, codecs.ascii)
       result.map(_._2) must beRight(
-        List(
-          s"Subject: =?utf-8?b?${email.subject.get.value.toBase64}?=${Command.end}"
+        beEqualTo(
+          List(
+            s"Subject: =?utf-8?b?${email.subject.get.value.toBase64}?=${Command.end}"
+          )
         )
       )
     }
@@ -117,8 +129,10 @@ class SmtpSpec extends SmtpBaseSpec {
       val email  = SmtpSpec.text
       val result = testCommand(Smtp.fromHeader(), email, codecs.ascii)
       result.map(_._2) must beRight(
-        List(
-          s"From: ${email.from.show}${Command.end}"
+        beEqualTo(
+          List(
+            s"From: ${email.from.show}${Command.end}"
+          )
         )
       )
     }
@@ -126,8 +140,10 @@ class SmtpSpec extends SmtpBaseSpec {
       val email  = SmtpSpec.text
       val result = testCommand(Smtp.toHeader(), email, codecs.ascii)
       result.map(_._2) must beRight(
-        List(
-          s"To: ${email.to.show}${Command.end}"
+        beEqualTo(
+          List(
+            s"To: ${email.to.show}${Command.end}"
+          )
         )
       )
     }
@@ -136,8 +152,10 @@ class SmtpSpec extends SmtpBaseSpec {
       val email  = SmtpSpec.mime
       val result = testCommand(Smtp.ccHeader(), email, codecs.ascii)
       result.map(_._2) must beRight(
-        List(
-          s"Cc: ${email.cc.get.show}${Command.end}"
+        beEqualTo(
+          List(
+            s"Cc: ${email.cc.get.show}${Command.end}"
+          )
         )
       )
     }
@@ -145,8 +163,10 @@ class SmtpSpec extends SmtpBaseSpec {
       val email  = SmtpSpec.mime
       val result = testCommand(Smtp.bccHeader(), email, codecs.ascii)
       result.map(_._2) must beRight(
-        List(
-          s"Bcc: ${email.bcc.get.show}${Command.end}"
+        beEqualTo(
+          List(
+            s"Bcc: ${email.bcc.get.show}${Command.end}"
+          )
         )
       )
     }
@@ -156,14 +176,16 @@ class SmtpSpec extends SmtpBaseSpec {
       result.map(_._2.size) must beRight(7)
       //TODO refactor to test all headers
       result.map(_._2) must beRight(
-        List(
-          s"Date: ${Smtp.dateFormatter.format(timestamp)}${Command.end}",
-          s"From: ${email.from.show}${Command.end}",
-          s"To: ${email.to.show}${Command.end}",
-          s"Cc: ${email.cc.get.show}${Command.end}",
-          s"Bcc: ${email.bcc.get.show}${Command.end}",
-          s"Message-ID: <$uuid.${timestamp.getEpochSecond}@${host.name}>${Command.end}",
-          s"Subject: =?utf-8?b?${email.subject.get.value.toBase64}?=${Command.end}"
+        beEqualTo(
+          List(
+            s"Date: ${Smtp.dateFormatter.format(timestamp)}${Command.end}",
+            s"From: ${email.from.show}${Command.end}",
+            s"To: ${email.to.show}${Command.end}",
+            s"Cc: ${email.cc.get.show}${Command.end}",
+            s"Bcc: ${email.bcc.get.show}${Command.end}",
+            s"Message-ID: <$uuid.${timestamp.getEpochSecond}@${host.name}>${Command.end}",
+            s"Subject: =?utf-8?b?${email.subject.get.value.toBase64}?=${Command.end}"
+          )
         )
       )
     }
@@ -173,8 +195,10 @@ class SmtpSpec extends SmtpBaseSpec {
     val email  = SmtpSpec.mime
     val result = testCommand(Smtp.mimeHeader(), email, codecs.ascii)
     result.map(_._2) must beRight(
-      List(
-        s"MIME-Version: 1.0${Command.end}"
+      beEqualTo(
+        List(
+          s"MIME-Version: 1.0${Command.end}"
+        )
       )
     )
   }
@@ -192,8 +216,10 @@ class SmtpSpec extends SmtpBaseSpec {
       codecs.ascii
     )
     result.map(_._2) must beRight(
-      List(
-        s"Content-Type: application/pdf; param1=value1;param2=value2${Command.end}"
+      beEqualTo(
+        List(
+          s"Content-Type: application/pdf; param1=value1;param2=value2${Command.end}"
+        )
       )
     )
   }
@@ -203,8 +229,10 @@ class SmtpSpec extends SmtpBaseSpec {
     val result =
       testCommand(Smtp.contentTransferEncoding(`base64`), email, codecs.ascii)
     result.map(_._2) must beRight(
-      List(
-        s"Content-Transfer-Encoding: base64${Command.end}"
+      beEqualTo(
+        List(
+          s"Content-Transfer-Encoding: base64${Command.end}"
+        )
       )
     )
   }
@@ -213,8 +241,10 @@ class SmtpSpec extends SmtpBaseSpec {
     val email  = SmtpSpec.mime
     val result = testCommand(Smtp.boundary(), email, codecs.ascii)
     result.map(_._2) must beRight(
-      List(
-        s"--${email.boundary.value}${Command.end}"
+      beEqualTo(
+        List(
+          s"--${email.boundary.value}${Command.end}"
+        )
       )
     )
   }
@@ -223,8 +253,10 @@ class SmtpSpec extends SmtpBaseSpec {
     val email  = SmtpSpec.mime
     val result = testCommand(Smtp.boundary(true), email, codecs.ascii)
     result.map(_._2) must beRight(
-      List(
-        s"--${email.boundary.value}--${Command.end}"
+      beEqualTo(
+        List(
+          s"--${email.boundary.value}--${Command.end}"
+        )
       )
     )
   }
@@ -233,8 +265,10 @@ class SmtpSpec extends SmtpBaseSpec {
     val email  = SmtpSpec.mime
     val result = testCommand(Smtp.multipart(), email, codecs.ascii)
     result.map(_._2) must beRight(
-      List(
-        s"Content-Type: multipart/mixed; boundary=${email.boundary.value}${Command.end}"
+      beEqualTo(
+        List(
+          s"Content-Type: multipart/mixed; boundary=${email.boundary.value}${Command.end}"
+        )
       )
     )
   }
@@ -243,14 +277,16 @@ class SmtpSpec extends SmtpBaseSpec {
     val email  = SmtpSpec.mime
     val result = testCommand(Smtp.mimeBody(), email, codecs.ascii)
     result.map(_._2) must beRight(
-      List(
-        s"--${email.boundary.value}${Command.end}",
-        s"Content-Type: text/plain; charset=UTF-8${Command.end}",
-        s"Content-Transfer-Encoding: base64${Command.end}",
-        s"${Command.end}"
-      ) ++ body(email.body) {
-        case Utf8(value) => value.toBase64
-      }
+      beEqualTo(
+        List(
+          s"--${email.boundary.value}${Command.end}",
+          s"Content-Type: text/plain; charset=UTF-8${Command.end}",
+          s"Content-Transfer-Encoding: base64${Command.end}",
+          s"${Command.end}"
+        ) ++ body(email.body) {
+          case Utf8(value) => value.toBase64
+        }
+      )
     )
   }
 
@@ -258,28 +294,33 @@ class SmtpSpec extends SmtpBaseSpec {
     val email  = SmtpSpec.mime.setBody(Html("<h1>hello</h1>"))
     val result = testCommand(Smtp.mimeBody(), email, codecs.ascii)
     result.map(_._2) must beRight(
-      List(
-        s"--${email.boundary.value}${Command.end}",
-        s"Content-Type: text/html; charset=UTF-8${Command.end}",
-        s"Content-Transfer-Encoding: base64${Command.end}",
-        s"${Command.end}"
-      ) ++ body(email.body) {
-        case Html(value) => value.toBase64
-      }
+      beEqualTo(
+        List(
+          s"--${email.boundary.value}${Command.end}",
+          s"Content-Type: text/html; charset=UTF-8${Command.end}",
+          s"Content-Transfer-Encoding: base64${Command.end}",
+          s"${Command.end}"
+        ) ++ body(email.body) {
+          case Html(value) => value.toBase64
+        }
+      )
     )
   }
+
   "send mime ascii body" in {
     val email  = SmtpSpec.mime.setBody(Ascii("hello"))
     val result = testCommand(Smtp.mimeBody(), email, codecs.ascii)
     result.map(_._2) must beRight(
-      List(
-        s"--${email.boundary.value}${Command.end}",
-        s"Content-Type: text/plain; charset=US-ASCII${Command.end}",
-        s"Content-Transfer-Encoding: 7bit${Command.end}",
-        s"${Command.end}"
-      ) ++ body(email.body) {
-        case Ascii(value) => value
-      }
+      beEqualTo(
+        List(
+          s"--${email.boundary.value}${Command.end}",
+          s"Content-Type: text/plain; charset=US-ASCII${Command.end}",
+          s"Content-Transfer-Encoding: 7bit${Command.end}",
+          s"${Command.end}"
+        ) ++ body(email.body) {
+          case Ascii(value) => value
+        }
+      )
     )
   }
 
@@ -305,11 +346,13 @@ class SmtpSpec extends SmtpBaseSpec {
       s"=?utf-8?b?${attachment.file.getFileName.toString.toBase64}?="
 
     result.map(_._2) must beRight(
-      s"--${email.boundary.value}${Command.end}" ::
-        s"Content-Type: image/png; name=${encodedAttachmentName}${Command.end}" ::
-        s"Content-Transfer-Encoding: base64${Command.end}" ::
-        s"${Command.end}" ::
-        encodedFile
+      beEqualTo(
+        s"--${email.boundary.value}${Command.end}" ::
+          s"Content-Type: image/png; name=${encodedAttachmentName}${Command.end}" ::
+          s"Content-Transfer-Encoding: base64${Command.end}" ::
+          s"${Command.end}" ::
+          encodedFile
+      )
     )
   }
 
