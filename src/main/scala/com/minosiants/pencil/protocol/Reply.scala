@@ -49,7 +49,7 @@ object Replies {
 object Reply {
   implicit lazy val ReplyShow: Show[Reply] = Show.fromToString
 
-  val textCodec = Codec[String](
+  val textCodec: Codec[String] = Codec[String](
     (s: String) => ascii.encode(s + "\r\n"),
     (bits: scodec.bits.BitVector) => {
       if (bits.toByteVector.endsWith(CRLF))
