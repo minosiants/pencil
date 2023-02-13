@@ -1,7 +1,7 @@
 package com.minosiants.pencil
 
 import cats.effect.unsafe.implicits.global
-import cats.effect.{ IO, Resource }
+import cats.effect.IO
 import com.minosiants.pencil.data._
 import fs2.io.net.Network
 import org.specs2.execute.Pending
@@ -21,11 +21,11 @@ class SmtpIntegrationSpec extends SpecificationLike {
         Body.Utf8("hi there")
       ) + attachment"files/jpeg-sample.jpg"
 
-          val sendEmail = for {
-            tls <- Network[IO].tlsContext.system
-              client = Client[IO]()(tls, logger)
-              response <- client.send(email)
-            }yield response
+      val sendEmail = for {
+        tls <- Network[IO].tlsContext.system
+        client = Client[IO]()(tls, logger)
+        response <- client.send(email)
+      } yield response
 
       sendEmail.attempt.unsafeRunSync() match {
         case Right(value) =>

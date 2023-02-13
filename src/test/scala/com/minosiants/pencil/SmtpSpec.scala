@@ -333,7 +333,8 @@ class SmtpSpec extends SmtpBaseSpec {
       .unit[IO]
       .use { _ =>
         fs2.io.file
-          .readAll[IO](attachment.file, 1024)
+          .Files[IO]
+          .readAll(attachment.file, 1024)
           .through(fs2.text.base64.encode)
           .compile
           .toList
