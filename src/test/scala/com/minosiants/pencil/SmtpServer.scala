@@ -40,43 +40,43 @@ final case class SmtpServer(
 
     stream.flatMap {
       case In(raw, Ehlo(_)) =>
-        Stream.eval_(state.tryUpdate(_ :+ raw)) ++
+        Stream.eval(state.tryUpdate(_ :+ raw)).drain ++
           Stream(DataSamples.ehloReplies)
 
       case In(raw, Mail(_)) =>
-        Stream.eval_(state.tryUpdate(_ :+ raw)) ++
+        Stream.eval(state.tryUpdate(_ :+ raw)).drain ++
           Stream(DataSamples.`250 OK`)
 
       case In(raw, Rcpt(_)) =>
-        Stream.eval_(state.tryUpdate(_ :+ raw)) ++
+        Stream.eval(state.tryUpdate(_ :+ raw)).drain ++
           Stream(DataSamples.`250 OK`)
 
       case In(raw, Data) =>
-        Stream.eval_(state.tryUpdate(_ :+ raw)) ++
+        Stream.eval(state.tryUpdate(_ :+ raw)).drain ++
           Stream(DataSamples.`354 End data`)
 
       case In(raw, Quit) =>
-        Stream.eval_(state.tryUpdate(_ :+ raw)) ++
+        Stream.eval(state.tryUpdate(_ :+ raw)).drain ++
           Stream(DataSamples.`221 Buy`)
 
       case In(raw, Noop) =>
-        Stream.eval_(state.tryUpdate(_ :+ raw)) ++
+        Stream.eval(state.tryUpdate(_ :+ raw)).drain ++
           Stream(DataSamples.`250 OK`)
 
       case In(raw, Rset) =>
-        Stream.eval_(state.tryUpdate(_ :+ raw)) ++
+        Stream.eval(state.tryUpdate(_ :+ raw)).drain ++
           Stream(DataSamples.`250 OK`)
 
       case In(raw, Vrfy(_)) =>
-        Stream.eval_(state.tryUpdate(_ :+ raw)) ++
+        Stream.eval(state.tryUpdate(_ :+ raw)).drain ++
           Stream(DataSamples.`250 OK`)
 
       case In(raw, Text(Command.endEmail)) =>
-        Stream.eval_(state.tryUpdate(_ :+ raw)) ++
+        Stream.eval(state.tryUpdate(_ :+ raw)).drain ++
           Stream(DataSamples.`250 OK`)
 
       case In(raw, Text(_)) =>
-        Stream.eval_(state.tryUpdate(_ :+ raw)) ++
+        Stream.eval(state.tryUpdate(_ :+ raw)).drain ++
           Stream.empty
       case In(_, AuthLogin) =>
         ???

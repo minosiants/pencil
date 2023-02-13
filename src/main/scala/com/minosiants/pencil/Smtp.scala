@@ -373,7 +373,7 @@ object Smtp {
         liftF(Error.smtpError[F, Unit]("not mime email"))
     }
 
-  def attachments[F[_]: Async: Applicative](): Smtp[F, Unit] = {
+  def attachments[F[_]: Async](): Smtp[F, Unit] = {
     Smtp[F] { req =>
       req.email match {
         case TextEmail(_, _, _, _, _, _) =>
@@ -396,7 +396,8 @@ object Smtp {
                 )
               ).run(req)
               _ <- fs2.io.file
-                .readAll[F](attachment, 1024)
+                .Files[F]
+                .readAll(attachment, 1024)
                 .through(fs2.text.base64.encode)
                 .flatMap(s => Stream.chunk(Chunk.array(s.toCharArray)))
                 .chunkN(n = 76)
