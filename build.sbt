@@ -21,7 +21,7 @@ lazy val root = (project in file("."))
     organization := "com.minosiants",
     name := "pencil",
     scalaVersion := "2.12.12",
-    crossScalaVersions := Seq("2.12.12", "2.13.6", "3.2.2"),
+    crossScalaVersions := Seq("2.12.17", "2.13.10", "3.2.2"),
     scalacOptions ++= {
       CrossVersion.partialVersion(scalaVersion.value) match {
         case Some((3, _)) =>
@@ -68,7 +68,7 @@ lazy val root = (project in file("."))
             "org.scodec"     %% "scodec-core"  % scodecCoreScala2Version,
             "org.scala-lang" % "scala-reflect" % scalaVersion.value,
             compilerPlugin(
-              "org.typelevel" %% "kind-projector" % "0.13.0" cross CrossVersion.full
+              "org.typelevel" %% "kind-projector" % "0.13.2" cross CrossVersion.full
             ),
             compilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
             compilerPlugin(scalafixSemanticdb)
