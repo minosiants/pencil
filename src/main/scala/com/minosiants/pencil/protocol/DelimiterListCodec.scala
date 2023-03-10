@@ -23,7 +23,8 @@ import scodec.bits.{ BitVector, ByteVector }
 final case class DelimiterListCodec[A](
     delimiter: ByteVector,
     valueCodec: Codec[A]
-) extends Codec[List[A]] with ScodecCompat {
+) extends Codec[List[A]]
+    with ScodecCompat {
 
   override def decode(bits: BitVector): Attempt[DecodeResult[List[A]]] = {
 

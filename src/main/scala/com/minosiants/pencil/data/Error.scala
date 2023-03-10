@@ -16,23 +16,25 @@
 
 package com.minosiants.pencil.data
 
-import cats._
+import cats.*
+
 // import cats.effect.IO
 
 import scala.util.control.NoStackTrace
 
-sealed trait Error extends NoStackTrace with Product with Serializable
+sealed trait Error1 extends NoStackTrace with Product with Serializable
 
-object Error {
 
-  final case class SmtpError(msg: String)           extends Error
-  final case class AuthError(msg: String)           extends Error
-  final case class InvalidMailBox(msg: String)      extends Error
-  final case class UnableCloseResource(msg: String) extends Error
-  final case class ResourceNotFound(msg: String)    extends Error
-  final case class TikaException(msg: String)       extends Error
+enum Error extends NoStackTrace with Product with Serializable:
+  case AuthError(msg: String)
+  case SmtpError(msg: String)
+  case InvalidMailBox(msg: String)
+  case UnableCloseResource(msg: String)
+  case ResourceNotFound(msg: String)
+  case TikaException(msg: String)
 
-  implicit lazy val errorShow: Show[Error] = Show.show {
+object Error:
+  given Show[Error] ={
     case SmtpError(msg)           => s"Smtp error: $msg "
     case AuthError(msg)           => s"Auth error: $msg"
     case InvalidMailBox(msg)      => s"Invalid maildbox: $msg"
@@ -41,26 +43,26 @@ object Error {
     case TikaException(msg)       => s"Tika exception: $msg"
   }
 
-  def smtpError[F[_]: ApplicativeThrow, A](msg: String): F[A] =
-    ApplicativeError[F, Throwable].raiseError[A](SmtpError(msg))
+  def smtpError[F[_], A](msg: String)(using F:ApplicativeThrow[F]): F[A] =
+    F.raiseError[A](SmtpError(msg))
 
-  def authError[F[_]: ApplicativeThrow, A](msg: String): F[A] =
-    ApplicativeError[F, Throwable].raiseError[A](AuthError(msg))
+  def authError[F[_], A](msg: String)(using F:ApplicativeThrow[F]): F[A] =
+    F.raiseError[A](AuthError(msg))
 
-  def unableCloseResource[F[_]: ApplicativeThrow, A](
+  def unableCloseResource[F[_], A](
       msg: String
-  ): F[A] =
-    ApplicativeError[F, Throwable].raiseError(UnableCloseResource(msg))
+  )(using F:ApplicativeThrow[F]): F[A] =
+    F.raiseError(UnableCloseResource(msg))
 
-  def resourceNotFound[F[_]: ApplicativeThrow, A](
+  def resourceNotFound[F[_], A](
       msg: String
-  ): F[A] =
-    ApplicativeError[F, Throwable].raiseError(ResourceNotFound(msg))
+  )(using F:ApplicativeThrow[F]): F[A] =
+    F.raiseError(ResourceNotFound(msg))
 
-  def tikaException[F[_]: ApplicativeThrow, A](
+  def tikaException[F[_], A](
       msg: String
-  )(e: Throwable): F[A] = {
-    val m = if (e.getMessage != null) s"Message: ${e.getMessage}" else ""
-    ApplicativeError[F, Throwable].raiseError(TikaException(s"$msg $m"))
+  )(using F:ApplicativeThrow[F])(e: Throwable): F[A] = {
+    val m = if e.getMessage != null then  s"Message: ${e.getMessage}" else ""
+    F.raiseError(TikaException(s"$msg $m"))
   }
-}
+
