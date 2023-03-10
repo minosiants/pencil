@@ -17,11 +17,11 @@
 package com.minosiants.pencil.data
 
 import scala.util.matching.Regex
-import cats.syntax.either._
-import cats.syntax.foldable._
-import cats.instances.list._
-import cats.instances.either._
-import scala.Function._
+import cats.syntax.either.*
+import cats.syntax.foldable.*
+import cats.instances.list.*
+import cats.instances.either.*
+import scala.Function.*
 import scala.language.postfixOps
 
 object MailboxParser {
@@ -40,7 +40,7 @@ object MailboxParser {
     }
 
     localPart.toList
-      .foldM[Either[Error, *], List[Char]](List.empty[Char]) {
+      .foldM(List.empty[Char]) {
 
         case (Nil, x) if notValid(x) =>
           Left(
@@ -65,13 +65,11 @@ object MailboxParser {
       .map(_.mkString)
   }
 
-  def verifyDomain(domain: String): Either[Error, String] = {
-
+  def verifyDomain(domain: String): Either[Error, String] =
     Either.fromOption(
       domainPattern.findFirstMatchIn(domain).map(const(domain)),
       Error.InvalidMailBox(s"invalid domain '$domain'")
     )
-  }
 
   private def verifyLength(box: String): Either[Error, String] = {
     if (box.isBlank())
