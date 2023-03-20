@@ -22,8 +22,8 @@ lazy val root = (project in file("."))
     scalaVersion := "3.2.2",
     scalacOptions ++= Seq(
       "-language:experimental.macros"
-     // ,"-new-syntax"
-     // ,"-indent"
+      ,"-new-syntax"
+      ,"-indent"
     ),
     javacOptions ++= Seq("-source", "1.17", "-target", "1.17"),
     libraryDependencies ++= Seq(
@@ -32,6 +32,7 @@ lazy val root = (project in file("."))
       "org.typelevel"   %% "literally"         % literallyVersion,
       "co.fs2"          %% "fs2-core"          % fs2Version,
       "co.fs2"          %% "fs2-io"            % fs2Version,
+      "co.fs2"          %% "fs2-scodec"            % fs2Version %  "test",
       "org.scodec"      %% "scodec-bits"       % scodecBitsVersion,
       "org.scodec"      %% "scodec-core"       % scodecCoreVersion,
       "org.typelevel"   %% "log4cats-core"     % log4catsVersion,

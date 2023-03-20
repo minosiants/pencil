@@ -1,8 +1,8 @@
 package com.minosiants.pencil
 
 import com.minosiants.pencil.protocol.Command
-import scodec.{ Attempt, Codec, DecodeResult, Decoder }
-import scodec.bits.{ BitVector, ByteVector }
+import scodec.{Attempt, Codec, DecodeResult, Decoder}
+import scodec.bits.{BitVector, ByteVector}
 
 final case class In(raw: BitVector, command: Command)
 
@@ -23,23 +23,21 @@ object In {
     override def decode(bits: BitVector): Attempt[DecodeResult[List[In]]] = {
 
       def go(vec: ByteVector): Attempt[List[In]] = {
-        if (vec === endEmailBits) {
+        if vec === endEmailBits then
           In.codec
             .decode(vec.bits)
             .map { case DecodeResult(value, _) => List(value) }
-        } else {
+        else
           val index = vec.indexOfSlice(delimiter)
-          if (index < 0)
+          if index < 0 then
             Attempt.successful(List.empty[In])
-          else {
+          else
             val (value, tail) = vec.splitAt(index)
             In.codec.decode((value ++ delimiter).bits) match {
               case Attempt.Successful(DecodeResult(a, _)) =>
                 go(tail.drop(delimiter.size)).map(v => a :: v)
               case Attempt.Failure(cause) => Attempt.Failure(cause)
             }
-          }
-        }
       }
 
       go(bits.toByteVector).map(DecodeResult(_, BitVector.empty))

@@ -27,20 +27,17 @@ import fs2.io.net.Socket
 import org.typelevel.log4cats.Logger
 import scodec.bits.BitVector
 import scodec.codecs._
-import scodec.{ Attempt, DecodeResult }
+import scodec.{Attempt, DecodeResult}
 
-/**
-  * Wraps [[Socket[IO]]] with smtp specific protocol
+/** Wraps [[Socket[IO]]] with smtp specific protocol
   */
 trait SmtpSocket[F[_]] {
 
-  /**
-    * Reads [[Replies]] from smtp server
+  /** Reads [[Replies]] from smtp server
     */
   def read(): F[Replies]
 
-  /**
-    * Send [[Command]] to smtp server
+  /** Send [[Command]] to smtp server
     */
   def write(command: Command): F[Unit]
 }

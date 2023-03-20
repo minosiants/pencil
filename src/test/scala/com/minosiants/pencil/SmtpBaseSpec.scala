@@ -1,21 +1,22 @@
 package com.minosiants.pencil
 
-import cats.effect._
+import cats.effect.*
 import cats.effect.unsafe.implicits.global
-import cats.instances.list._
-import cats.syntax.traverse._
-import com.comcast.ip4s.{ Host, SocketAddress }
-import com.minosiants.pencil.data.{ Email, Error, Host => PHost }
+import cats.instances.list.*
+import cats.syntax.traverse.*
+import com.comcast.ip4s.{Host, SocketAddress}
+import com.minosiants.pencil.data.{Email, Error, Host as PHost}
+import com.minosiants.pencil.syntax.LiteralsSyntax
 import fs2.io.net.Network
 import org.specs2.mutable.SpecificationLike
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 import scodec.bits.BitVector
-import scodec.{ Codec, DecodeResult }
+import scodec.{Codec, DecodeResult}
 
-import java.time.{ Clock, Instant, ZoneId, ZoneOffset }
+import java.time.{Clock, Instant, ZoneId, ZoneOffset}
 import java.util.UUID
-import scala.concurrent.duration._
-trait SmtpBaseSpec extends SpecificationLike {
+import scala.concurrent.duration.*
+trait SmtpBaseSpec extends SpecificationLike with LiteralsSyntax{
 
   val logger    = Slf4jLogger.getLogger[IO]
   val timestamp = Instant.now()
@@ -64,12 +65,11 @@ trait SmtpBaseSpec extends SpecificationLike {
           state.get
         })
         r <- Smtp.liftF(
-          raw.traverse(
-            bits =>
-              codec.decode(bits).toEither match {
-                case Right(DecodeResult(value, _)) => IO(value)
-                case Left(err)                     => Error.smtpError[IO, B](err.message)
-              }
+          raw.traverse(bits =>
+            codec.decode(bits).toEither match {
+              case Right(DecodeResult(value, _)) => IO(value)
+              case Left(err) => Error.smtpError[IO, B](err.message)
+            }
           )
         )
       } yield (v, r))

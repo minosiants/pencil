@@ -24,7 +24,6 @@ import scala.util.control.NoStackTrace
 
 sealed trait Error1 extends NoStackTrace with Product with Serializable
 
-
 enum Error extends NoStackTrace with Product with Serializable:
   case AuthError(msg: String)
   case SmtpError(msg: String)
@@ -34,7 +33,7 @@ enum Error extends NoStackTrace with Product with Serializable:
   case TikaException(msg: String)
 
 object Error:
-  given Show[Error] ={
+  given Show[Error] = {
     case SmtpError(msg)           => s"Smtp error: $msg "
     case AuthError(msg)           => s"Auth error: $msg"
     case InvalidMailBox(msg)      => s"Invalid maildbox: $msg"
@@ -43,26 +42,25 @@ object Error:
     case TikaException(msg)       => s"Tika exception: $msg"
   }
 
-  def smtpError[F[_], A](msg: String)(using F:ApplicativeThrow[F]): F[A] =
+  def smtpError[F[_], A](msg: String)(using F: ApplicativeThrow[F]): F[A] =
     F.raiseError[A](SmtpError(msg))
 
-  def authError[F[_], A](msg: String)(using F:ApplicativeThrow[F]): F[A] =
+  def authError[F[_], A](msg: String)(using F: ApplicativeThrow[F]): F[A] =
     F.raiseError[A](AuthError(msg))
 
   def unableCloseResource[F[_], A](
       msg: String
-  )(using F:ApplicativeThrow[F]): F[A] =
+  )(using F: ApplicativeThrow[F]): F[A] =
     F.raiseError(UnableCloseResource(msg))
 
   def resourceNotFound[F[_], A](
       msg: String
-  )(using F:ApplicativeThrow[F]): F[A] =
+  )(using F: ApplicativeThrow[F]): F[A] =
     F.raiseError(ResourceNotFound(msg))
 
   def tikaException[F[_], A](
       msg: String
-  )(using F:ApplicativeThrow[F])(e: Throwable): F[A] = {
-    val m = if e.getMessage != null then  s"Message: ${e.getMessage}" else ""
+  )(using F: ApplicativeThrow[F])(e: Throwable): F[A] = {
+    val m = if e.getMessage != null then s"Message: ${e.getMessage}" else ""
     F.raiseError(TikaException(s"$msg $m"))
   }
-
