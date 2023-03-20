@@ -1,8 +1,8 @@
 package com.minosiants.pencil.data
 
-import java.nio.file.{ Path, Paths }
+import java.nio.file.{Path, Paths}
 
-import com.minosiants.pencil.data.Email.{ MimeEmail, TextEmail }
+import com.minosiants.pencil.data.Email.{MimeEmail, TextEmail}
 import org.scalacheck.Gen
 
 trait EmailGens {
@@ -33,15 +33,15 @@ trait EmailGens {
     domain <- domainGen
   } yield Mailbox.unsafeFromString(s"$lp@$domain")
 
-  val fromGen: Gen[From]                    = mailboxGen.map(From(_))
-  val toGen: Gen[To]                        = Gen.nonEmptyListOf(mailboxGen).map(To(_: _*))
-  val ccGen: Gen[Cc]                        = Gen.nonEmptyListOf(mailboxGen).map(Cc(_: _*))
-  val bccGen: Gen[Bcc]                      = Gen.nonEmptyListOf(mailboxGen).map(Bcc(_: _*))
-  val subjectGen: Gen[Subject]              = Gen.asciiPrintableStr.map(Subject.apply)
-  val textBodyGen: Gen[Body.Ascii]          = Gen.asciiPrintableStr.map(Body.Ascii.apply)
-  val htmlBodyGen: Gen[Body.Html]           = Gen.asciiPrintableStr.map(Body.Html.apply)
-  val utf8BodyGen: Gen[Body.Utf8]           = Gen.asciiPrintableStr.map(Body.Utf8.apply)
-  val pathGen: Gen[Path]                    = Gen.asciiPrintableStr.map(Paths.get(_))
+  val fromGen: Gen[From]       = mailboxGen.map(From(_))
+  val toGen: Gen[To]           = Gen.nonEmptyListOf(mailboxGen).map(To(_: _*))
+  val ccGen: Gen[Cc]           = Gen.nonEmptyListOf(mailboxGen).map(Cc(_: _*))
+  val bccGen: Gen[Bcc]         = Gen.nonEmptyListOf(mailboxGen).map(Bcc(_: _*))
+  val subjectGen: Gen[Subject] = Gen.asciiPrintableStr.map(Subject.apply)
+  val textBodyGen: Gen[Body.Ascii] = Gen.asciiPrintableStr.map(Body.Ascii.apply)
+  val htmlBodyGen: Gen[Body.Html]  = Gen.asciiPrintableStr.map(Body.Html.apply)
+  val utf8BodyGen: Gen[Body.Utf8]  = Gen.asciiPrintableStr.map(Body.Utf8.apply)
+  val pathGen: Gen[Path]           = Gen.asciiPrintableStr.map(Paths.get(_))
   val attachmentGen: Gen[Attachment]        = pathGen.map(Attachment(_))
   val attachmentsGen: Gen[List[Attachment]] = Gen.listOf(attachmentGen)
 

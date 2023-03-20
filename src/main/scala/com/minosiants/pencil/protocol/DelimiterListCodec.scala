@@ -17,8 +17,8 @@
 package com.minosiants.pencil
 package protocol
 
-import scodec.{ Attempt, Codec, DecodeResult, SizeBound }
-import scodec.bits.{ BitVector, ByteVector }
+import scodec.{Attempt, Codec, DecodeResult, SizeBound}
+import scodec.bits.{BitVector, ByteVector}
 
 final case class DelimiterListCodec[A](
     delimiter: ByteVector,
@@ -28,19 +28,16 @@ final case class DelimiterListCodec[A](
 
   override def decode(bits: BitVector): Attempt[DecodeResult[List[A]]] = {
 
-    def go(vec: ByteVector): Attempt[List[A]] = {
+    def go(vec: ByteVector): Attempt[List[A]] =
       val index = vec.indexOfSlice(delimiter)
-      if (index < 0)
-        Attempt.successful(List.empty[A])
-      else {
+      if index < 0 then Attempt.successful(List.empty[A])
+      else
         val (value, tail) = vec.splitAt(index)
         valueCodec.decode(value.bits) match {
           case Attempt.Successful(DecodeResult(a, _)) =>
             go(tail.drop(delimiter.size)).map(v => a :: v)
           case Attempt.Failure(cause) => Attempt.Failure(cause)
         }
-      }
-    }
 
     go(bits.toByteVector).map(DecodeResult(_, BitVector.empty))
 

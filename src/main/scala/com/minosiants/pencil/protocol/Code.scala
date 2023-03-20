@@ -19,8 +19,8 @@ package pencil.protocol
 
 import scodec.Attempt.Successful
 import scodec.bits.BitVector
-import scodec.codecs.{ ascii, limitedSizeBits }
-import scodec.{ Attempt, Codec, DecodeResult, Err }
+import scodec.codecs.{ascii, limitedSizeBits}
+import scodec.{Attempt, Codec, DecodeResult, Err}
 
 import scala.util.Try
 

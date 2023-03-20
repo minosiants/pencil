@@ -18,17 +18,17 @@ package com.minosiants.pencil
 
 import cats.implicits._
 import java.io.InputStream
-import java.nio.file.{ Path, Paths, Files => JFiles }
+import java.nio.file.{Path, Paths, Files => JFiles}
 
 import cats.MonadError
 import cats.MonadThrow
-import cats.effect.{ Resource, Sync }
+import cats.effect.{Resource, Sync}
 import com.minosiants.pencil.data.Error
 import Function._
 
 object Files {
 
-  def inputStream[F[_]: Sync](file: Path): Resource[F, InputStream] = {
+  def inputStream[F[_]: Sync](file: Path): Resource[F, InputStream] =
     Resource
       .make {
         Sync[F]
@@ -39,12 +39,9 @@ object Files {
             const(Error.resourceNotFound[F, InputStream](file.toString))
           )
       } { is =>
-        if (is != null)
-          Sync[F].delay(is.close())
-        else
-          Error.resourceNotFound[F, Unit](file.toString)
+        if is != null then Sync[F].delay(is.close())
+        else Error.resourceNotFound[F, Unit](file.toString)
       }
-  }
 
   def pathFrom[F[_]: MonadThrow](file: String): F[Path] =
     MonadError[F, Throwable].ensure {
@@ -61,7 +58,7 @@ object Files {
         getClass.getClassLoader.getResource(file)
       }
       .flatMap { resource =>
-        if (resource != null && JFiles.exists(Paths.get(resource.toURI)))
+        if resource != null && JFiles.exists(Paths.get(resource.toURI)) then
           Paths.get(resource.toURI).pure[F]
         else Error.resourceNotFound[F, Path](file)
       }

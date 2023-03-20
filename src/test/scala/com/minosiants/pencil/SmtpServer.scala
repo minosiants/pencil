@@ -1,13 +1,13 @@
 package com.minosiants.pencil
 
-import cats.effect.{ Deferred, IO, Ref }
+import cats.effect.{Deferred, IO, Ref}
 import com.comcast.ip4s._
 import com.minosiants.pencil.protocol.Command._
 import com.minosiants.pencil.protocol._
 import fs2.Stream
-import fs2.io.net.{ Network, Socket }
+import fs2.io.net.{Network, Socket}
 import scodec.bits.BitVector
-import scodec.stream.{ StreamDecoder, StreamEncoder }
+import fs2.interop.scodec.{StreamDecoder, StreamEncoder}
 
 final case class SmtpServer(
     state: Ref[IO, List[BitVector]],
@@ -21,14 +21,13 @@ final case class SmtpServer(
       .resource(
         Network[IO].serverResource(Some(ip"127.0.0.1"), Port.fromInt(port))
       )
-      .flatMap {
-        case (localAddress, server) =>
-          Stream.eval(localBindAddress.complete(localAddress)).drain ++
-            server.flatMap { socket =>
-              val s = MessageSocket(socket)
-              s.write(DataSamples.`220 Greeting`) ++
-                s.read.through(processCommand).through(s.writes)
-            }
+      .flatMap { case (localAddress, server) =>
+        Stream.eval(localBindAddress.complete(localAddress)).drain ++
+          server.flatMap { socket =>
+            val s = MessageSocket(socket)
+            s.write(DataSamples.`220 Greeting`) ++
+              s.read.through(processCommand).through(s.writes)
+          }
 
       }
       .compile
