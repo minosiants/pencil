@@ -71,7 +71,6 @@ object ContentType {
       case _ => None
     }
 
-  implicit lazy val contentTypeShow: Show[ContentType] = Show(
-    ct => s"${ct.mainType.toLowerCase}/${ct.subType.toLowerCase}"
-  )
+  implicit lazy val contentTypeShow: Show[ContentType] =
+    Show(ct => s"${ct.mainType.toLowerCase}/${ct.subType.toLowerCase}")
 }

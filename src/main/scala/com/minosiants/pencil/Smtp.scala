@@ -20,21 +20,22 @@ import cats._
 import cats.data.Kleisli
 import cats.effect.Async
 import cats.implicits._
-import com.minosiants.pencil.data.Body.{ Ascii, Html, Utf8 }
+import com.minosiants.pencil.data.Body.{Ascii, Html, Utf8}
 import com.minosiants.pencil.data.Email._
-import com.minosiants.pencil.data.{ Email, Mailbox, _ }
-import com.minosiants.pencil.protocol.Code._
-import com.minosiants.pencil.protocol.Command._
-import com.minosiants.pencil.protocol.ContentType._
-import com.minosiants.pencil.protocol.Encoding.{ `7bit`, `base64` }
-import com.minosiants.pencil.protocol.Header._
-import com.minosiants.pencil.protocol._
-import fs2.{ Chunk, Stream }
+import com.minosiants.pencil.data.{Email, Mailbox, *}
+import com.minosiants.pencil.protocol.Code.*
+import com.minosiants.pencil.protocol.Command.*
+import com.minosiants.pencil.protocol.ContentType.*
+import com.minosiants.pencil.protocol.Encoding.{`7bit`, `base64`}
+import com.minosiants.pencil.protocol.Header.*
+import com.minosiants.pencil.protocol.*
+import fs2.{Chunk, Stream}
 
 import java.time.format.DateTimeFormatter
-import java.time.{ Instant, ZoneId, ZoneOffset }
-import scala.Function._
+import java.time.{Instant, ZoneId, ZoneOffset}
+import scala.Function.*
 
+type Smtp[F[_], A] = Kleisli[F, Request[F], A]
 object Smtp {
   // Used for easier type inference
   def apply[F[_]]: SmtpPartiallyApplied[F] =
@@ -94,24 +95,24 @@ object Smtp {
     for {
       s       <- socket[F]
       replies <- liftF(s.read())
-      res <- if (replies.success)
-        pure[F, Replies](replies)
-      else liftF(Error.smtpError[F, Replies](replies.show))
+      res <-
+        if replies.success then pure[F, Replies](replies)
+        else liftF(Error.smtpError[F, Replies](replies.show))
     } yield res
 
   def processErrors[F[_]: ApplicativeThrow](
       replies: Replies
   ): F[Replies] =
-    if (replies.success) Applicative[F].pure(replies)
+    if replies.success then Applicative[F].pure(replies)
     else Error.smtpError[F, Replies](replies.show)
 
   def command1[F[_]: MonadThrow](
       run: Email => Command
   ): Smtp[F, Replies] =
-    for {
+    for
       _   <- write[F](run)
       res <- read[F]
-    } yield res
+    yield res
 
   def command[F[_]: MonadThrow](c: Command): Smtp[F, Replies] =
     command1(const(c))
@@ -119,16 +120,16 @@ object Smtp {
   def init[F[_]: MonadThrow](): Smtp[F, Replies] = read[F]
 
   def ehlo[F[_]: MonadThrow](): Smtp[F, Replies] =
-    for {
+    for
       h       <- host[F]
       replies <- command[F](Ehlo(h.name))
-    } yield replies
+    yield replies
 
   def mail[F[_]: MonadThrow](): Smtp[F, Replies] =
-    for {
+    for
       mailbox <- email[F].map(_.from.box)
       replies <- command[F](Mail(mailbox))
-    } yield replies
+    yield replies
 
   def rcpt[F[_]: MonadThrow](): Smtp[F, List[Replies]] =
     Smtp[F] { req =>
@@ -157,10 +158,10 @@ object Smtp {
     command(StartTls)
 
   def authLogin[F[_]: MonadThrow](): Smtp[F, Replies] =
-    for {
+    for
       rep <- command[F](AuthLogin)
       _   <- checkReplyFor[F](`334`, rep)
-    } yield rep
+    yield rep
 
   def checkReplyFor[F[_]: ApplicativeThrow](
       code: Code,
@@ -180,7 +181,7 @@ object Smtp {
   def login[F[_]: MonadThrow](
       credentials: Credentials
   ): Smtp[F, Unit] =
-    for {
+    for
       _ <- authLogin[F]()
       ru <- command[F](
         Text(s"${credentials.username.show.toBase64} ${Command.end}")
@@ -190,7 +191,7 @@ object Smtp {
         Text(s"${credentials.password.show.toBase64} ${Command.end}")
       )
       _ <- checkReplyFor[F](`235`, rp)
-    } yield ()
+    yield ()
 
   def endEmail[F[_]: MonadThrow](): Smtp[F, Replies] =
     email[F].flatMap {
@@ -253,18 +254,18 @@ object Smtp {
     .withZone(ZoneId.from(ZoneOffset.UTC))
 
   def dateHeader[F[_]: MonadThrow](): Smtp[F, Unit] =
-    for {
+    for
       ts <- timestamp[F]
       time = dateFormatter.format(ts)
       _ <- text[F](s"Date: ${time}${Command.end}")
-    } yield ()
+    yield ()
 
   def messageIdHeader[F[_]: MonadThrow](): Smtp[F, Unit] =
     for {
       hostName <- host[F].map(_.name)
       seconds  <- timestamp[F].map(_.getEpochSecond)
       uuid_    <- uuid[F]
-      _        <- text[F](s"Message-ID: <$uuid_.$seconds@$hostName>${Command.end}")
+      _ <- text[F](s"Message-ID: <$uuid_.$seconds@$hostName>${Command.end}")
     } yield ()
 
   def mainHeaders[F[_]: MonadThrow](): Smtp[F, Unit] =
@@ -284,10 +285,8 @@ object Smtp {
   def emptyLine[F[_]: MonadThrow](): Smtp[F, Unit] =
     email[F].flatMap {
       case e @ MimeEmail(_, _, _, _, _, _, _, _) =>
-        if (e.isMultipart)
-          text[F](Command.end)
-        else
-          unit[F]
+        if e.isMultipart then text[F](Command.end)
+        else unit[F]
       case TextEmail(_, _, _, _, _, _) =>
         text[F](Command.end)
     }
@@ -305,11 +304,9 @@ object Smtp {
       isFinal: Boolean = false
   ): Smtp[F, Unit] = email[F].flatMap {
     case e @ MimeEmail(_, _, _, _, _, _, _, Boundary(b)) =>
-      val end = if (isFinal) "--" else ""
-      if (e.isMultipart)
-        text(s"--$b$end${Command.end}")
-      else
-        unit[F]
+      val end = if isFinal then "--" else ""
+      if e.isMultipart then text(s"--$b$end${Command.end}")
+      else unit[F]
 
     case TextEmail(_, _, _, _, _, _) =>
       liftF(Error.smtpError[F, Unit]("not mime"))

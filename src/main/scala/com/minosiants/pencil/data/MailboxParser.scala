@@ -71,14 +71,12 @@ object MailboxParser {
       Error.InvalidMailBox(s"invalid domain '$domain'")
     )
 
-  private def verifyLength(box: String): Either[Error, String] = {
-    if (box.isBlank())
+  private def verifyLength(box: String): Either[Error, String] =
+    if box.isBlank() then
       Left(Error.InvalidMailBox(s"mailbox has empty value '$box''"))
-    else if (box.length > 255)
+    else if box.length > 255 then
       Left(Error.InvalidMailBox(s"mailbox is too long '$box''"))
-    else
-      Right(box)
-  }
+    else Right(box)
 
   private def split(box: String): Either[Error, (LocalPart, Domain)] =
     box.split("@").toList match {
@@ -91,13 +89,12 @@ object MailboxParser {
       case lp :: d => Right((lp, d.mkString))
     }
 
-  def parse(mailbox: String): Either[Error, Mailbox] = {
-    for {
+  def parse(mailbox: String): Either[Error, Mailbox] =
+    for
       _     <- verifyLength(mailbox)
       parts <- split(mailbox)
       lp    <- verifyLocalPart(parts._1)
       dom   <- verifyDomain(parts._2)
-    } yield Mailbox(lp, dom)
-  }
+    yield Mailbox(lp, dom)
 
 }

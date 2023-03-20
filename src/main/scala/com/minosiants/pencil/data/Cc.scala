@@ -32,9 +32,8 @@ object Cc {
   def apply(boxes: Mailbox*): Cc =
     new Cc(NonEmptyList.fromListUnsafe(boxes.toList))
 
-  implicit lazy val ccShow: Show[Cc] = Show.show(
-    cc => cc.boxes.map(_.show).toList.mkString(",")
-  )
+  implicit lazy val ccShow: Show[Cc] =
+    Show.show(cc => cc.boxes.map(_.show).toList.mkString(","))
   implicit lazy val ccSemigroup: Semigroup[Cc] =
     Semigroup.instance[Cc]((a, b) => a + b)
 }

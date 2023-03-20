@@ -15,83 +15,79 @@
  */
 
 package com.minosiants.pencil
-import cats.effect.{ Async, Concurrent, Resource }
-import com.comcast.ip4s._
-import com.minosiants.pencil.data.Email.{ MimeEmail, TextEmail }
-import com.minosiants.pencil.data.{ Host => PHost, _ }
-import com.minosiants.pencil.protocol._
+import cats.effect.{Async, Concurrent, Resource}
+import com.comcast.ip4s.*
+import com.minosiants.pencil.data.Email.{MimeEmail, TextEmail}
+import com.minosiants.pencil.data.{Host as PHost, *}
+import com.minosiants.pencil.protocol.*
 import fs2.io.net.tls.TLSContext
-import fs2.io.net.{ Network, Socket }
+import fs2.io.net.{Network, Socket}
 import org.typelevel.log4cats.Logger
 
 import java.time.Instant
 import java.util.UUID
 import scala.Function.const
 
-/**
-  * Smtp client
-  *
+/** Smtp client
   */
 trait Client[F[_]] {
 
-  /**
-    * Sends `email` to a smtp server
+  /** Sends `email` to a smtp server
     *
-    * @param email - email to be sent
-    * @param es - sender [[EmailSender]]
-    * @return - IO of [[Replies]] from smtp server
+    * @param email
+    *   \- email to be sent
+    * @param es
+    *   \- sender [[EmailSender]]
+    * @return
+    *   \- IO of [[Replies]] from smtp server
     */
   def send(email: Email): F[Replies]
 
 }
 
-object Client {
+object Client:
 
-  def apply[F[_]: Async: Concurrent: Network](
+  def apply[F[_]](
       address: SocketAddress[Host] = SocketAddress(host"localhost", port"25"),
       credentials: Option[Credentials] = None
   )(
       tlsContext: TLSContext[F],
       logger: Logger[F]
-  ): Client[F] =
+  )(using A: Async[F], C: Concurrent[F], N: Network[F]): Client[F] =
     new Client[F] {
-      val socket: Resource[F, Socket[F]] = Network[F].client(address)
+      val socket: Resource[F, Socket[F]] = N.client(address)
 
       def tlsSmtpSocket(s: Socket[F]): Resource[F, SmtpSocket[F]] =
         tlsContext.client(s).map { cs =>
           SmtpSocket.fromSocket(cs, logger)
         }
 
-      override def send(
-          email: Email
-      ): F[Replies] = {
-        val sockets = for {
+      override def send(email: Email): F[Replies] = {
+        val sockets = for
           s   <- socket
           tls <- tlsSmtpSocket(s)
-        } yield (s, tls)
-
-        sockets.use {
-          case (s, tls) =>
-            val request = for {
-              _   <- Smtp.init[F]()
-              rep <- Smtp.ehlo[F]()
-              r <- if (supportTLS(rep)) sendEmailViaTls(tls)
+        yield (s, tls)
+        sockets.use { case (s, tls) =>
+          val request = for
+            _   <- Smtp.init[F]()
+            rep <- Smtp.ehlo[F]()
+            r <-
+              if supportTLS(rep) then sendEmailViaTls(tls)
               else login(rep).flatMap(_ => sender)
-            } yield r
+          yield r
 
-            request.run(
-              Request(
-                email,
-                SmtpSocket.fromSocket(s, logger),
-                PHost.local(),
-                Instant.now(),
-                () => UUID.randomUUID().toString()
-              )
+          request.run(
+            Request(
+              email,
+              SmtpSocket.fromSocket(s, logger),
+              PHost.local(),
+              Instant.now(),
+              () => UUID.randomUUID().toString
             )
+          )
 
         }
       }
-
       def login(rep: Replies): Smtp[F, Unit] =
         credentials
           .filter(const(supportLogin(rep)))
@@ -101,14 +97,14 @@ object Client {
         rep.replies.exists(r => r.text.contains("STARTTLS"))
 
       def supportLogin(rep: Replies): Boolean =
-        rep.replies.exists(
-          reply => reply.text.contains("AUTH") && reply.text.contains("LOGIN")
+        rep.replies.exists(reply =>
+          reply.text.contains("AUTH") && reply.text.contains("LOGIN")
         )
 
       def sendEmailViaTls(
           tls: SmtpSocket[F]
       ): Smtp[F, Replies] =
-        for {
+        for
           _ <- Smtp.startTls[F]()
           r <- Smtp.local { (req: Request[F]) =>
             Request(
@@ -116,19 +112,19 @@ object Client {
               tls,
               PHost.local(),
               Instant.now(),
-              () => UUID.randomUUID().toString()
+              () => UUID.randomUUID().toString
             )
-          }(for {
+          }(for
             rep <- Smtp.ehlo[F]()
             _   <- login(rep)
             r   <- sender
-          } yield r)
-        } yield r
+          yield r)
+        yield r
 
       def sender: Smtp[F, Replies] = Smtp.ask[F].flatMap { r =>
         r.email match {
           case TextEmail(_, _, _, _, _, _) =>
-            for {
+            for
               _ <- Smtp.mail[F]()
               _ <- Smtp.rcpt[F]()
               _ <- Smtp.data[F]()
@@ -136,10 +132,10 @@ object Client {
               _ <- Smtp.emptyLine[F]()
               r <- Smtp.asciiBody[F]()
               _ <- Smtp.quit[F]()
-            } yield r
+            yield r
 
           case MimeEmail(_, _, _, _, _, _, _, _) =>
-            for {
+            for
               _ <- Smtp.mail[F]()
               _ <- Smtp.rcpt[F]()
               _ <- Smtp.data[F]()
@@ -151,8 +147,7 @@ object Client {
               _ <- Smtp.attachments[F]()
               r <- Smtp.endEmail[F]()
               _ <- Smtp.quit[F]()
-            } yield r
+            yield r
         }
       }
     }
-}
