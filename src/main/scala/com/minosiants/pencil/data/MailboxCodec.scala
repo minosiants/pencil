@@ -4,7 +4,7 @@ package data
 import scodec.{ Attempt, Codec, DecodeResult, Err, SizeBound }
 import scodec.bits.{ BitVector, ByteVector }
 import scodec.codecs.ascii
-
+import cats.syntax.show.*
 final case class MailboxCodec() extends Codec[Mailbox] {
   private val `<` = ByteVector("<".getBytes)
   private val `>` = ByteVector(">".getBytes)
@@ -27,7 +27,7 @@ final case class MailboxCodec() extends Codec[Mailbox] {
           case Right(mb) =>
             Attempt.successful(DecodeResult(mb, remainder))
           case Left(error) =>
-            Attempt.failure(Err(Error.errorShow.show(error)))
+            Attempt.failure(Err(error.show))
         }
     })
 

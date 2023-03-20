@@ -40,7 +40,7 @@ object MailboxParser {
     }
 
     localPart.toList
-      .foldM[Either[Error, ?], List[Char]](List.empty[Char]) {
+      .foldM(List.empty[Char]) {
 
         case (Nil, x) if notValid(x) =>
           Left(
@@ -65,13 +65,11 @@ object MailboxParser {
       .map(_.mkString)
   }
 
-  def verifyDomain(domain: String): Either[Error, String] = {
-
+  def verifyDomain(domain: String): Either[Error, String] =
     Either.fromOption(
       domainPattern.findFirstMatchIn(domain).map(const(domain)),
       Error.InvalidMailBox(s"invalid domain '$domain'")
     )
-  }
 
   private def verifyLength(box: String): Either[Error, String] = {
     if (box.isBlank())

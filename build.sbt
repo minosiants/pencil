@@ -22,6 +22,8 @@ lazy val root = (project in file("."))
     scalaVersion := "3.2.2",
     scalacOptions ++= Seq(
       "-language:experimental.macros"
+     // ,"-new-syntax"
+     // ,"-indent"
     ),
     javacOptions ++= Seq("-source", "1.17", "-target", "1.17"),
     libraryDependencies ++= Seq(
