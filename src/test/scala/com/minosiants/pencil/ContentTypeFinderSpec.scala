@@ -1,5 +1,5 @@
 package com.minosiants.pencil
-import java.nio.file.{ Path, Paths }
+import java.nio.file.{Path, Paths}
 
 import cats.effect.IO
 import com.minosiants.pencil.data._
@@ -16,9 +16,8 @@ class ContentTypeFinderSpec extends Specification with ScalaCheck {
 
   "ContentTypeFinder" should {
 
-    "find content type" in forAll(pathGen) {
-      case (p, t) =>
-        findContentType(p).attempt.unsafeRunSync() ==== Right(t)
+    "find content type" in forAll(pathGen) { case (p, t) =>
+      findContentType(p).attempt.unsafeRunSync() ==== Right(t)
     }
 
     "not find file" in {

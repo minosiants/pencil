@@ -1,18 +1,19 @@
 package com.minosiants.pencil
 
 import cats.effect.IO
-import cats.syntax.show._
+import cats.syntax.show.*
 import com.minosiants.pencil.SmtpSpec.body
-import com.minosiants.pencil.data.Body.{ Ascii, Html, Utf8 }
-import com.minosiants.pencil.data.Email._
-import com.minosiants.pencil.data._
+import com.minosiants.pencil.data.Body.{Ascii, Html, Utf8}
+import com.minosiants.pencil.data.Email.*
+import com.minosiants.pencil.data.*
 import com.minosiants.pencil.protocol.ContentType.`application/pdf`
 import com.minosiants.pencil.protocol.Encoding.`base64`
 import com.minosiants.pencil.protocol.Header.`Content-Type`
-import com.minosiants.pencil.protocol._
+import com.minosiants.pencil.protocol.*
 import scodec.codecs
 import cats.effect.Resource
 import cats.effect.unsafe.implicits.global
+import com.minosiants.pencil.syntax.LiteralsSyntax
 
 class SmtpSpec extends SmtpBaseSpec {
 
@@ -174,7 +175,7 @@ class SmtpSpec extends SmtpBaseSpec {
       val email  = SmtpSpec.mime
       val result = testCommand(Smtp.mainHeaders(), email, codecs.ascii)
       result.map(_._2.size) must beRight(7)
-      //TODO refactor to test all headers
+      // TODO refactor to test all headers
       result.map(_._2) must beRight(
         beEqualTo(
           List(
@@ -283,8 +284,8 @@ class SmtpSpec extends SmtpBaseSpec {
           s"Content-Type: text/plain; charset=UTF-8${Command.end}",
           s"Content-Transfer-Encoding: base64${Command.end}",
           s"${Command.end}"
-        ) ++ body(email.body) {
-          case Utf8(value) => value.toBase64
+        ) ++ body(email.body) { case Utf8(value) =>
+          value.toBase64
         }
       )
     )
@@ -300,8 +301,8 @@ class SmtpSpec extends SmtpBaseSpec {
           s"Content-Type: text/html; charset=UTF-8${Command.end}",
           s"Content-Transfer-Encoding: base64${Command.end}",
           s"${Command.end}"
-        ) ++ body(email.body) {
-          case Html(value) => value.toBase64
+        ) ++ body(email.body) { case Html(value) =>
+          value.toBase64
         }
       )
     )
@@ -317,8 +318,8 @@ class SmtpSpec extends SmtpBaseSpec {
           s"Content-Type: text/plain; charset=US-ASCII${Command.end}",
           s"Content-Transfer-Encoding: 7bit${Command.end}",
           s"${Command.end}"
-        ) ++ body(email.body) {
-          case Ascii(value) => value
+        ) ++ body(email.body) { case Ascii(value) =>
+          value
         }
       )
     )
@@ -359,7 +360,7 @@ class SmtpSpec extends SmtpBaseSpec {
 
 }
 
-object SmtpSpec {
+object SmtpSpec extends LiteralsSyntax{
 
   def lines(str: String): List[String] =
     str.grouped(76).map(_ + Command.end).toList

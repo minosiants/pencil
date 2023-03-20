@@ -52,10 +52,9 @@ object Reply {
   val textCodec: Codec[String] = Codec[String](
     (s: String) => ascii.encode(s + "\r\n"),
     (bits: scodec.bits.BitVector) => {
-      if (bits.toByteVector.endsWith(CRLF))
+      if bits.toByteVector.endsWith(CRLF) then
         ascii.decode(bits.dropRight(CRLF.bits.size))
-      else
-        ascii.decode(bits)
+      else ascii.decode(bits)
     }
   )
 

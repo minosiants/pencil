@@ -20,7 +20,7 @@ package data
 import cats.Show
 import scodec.Codec
 
-final case class Mailbox(localPart: String, domain: String)
+case class Mailbox(localPart: String, domain: String)
     extends Product
     with Serializable {
 

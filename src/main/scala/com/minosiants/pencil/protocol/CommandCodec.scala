@@ -19,9 +19,9 @@ package protocol
 
 import com.minosiants.pencil.data.Mailbox
 import com.minosiants.pencil.protocol.Command._
-import scodec.bits.{ BitVector, ByteVector }
+import scodec.bits.{BitVector, ByteVector}
 import scodec.codecs._
-import scodec.{ Attempt, Codec, DecodeResult, SizeBound }
+import scodec.{Attempt, Codec, DecodeResult, SizeBound}
 
 final case class CommandCodec() extends Codec[Command] {
 
@@ -35,9 +35,8 @@ final case class CommandCodec() extends Codec[Command] {
                 DecodeResult(Ehlo(domain), BitVector.empty)
             }
           case "MAIL" =>
-            Mailbox.codec.decode(rest).map {
-              case DecodeResult(email, _) =>
-                DecodeResult(Mail(email), BitVector.empty)
+            Mailbox.codec.decode(rest).map { case DecodeResult(email, _) =>
+              DecodeResult(Mail(email), BitVector.empty)
             }
           case "RCPT" =>
             Mailbox.codec.decode(rest.drop(4 * 8)).map {
@@ -49,18 +48,16 @@ final case class CommandCodec() extends Codec[Command] {
           case "RSET" => Attempt.successful(DecodeResult(Rset, BitVector.empty))
           case "NOOP" => Attempt.successful(DecodeResult(Noop, BitVector.empty))
           case "VRFY" =>
-            ascii.decode(extractText(rest)).map {
-              case DecodeResult(txt, _) =>
-                DecodeResult(Vrfy(txt), BitVector.empty)
+            ascii.decode(extractText(rest)).map { case DecodeResult(txt, _) =>
+              DecodeResult(Vrfy(txt), BitVector.empty)
             }
           case "AUTH" =>
             Attempt.successful(DecodeResult(AuthLogin, BitVector.empty))
           case "STAR" =>
             Attempt.successful(DecodeResult(StartTls, BitVector.empty))
           case _ =>
-            ascii.decode(bits).map {
-              case DecodeResult(txt, _) =>
-                DecodeResult(Text(txt), BitVector.empty)
+            ascii.decode(bits).map { case DecodeResult(txt, _) =>
+              DecodeResult(Text(txt), BitVector.empty)
             }
         }
     }

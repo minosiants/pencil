@@ -18,20 +18,12 @@ package com.minosiants
 
 import java.nio.charset.StandardCharsets
 
-import cats.data.Kleisli
-import com.minosiants.pencil.syntax.LiteralsSyntax
-import scodec.bits.{ BitVector, ByteVector }
+import scodec.bits.{BitVector, ByteVector}
 
-package object pencil extends LiteralsSyntax {
-
-  type Smtp[F[_], A] = Kleisli[F, Request[F], A]
-
+package pencil:
   val CRLF: ByteVector = ByteVector("\r\n".getBytes)
-
   implicit class ExtraStringOps(private val str: String) extends AnyVal {
-    def toBase64: String         = toBitVector.toBase64
-    def toBitVector: BitVector   = BitVector(str.getBytes(StandardCharsets.UTF_8))
+    def toBase64: String       = toBitVector.toBase64
+    def toBitVector: BitVector = BitVector(str.getBytes(StandardCharsets.UTF_8))
     def toByteVector: ByteVector = toBitVector.bytes
   }
-
-}
