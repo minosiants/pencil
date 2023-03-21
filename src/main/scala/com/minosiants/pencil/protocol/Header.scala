@@ -35,7 +35,7 @@ object Header {
       mechanism: Encoding
   ) extends Header
 
-  implicit lazy val headerShow: Show[Header] = Show.show {
+  lazy given headerShow: Show[Header] = Show.show {
     case `MIME-Version`(value) =>
       s"MIME-Version: $value"
 

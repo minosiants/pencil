@@ -32,9 +32,9 @@ object Bcc {
   def apply(boxes: Mailbox*): Bcc =
     new Bcc(NonEmptyList.fromListUnsafe(boxes.toList))
 
-  implicit lazy val bccShow: Show[Bcc] =
+  lazy given bccShow: Show[Bcc] =
     Show.show(bcc => bcc.boxes.map(_.show).toList.mkString(","))
 
-  implicit lazy val bccSemigroup: Semigroup[Bcc] =
+  lazy given bccSemigroup: Semigroup[Bcc] =
     Semigroup.instance((a, b) => a + b)
 }

@@ -104,7 +104,7 @@ object Code {
     `555`
   )
 
-  implicit lazy val codec: Codec[Code] = Codec[Code](
+  lazy given codec: Codec[Code] = Codec[Code](
     (value: Code) => ascii.encode(value.value.toString),
     (bits: BitVector) => {
       limitedSizeBits(3 * 8, ascii).decode(bits) match {

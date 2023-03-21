@@ -34,9 +34,9 @@ object Mailbox {
   def unsafeFromString(mailbox: String): Mailbox =
     fromString(mailbox).fold(throw _, identity)
 
-  implicit val mailboxShow: Show[Mailbox] =
+  given mailboxShow: Show[Mailbox] =
     Show.show[Mailbox](mb => s"<${mb.address}>")
 
-  implicit lazy val codec: Codec[Mailbox] = MailboxCodec()
+  lazy given codec: Codec[Mailbox] = MailboxCodec()
 
 }

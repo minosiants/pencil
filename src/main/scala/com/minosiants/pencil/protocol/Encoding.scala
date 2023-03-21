@@ -28,7 +28,7 @@ object Encoding {
   case object `quoted-printable` extends Encoding
   case object `base64`           extends Encoding
 
-  implicit lazy val encodingShow: Show[Encoding] = Show.show {
+  lazy given encodingShow: Show[Encoding] = Show.show {
     case `7bit`             => "7bit"
     case `8bit`             => "8bit"
     case `binary`           => "binary"

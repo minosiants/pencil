@@ -37,7 +37,7 @@ object Command {
   case object AuthLogin                   extends Command
   case object StartTls                    extends Command
 
-  implicit lazy val CommandShow: Show[Command] = Show.show {
+  lazy given CommandShow: Show[Command] = Show.show {
     case Ehlo(domain) => s"EHLO $domain$end"
     case Mail(Mailbox(localPart, domain)) =>
       s"MAIL FROM: <$localPart@$domain>$end"
@@ -57,5 +57,5 @@ object Command {
   val end              = "\r\n"
   val endEmail: String = s"$end.$end"
 
-  lazy implicit val codec: Codec[Command] = CommandCodec()
+  lazy given codec: Codec[Command] = CommandCodec()
 }

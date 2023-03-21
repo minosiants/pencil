@@ -26,9 +26,9 @@ final case class Credentials(username: Username, password: Password)
     with Serializable
 
 object Username {
-  implicit lazy val usernameShow: Show[Username] = Show.show(_.value)
+  lazy given usernameShow: Show[Username] = Show.show(_.value)
 }
 
 object Password {
-  implicit lazy val passwordShow: Show[Password] = Show.show(_.value)
+  lazy given passwordShow: Show[Password] = Show.show(_.value)
 }

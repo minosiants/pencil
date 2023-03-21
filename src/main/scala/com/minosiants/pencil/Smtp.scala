@@ -27,7 +27,7 @@ import com.minosiants.pencil.protocol.Code.*
 import com.minosiants.pencil.protocol.Command.*
 import com.minosiants.pencil.protocol.ContentType.*
 import com.minosiants.pencil.protocol.Encoding.{`7bit`, `base64`}
-import com.minosiants.pencil.protocol.Header.*
+import com.minosiants.pencil.protocol.Header.{*, given}
 import com.minosiants.pencil.protocol.*
 import fs2.{Chunk, Stream}
 

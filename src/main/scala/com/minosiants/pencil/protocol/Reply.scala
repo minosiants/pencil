@@ -37,17 +37,17 @@ final case class Replies(replies: List[Reply])
 }
 
 object Replies {
-  implicit lazy val RepliesShow: Show[Replies] = Show.fromToString
+  lazy given RepliesShow: Show[Replies] = Show.fromToString
 
   def apply(replies: Reply): Replies = Replies(List(replies))
 
-  implicit val codec: Codec[Replies] = (
+  given codec: Codec[Replies] = (
     ("replies" | DelimiterListCodec(CRLF, Reply.codec))
   ).as[Replies]
 }
 
 object Reply {
-  implicit lazy val ReplyShow: Show[Reply] = Show.fromToString
+  lazy given ReplyShow: Show[Reply] = Show.fromToString
 
   val textCodec: Codec[String] = Codec[String](
     (s: String) => ascii.encode(s + "\r\n"),
@@ -58,7 +58,7 @@ object Reply {
     }
   )
 
-  implicit val codec: Codec[Reply] = (
+  given codec: Codec[Reply] = (
     ("code" | Code.codec) ::
       ("sep" | limitedSizeBits(8, ascii)) ::
       ("text" | textCodec)
