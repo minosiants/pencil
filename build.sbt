@@ -12,6 +12,7 @@ val logbackVersion      = "1.2.3"
 val literallyVersion    = "1.1.0"
 
 ThisBuild / scalafixScalaBinaryVersion := (ThisBuild / scalaBinaryVersion).value
+ThisBuild / scalafixDependencies += "no.arktekk" %% "scala3-scalafix" % "0.1.0"
 ThisBuild / semanticdbEnabled := true
 ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
 
