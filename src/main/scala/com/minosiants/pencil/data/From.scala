@@ -18,11 +18,18 @@ package com.minosiants.pencil
 package data
 
 import cats.Show
-import cats.syntax.show._
+import cats.syntax.show.*
 
-final case class From(box: Mailbox) extends Product with Serializable
+object FromType:
 
-object From {
-  implicit lazy val fromShow: Show[From] =
-    Show.show(from => s"${from.box.show}")
-}
+  opaque type From = Mailbox
+  object From:
+
+    def apply(box: Mailbox): From = box
+    extension (self: From)
+      def mailbox: Mailbox = self
+      def address: String  = self.address
+
+    given Show[From] =
+      Mailbox.given_Show_Mailbox
+        // Show.show[From](from => s"${from.mailbox.show}")

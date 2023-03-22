@@ -32,7 +32,7 @@ final case class MailboxCodec() extends Codec[Mailbox] {
     )
 
   override def encode(mb: Mailbox): Attempt[BitVector] =
-    Attempt.successful(Mailbox.mailboxShow.show(mb).toBitVector)
+    Attempt.successful(mb.show.toBitVector)
 
   override def sizeBound: SizeBound = SizeBound.unknown
 }

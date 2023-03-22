@@ -14,7 +14,12 @@ import scodec.codecs
 import cats.effect.Resource
 import cats.effect.unsafe.implicits.global
 import com.minosiants.pencil.syntax.LiteralsSyntax
-
+import FromType.From
+import CcType.Cc
+import ToType.To
+import BccType.Bcc
+import AttachmentType.Attachment
+import HostType.Host
 class SmtpSpec extends SmtpBaseSpec {
 
   sequential
@@ -45,7 +50,7 @@ class SmtpSpec extends SmtpBaseSpec {
 
     "get response on MAIL" in {
       val result = testCommand(Smtp.mail(), SmtpSpec.mime, codecs.ascii)
-      val from   = SmtpSpec.mime.from.box
+      val from   = SmtpSpec.mime.from.mailbox
       result.map(_._1) must beRight(DataSamples.`250 OK`)
       result.map(_._2) must beRight(
         beEqualTo(List(s"MAIL FROM: ${from.show}${Command.end}"))
@@ -360,7 +365,7 @@ class SmtpSpec extends SmtpBaseSpec {
 
 }
 
-object SmtpSpec extends LiteralsSyntax{
+object SmtpSpec extends LiteralsSyntax {
 
   def lines(str: String): List[String] =
     str.grouped(76).map(_ + Command.end).toList
