@@ -17,10 +17,17 @@
 package com.minosiants.pencil
 package data
 
-import Body._
+import Body.*
 import cats.data.NonEmptyList
-import cats.syntax.semigroup._
-import cats.instances.option._
+import cats.syntax.semigroup.*
+import cats.instances.option.*
+import FromType.From
+import CcType.Cc
+import ToType.To
+import BccType.Bcc
+import AttachmentType.Attachment
+
+import scala.annotation.targetName
 
 /** Abstract class represents email
   */
@@ -31,10 +38,11 @@ sealed abstract class Email extends Product with Serializable {
   def bcc: Option[Bcc]
   def subject: Option[Subject]
   def recipients: NonEmptyList[Mailbox] = (cc, bcc) match {
-    case (Some(cc), Some(bcc)) => to.boxes ::: cc.boxes ::: bcc.boxes
-    case (None, Some(bcc))     => to.boxes ::: bcc.boxes
-    case (Some(cc), None)      => to.boxes ::: cc.boxes
-    case (None, None)          => to.boxes
+    case (Some(cc), Some(bcc)) =>
+      to.mailboxes ::: cc.mailboxes ::: bcc.mailboxes
+    case (None, Some(bcc)) => to.mailboxes ::: bcc.mailboxes
+    case (Some(cc), None)  => to.mailboxes ::: cc.mailboxes
+    case (None, None)      => to.mailboxes
   }
 }
 
@@ -104,7 +112,7 @@ object Email {
   /** [[MimeEmail]] constructor
     */
   def mime(from: From, to: To, subject: Subject, body: Body): MimeEmail = {
-    val boundary = Boundary.genFrom(from.box.address)
+    val boundary = Boundary.genFrom(from.address)
     MimeEmail(from, to, None, None, Some(subject), Some(body), Nil, boundary)
   }
 
@@ -121,11 +129,11 @@ trait TextEmailOps {
 
   /** Add [[Mailbox]] to `cc` .
     */
-  def addCc(mb: Mailbox*): TextEmail = copy(cc = cc |+| Some(Cc(mb: _*)))
+  def addCc(mb: Mailbox*): TextEmail = copy(cc = cc |+| Some(Cc(mb*)))
 
   /** Combine values from both `cc`.
     */
-  def addCc(cc: Cc): TextEmail = addCc(cc.boxes.toList: _*)
+  def addCc(cc: Cc): TextEmail = addCc(cc.toList*)
 
   /** Combine values from both `cc`.
     */
@@ -137,14 +145,15 @@ trait TextEmailOps {
 
   /** Add [[Mailbox]] to `bcc`.
     */
-  def addBcc(mb: Mailbox*): TextEmail = copy(bcc = bcc |+| Some(Bcc(mb: _*)))
+  def addBcc(mb: Mailbox*): TextEmail = copy(bcc = bcc |+| Some(Bcc(mb*)))
 
   /** Combine to `bcc`.
     */
-  def addBcc(bcc: Bcc): TextEmail = addBcc(bcc.boxes.toList: _*)
+  def addBcc(bcc: Bcc): TextEmail = addBcc(bcc.toList*)
 
   /** Combine to `bcc`.
     */
+  @targetName("+bcc")
   def +(bcc: Bcc): TextEmail = addBcc(bcc)
 
   /** Set `body` value. Replace existing one with a new one.
@@ -166,14 +175,15 @@ trait TextEmailOps {
   /** Add [[Mailbox]] to `to` value.
     */
   def addTo(to: Mailbox*): TextEmail =
-    copy(to = To(this.to.boxes ++ to.toList))
+    copy(to = this.to + To(to*))
 
   /** Combine `to` values.
     */
-  def addTo(to: To): TextEmail = addTo(to.boxes.toList: _*)
+  def addTo(to: To): TextEmail = addTo(to.toList: _*)
 
   /** Combine `to` values.
     */
+  @targetName("+to")
   def +(to: To): TextEmail = addTo(to)
 }
 
@@ -195,11 +205,11 @@ trait MimeEmailOps {
 
   /** Add [[Mailbox]] to `cc`.
     */
-  def addCc(mb: Mailbox*): MimeEmail = copy(cc = cc |+| Some(Cc(mb: _*)))
+  def addCc(mb: Mailbox*): MimeEmail = copy(cc = cc |+| Some(Cc(mb*)))
 
   /** Combine `cc` values.
     */
-  def addCc(cc: Cc): MimeEmail = addCc(cc.boxes.toList: _*)
+  def addCc(cc: Cc): MimeEmail = addCc(cc.toList*)
 
   /** Combine `cc` values.
     */
@@ -211,14 +221,15 @@ trait MimeEmailOps {
 
   /** Add [[Mailbox]] to `bcc` value.
     */
-  def addBcc(mb: Mailbox*): MimeEmail = copy(bcc = bcc |+| Some(Bcc(mb: _*)))
+  def addBcc(mb: Mailbox*): MimeEmail = copy(bcc = bcc |+| Some(Bcc(mb*)))
 
   /** Combine `bcc` values
     */
-  def addBcc(bcc: Bcc): MimeEmail = addBcc(bcc.boxes.toList: _*)
+  def addBcc(bcc: Bcc): MimeEmail = addBcc(bcc.toList*)
 
   /** Combine `bcc` values
     */
+  @targetName("+bcc")
   def +(bcc: Bcc): MimeEmail = addBcc(bcc)
 
   /** Set `body`. Replace an existing value with a new one.
@@ -243,10 +254,11 @@ trait MimeEmailOps {
 
   /** Combine `to` values.
     */
-  def addTo(to: To): MimeEmail = addTo(to.boxes.toList: _*)
+  def addTo(to: To): MimeEmail = addTo(to.toList*)
 
   /** Combine `to` values.
     */
+  @targetName("+to")
   def +(to: To): MimeEmail = addTo(to)
 
   /** Check if it is multipart.

@@ -18,23 +18,20 @@ package com.minosiants.pencil
 package data
 
 import cats.Show
-import cats.syntax.show._
+import cats.syntax.show.*
 import cats.data.NonEmptyList
 import cats.kernel.Semigroup
 
-final case class Bcc(boxes: NonEmptyList[Mailbox])
-    extends Product
-    with Serializable {
-  def +(bcc: Bcc) = copy(boxes = boxes ::: bcc.boxes)
-}
+object BccType:
+  opaque type Bcc = NonEmptyList[Mailbox]
+  object Bcc:
+    def apply(boxes: Mailbox*): Bcc =
+      NonEmptyList.fromListUnsafe(boxes.toList)
 
-object Bcc {
-  def apply(boxes: Mailbox*): Bcc =
-    new Bcc(NonEmptyList.fromListUnsafe(boxes.toList))
+    extension (self: Bcc)
+      def +(bcc: Bcc)                      = self ::: bcc
+      def mailboxes: NonEmptyList[Mailbox] = self
+      def toList: List[Mailbox]            = self.toList
 
-  implicit lazy val bccShow: Show[Bcc] =
-    Show.show(bcc => bcc.boxes.map(_.show).toList.mkString(","))
-
-  implicit lazy val bccSemigroup: Semigroup[Bcc] =
-    Semigroup.instance((a, b) => a + b)
-}
+    given Show[Bcc] = Show.show(bcc => bcc.map(_.show).toList.mkString(","))
+    given Semigroup[Bcc] = Semigroup.instance((a, b) => a + b)

@@ -21,19 +21,17 @@ import java.nio.file.Path
 import cats.implicits._
 import cats.effect.Sync
 
-final case class Attachment(private[pencil] val file: Path)
-    extends Product
-    with Serializable
+object AttachmentType:
 
-object Attachment {
+  opaque type Attachment = Path
+  object Attachment:
 
-  def fromString[F[_]: Sync](file: String): F[Attachment] = {
-    Files
+    def apply(path: Path): Attachment = path
+
+    def fromString[F[_]](file: String)(using Sync[F]): F[Attachment] = Files
       .pathFrom[F](file)
       .handleErrorWith { _ =>
         Files.pathFromClassLoader[F](file)
       }
-      .map(Attachment(_))
-  }
 
-}
+    extension (self: Attachment) def file: Path = self

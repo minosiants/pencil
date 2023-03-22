@@ -20,23 +20,20 @@ package data
 import cats.Show
 import scodec.Codec
 
-case class Mailbox(localPart: String, domain: String)
+final case class Mailbox(localPart: String, domain: String)
     extends Product
-    with Serializable {
+    with Serializable:
 
   def address: String = s"$localPart@$domain"
-}
 
-object Mailbox {
+object Mailbox:
 
   def fromString(mailbox: String): Either[Error, Mailbox] =
     MailboxParser.parse(mailbox)
   def unsafeFromString(mailbox: String): Mailbox =
     fromString(mailbox).fold(throw _, identity)
 
-  implicit val mailboxShow: Show[Mailbox] =
+  given Show[Mailbox] =
     Show.show[Mailbox](mb => s"<${mb.address}>")
 
-  implicit lazy val codec: Codec[Mailbox] = MailboxCodec()
-
-}
+  given Codec[Mailbox] = MailboxCodec()

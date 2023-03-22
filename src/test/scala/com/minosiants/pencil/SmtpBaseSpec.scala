@@ -5,7 +5,8 @@ import cats.effect.unsafe.implicits.global
 import cats.instances.list.*
 import cats.syntax.traverse.*
 import com.comcast.ip4s.{Host, SocketAddress}
-import com.minosiants.pencil.data.{Email, Error, Host as PHost}
+import com.minosiants.pencil.data.{Email, Error}
+import com.minosiants.pencil.data.HostType.{Host as PHost}
 import com.minosiants.pencil.syntax.LiteralsSyntax
 import fs2.io.net.Network
 import org.specs2.mutable.SpecificationLike
@@ -16,7 +17,7 @@ import scodec.{Codec, DecodeResult}
 import java.time.{Clock, Instant, ZoneId, ZoneOffset}
 import java.util.UUID
 import scala.concurrent.duration.*
-trait SmtpBaseSpec extends SpecificationLike with LiteralsSyntax{
+trait SmtpBaseSpec extends SpecificationLike with LiteralsSyntax {
 
   val logger    = Slf4jLogger.getLogger[IO]
   val timestamp = Instant.now()
