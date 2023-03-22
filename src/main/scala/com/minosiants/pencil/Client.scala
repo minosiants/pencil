@@ -18,7 +18,8 @@ package com.minosiants.pencil
 import cats.effect.{Async, Concurrent, Resource}
 import com.comcast.ip4s.*
 import com.minosiants.pencil.data.Email.{MimeEmail, TextEmail}
-import com.minosiants.pencil.data.{Host as PHost, *}
+import com.minosiants.pencil.data.*
+import HostType.{Host as PHost}
 import com.minosiants.pencil.protocol.*
 import fs2.io.net.tls.TLSContext
 import fs2.io.net.{Network, Socket}

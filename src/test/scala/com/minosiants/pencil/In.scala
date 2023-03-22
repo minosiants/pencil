@@ -29,8 +29,7 @@ object In {
             .map { case DecodeResult(value, _) => List(value) }
         else
           val index = vec.indexOfSlice(delimiter)
-          if index < 0 then
-            Attempt.successful(List.empty[In])
+          if index < 0 then Attempt.successful(List.empty[In])
           else
             val (value, tail) = vec.splitAt(index)
             In.codec.decode((value ++ delimiter).bits) match {

@@ -34,7 +34,12 @@ import fs2.{Chunk, Stream}
 import java.time.format.DateTimeFormatter
 import java.time.{Instant, ZoneId, ZoneOffset}
 import scala.Function.*
-
+import FromType.From
+import CcType.Cc
+import ToType.To
+import BccType.Bcc
+import AttachmentType.Attachment
+import HostType._
 type Smtp[F[_], A] = Kleisli[F, Request[F], A]
 object Smtp {
   // Used for easier type inference
@@ -127,8 +132,8 @@ object Smtp {
 
   def mail[F[_]: MonadThrow](): Smtp[F, Replies] =
     for
-      mailbox <- email[F].map(_.from.box)
-      replies <- command[F](Mail(mailbox))
+      from    <- email[F].map(_.from)
+      replies <- command[F](Mail(from.mailbox))
     yield replies
 
   def rcpt[F[_]: MonadThrow](): Smtp[F, List[Replies]] =

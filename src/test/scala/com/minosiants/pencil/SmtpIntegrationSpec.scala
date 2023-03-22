@@ -9,7 +9,7 @@ import org.specs2.execute.Pending
 import org.specs2.mutable.SpecificationLike
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 
-class SmtpIntegrationSpec extends SpecificationLike with LiteralsSyntax{
+class SmtpIntegrationSpec extends SpecificationLike with LiteralsSyntax {
   val logger = Slf4jLogger.getLogger[IO]
 
   "Smtp integration" should {

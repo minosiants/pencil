@@ -21,19 +21,21 @@ import cats.Show
 import cats.syntax.show._
 import cats.data.NonEmptyList
 import cats.kernel.Semigroup
+object CcType:
 
-final case class Cc(boxes: NonEmptyList[Mailbox])
-    extends Product
-    with Serializable {
-  def +(cc: Cc) = copy(boxes = boxes ::: cc.boxes)
-}
+  opaque type Cc = NonEmptyList[Mailbox]
+  object Cc:
 
-object Cc {
-  def apply(boxes: Mailbox*): Cc =
-    new Cc(NonEmptyList.fromListUnsafe(boxes.toList))
+    def apply(boxes: Mailbox*): Cc =
+      NonEmptyList.fromListUnsafe(boxes.toList)
 
-  implicit lazy val ccShow: Show[Cc] =
-    Show.show(cc => cc.boxes.map(_.show).toList.mkString(","))
-  implicit lazy val ccSemigroup: Semigroup[Cc] =
-    Semigroup.instance[Cc]((a, b) => a + b)
-}
+    extension (self: Cc)
+      def +(other: Cc): Cc                 = self ::: other
+      def mailboxes: NonEmptyList[Mailbox] = self
+      def toList: List[Mailbox]            = self.toList
+
+    given Show[Cc] =
+      Show.show(cc => cc.map(_.show).toList.mkString(","))
+
+    given Semigroup[Cc] =
+      Semigroup.instance[Cc]((a, b) => a + b)
