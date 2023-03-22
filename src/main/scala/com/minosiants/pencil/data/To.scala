@@ -20,20 +20,20 @@ package data
 import cats.Show
 import cats.data.NonEmptyList
 import cats.kernel.Semigroup
+import cats.syntax.show._
+object ToType:
 
-final case class To(boxes: NonEmptyList[Mailbox])
-    extends Product
-    with Serializable {
-  def +(to: To): To = copy(boxes = boxes ::: to.boxes)
-}
+  opaque type To = NonEmptyList[Mailbox]
 
-object To {
+  object To:
 
-  implicit lazy val toShow: Show[To] = Show.show(to =>
-    to.boxes.map(v => Mailbox.mailboxShow.show(v)).toList.mkString(",")
-  )
-  def apply(to: Mailbox*): To = To(NonEmptyList.fromListUnsafe(to.toList))
+    def apply(to: Mailbox*): To = NonEmptyList.fromListUnsafe(to.toList)
+    extension (self: To)
+      def +(that: To): To                  = self ::: that
+      def mailboxes: NonEmptyList[Mailbox] = self
+      def toList: List[Mailbox]            = self.toList
 
-  implicit lazy val toSemigroup: Semigroup[To] =
-    Semigroup.instance((a, b) => a + b)
-}
+    given Show[To] = Show.show(to => to.map(_.show).toList.mkString(","))
+
+    given Semigroup[To] =
+      Semigroup.instance((a, b) => a + b)
