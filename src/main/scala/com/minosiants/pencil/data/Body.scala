@@ -17,12 +17,18 @@
 package com.minosiants.pencil
 package data
 
-sealed trait Body extends Product with Serializable
+sealed trait Body1 extends Product with Serializable
 
-object Body {
+object Body1 {
 
-  final case class Ascii(value: String) extends Body
-  final case class Html(value: String)  extends Body
-  final case class Utf8(value: String)  extends Body
+  final case class Ascii(value: String) extends Body1
+  final case class Html(value: String)  extends Body1
+  final case class Utf8(value: String)  extends Body1
 
 }
+
+enum Body:
+  def value: String
+  case Ascii(value: String)
+  case Html(value: String)
+  case Utf8(value: String)

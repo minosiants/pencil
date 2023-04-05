@@ -27,3 +27,19 @@ package pencil:
     def toBitVector: BitVector = BitVector(str.getBytes(StandardCharsets.UTF_8))
     def toByteVector: ByteVector = toBitVector.bytes
   }
+  type To = com.minosiants.pencil.data.ToType.To
+  val To = com.minosiants.pencil.data.ToType.To
+  type From = com.minosiants.pencil.data.FromType.From
+  val From = com.minosiants.pencil.data.FromType.From
+  type Cc = com.minosiants.pencil.data.CcType.Cc
+  val Cc = com.minosiants.pencil.data.CcType.Cc
+  type Bcc = com.minosiants.pencil.data.BccType.Bcc
+  val Bcc = com.minosiants.pencil.data.BccType.Bcc
+  type Subject = com.minosiants.pencil.data.SubjectType.Subject
+  val Subject = com.minosiants.pencil.data.SubjectType.Subject
+  type Attachment = com.minosiants.pencil.data.AttachmentType.Attachment
+  val Attachment = com.minosiants.pencil.data.AttachmentType.Attachment
+  type Host = com.minosiants.pencil.data.HostType.Host
+  val Host = com.minosiants.pencil.data.HostType.Host
+  type Boundary = com.minosiants.pencil.data.BoundaryType.Boundary
+  val Boundary = com.minosiants.pencil.data.BoundaryType.Boundary

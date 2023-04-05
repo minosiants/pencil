@@ -1,16 +1,14 @@
-package com.minosiants.pencil.data
+package com.minosiants.pencil
+package data
 
 import java.nio.file.{Path, Paths}
 
-import com.minosiants.pencil.data.Email.{MimeEmail, TextEmail}
+import com.minosiants.pencil.data.Email
 import org.scalacheck.Gen
-import FromType.From
-import CcType.Cc
-import ToType.To
-import BccType.Bcc
-import AttachmentType.Attachment
+import org.scalacheck.Arbitrary
 
 trait EmailGens {
+
   val localPartCharGen: Gen[Char] = Gen
     .choose(33.toChar, 126.toChar)
     .retryUntil(v => !MailboxParser.special.contains(v))
@@ -38,38 +36,55 @@ trait EmailGens {
     domain <- domainGen
   } yield Mailbox.unsafeFromString(s"$lp@$domain")
 
-  val fromGen: Gen[From]           = mailboxGen.map(From(_))
-  val toGen: Gen[To]               = Gen.nonEmptyListOf(mailboxGen).map(To(_*))
-  val ccGen: Gen[Cc]               = Gen.nonEmptyListOf(mailboxGen).map(Cc(_*))
-  val bccGen: Gen[Bcc]             = Gen.nonEmptyListOf(mailboxGen).map(Bcc(_*))
-  val subjectGen: Gen[Subject]     = Gen.asciiPrintableStr.map(Subject.apply)
-  val textBodyGen: Gen[Body.Ascii] = Gen.asciiPrintableStr.map(Body.Ascii.apply)
-  val htmlBodyGen: Gen[Body.Html]  = Gen.asciiPrintableStr.map(Body.Html.apply)
-  val utf8BodyGen: Gen[Body.Utf8]  = Gen.asciiPrintableStr.map(Body.Utf8.apply)
-  val pathGen: Gen[Path]           = Gen.asciiPrintableStr.map(Paths.get(_))
-  val attachmentGen: Gen[Attachment]        = pathGen.map(Attachment(_))
-  val attachmentsGen: Gen[List[Attachment]] = Gen.listOf(attachmentGen)
+  given Arbitrary[From] = Arbitrary(mailboxGen.map(From(_)))
+  given Arbitrary[To]   = Arbitrary(Gen.nonEmptyListOf(mailboxGen).map(To(_*)))
+  given Arbitrary[Cc]   = Arbitrary(Gen.nonEmptyListOf(mailboxGen).map(Cc(_*)))
+  given Arbitrary[Bcc]  = Arbitrary(Gen.nonEmptyListOf(mailboxGen).map(Bcc(_*)))
+  given Arbitrary[Subject] = Arbitrary(Gen.asciiPrintableStr.map(Subject.apply))
+  given Arbitrary[Body.Ascii] = Arbitrary(
+    Gen.asciiPrintableStr.map(Body.Ascii.apply)
+  )
+  given Arbitrary[Body.Html] = Arbitrary(
+    Gen.asciiPrintableStr.map(Body.Html.apply)
+  )
+  given Arbitrary[Body.Utf8] = Arbitrary(
+    Gen.asciiPrintableStr.map(Body.Utf8.apply)
+  )
+  given Arbitrary[Path] = Arbitrary(Gen.asciiPrintableStr.map(Paths.get(_)))
+  given Arbitrary[Attachment] = Arbitrary(
+    Arbitrary.arbitrary[Path].map(Attachment(_))
+  )
+  given Arbitrary[List[Attachment]] = Arbitrary(
+    Gen.listOf(Arbitrary.arbitrary[Attachment])
+  )
 
-  val textEmailGen: Gen[TextEmail] = for {
-    from    <- fromGen
-    to      <- toGen
-    cc      <- Gen.option(ccGen)
-    bcc     <- Gen.option(bccGen)
-    subject <- Gen.option(subjectGen)
-    body    <- Gen.option(textBodyGen)
-  } yield TextEmail(from, to, cc, bcc, subject, body)
-
-  def mimeEmailGen(bodyGen: Gen[Body]): Gen[Email.MimeEmail] =
-    for {
-      from        <- fromGen
-      to          <- toGen
-      cc          <- Gen.option(ccGen)
-      bcc         <- Gen.option(bccGen)
-      subject     <- Gen.option(subjectGen)
-      body        <- Gen.option(bodyGen)
-      attachments <- attachmentsGen
+  val emailTypeGen: Gen[EmailType] = {
+    val textGen = Gen.const(EmailType.Text)
+    val mimeGen = for {
       boundary    <- Gen.asciiPrintableStr.map(Boundary(_))
-    } yield MimeEmail(from, to, cc, bcc, subject, body, attachments, boundary)
+      attachments <- Gen.listOf(Arbitrary.arbitrary[Attachment])
+    } yield EmailType.Mime(boundary, attachments)
+    Gen.oneOf(textGen, mimeGen)
+  }
 
-  val utf8EmailGen: Gen[MimeEmail] = mimeEmailGen(utf8BodyGen)
+  given Arbitrary[Email] = Arbitrary {
+    for {
+      from      <- Arbitrary.arbitrary[From]
+      to        <- Arbitrary.arbitrary[To]
+      cc        <- Gen.option(Arbitrary.arbitrary[Cc])
+      bcc       <- Gen.option(Arbitrary.arbitrary[Bcc])
+      subject   <- Gen.option(Arbitrary.arbitrary[Subject])
+      emailType <- emailTypeGen
+      body <- emailType.fold(
+        Gen.option(Arbitrary.arbitrary[Body.Ascii]),
+        _ =>
+          Gen.option(
+            Gen.oneOf(
+              Arbitrary.arbitrary[Body.Html],
+              Arbitrary.arbitrary[Body.Utf8]
+            )
+          )
+      )
+    } yield Email(from, to, cc, bcc, subject, body, emailType)
+  }
 }
