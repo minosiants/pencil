@@ -21,22 +21,38 @@ import Body.*
 import cats.data.NonEmptyList
 import cats.syntax.semigroup.*
 import cats.instances.option.*
-import FromType.From
-import CcType.Cc
-import ToType.To
-import BccType.Bcc
-import AttachmentType.Attachment
+import cats.syntax.option.*
 
 import scala.annotation.targetName
 
-/** Abstract class represents email
-  */
-sealed abstract class Email extends Product with Serializable {
-  def from: From
-  def to: To
-  def cc: Option[Cc]
-  def bcc: Option[Bcc]
-  def subject: Option[Subject]
+enum EmailType:
+  case Text
+  case Mime(boundary: Boundary, attachments: List[Attachment] = Nil)
+
+  def +(a: Attachment): EmailType = this match {
+    case Text                        => this
+    case Mime(boundary, attachments) => Mime(boundary, a :: attachments)
+  }
+
+  def fold[A](text: => A, mime: Mime => A): A =
+    this match
+      case Text           => text
+      case m @ Mime(_, _) => mime(m)
+
+  def mime: Option[Mime]      = fold(None, _.some)
+  def text: Option[Text.type] = fold(Some(Text), _ => None)
+  def isMime: Boolean         = fold(false, _ => true)
+  def isText: Boolean         = fold(true, _ => false)
+
+final case class Email(
+    from: From,
+    to: To,
+    cc: Option[Cc],
+    bcc: Option[Bcc],
+    subject: Option[Subject],
+    body: Option[Body],
+    emailType: EmailType
+):
   def recipients: NonEmptyList[Mailbox] = (cc, bcc) match {
     case (Some(cc), Some(bcc)) =>
       to.mailboxes ::: cc.mailboxes ::: bcc.mailboxes
@@ -44,228 +60,110 @@ sealed abstract class Email extends Product with Serializable {
     case (Some(cc), None)  => to.mailboxes ::: cc.mailboxes
     case (None, None)      => to.mailboxes
   }
-}
-
-object Email {
-
-  /** Represents text (ascii) email
-    *
-    * @param from
-    *   \- [[From]] contains sender [[Mailbox]]
-    * @param to
-    *   \- [[To]] contains list of recipients
-    * @param cc
-    *   \- [[Cc]] optional param. Contains cc recipients
-    * @param bcc
-    *   \- [[Bcc]] optional param. Contains bcc recipients
-    * @param subject
-    *   \- [[Subject]] optional param. Contains email subject
-    * @param body
-    *   \- [[Ascii]] optional param. Contains email body
-    */
-  final case class TextEmail(
-      from: From,
-      to: To,
-      cc: Option[Cc],
-      bcc: Option[Bcc],
-      subject: Option[Subject],
-      body: Option[Ascii]
-  ) extends Email
-      with TextEmailOps
-
-  /** Represents mime email
-    *
-    * @param from
-    *   \- [[From]] contains sender [[Mailbox]]
-    * @param to
-    *   \- [[To]] contains list of recipients
-    * @param cc
-    *   \- [[Cc]] optional param. Contains cc recipients
-    * @param bcc
-    *   \- [[Bcc]] optional param. Contains bcc recipients
-    * @param subject
-    *   \- [[Subject]] optional param. Contains email subject
-    * @param body
-    *   \- [[Body]] optional param. Contains email body
-    * @param attachments
-    *   \- [[List[Attachment]]] - list of attachments
-    * @param boundary
-    *   \- [[Boundary]] - used for multi part separation
-    */
-  final case class MimeEmail(
-      from: From,
-      to: To,
-      cc: Option[Cc],
-      bcc: Option[Bcc],
-      subject: Option[Subject],
-      body: Option[Body],
-      attachments: List[Attachment],
-      boundary: Boundary
-  ) extends Email
-      with MimeEmailOps
-
-  /** [[TextEmail]] constructor
-    */
-  def text(from: From, to: To, subject: Subject, body: Ascii): TextEmail =
-    TextEmail(from, to, None, None, Some(subject), Some(body))
-
-  /** [[MimeEmail]] constructor
-    */
-  def mime(from: From, to: To, subject: Subject, body: Body): MimeEmail = {
-    val boundary = Boundary.genFrom(from.address)
-    MimeEmail(from, to, None, None, Some(subject), Some(body), Nil, boundary)
-  }
-
-}
-
-import Email._
-
-trait TextEmailOps {
-  self: TextEmail =>
 
   /** Replace `cc` with a new value.
     */
-  def setCc(cc: Cc): TextEmail = copy(cc = Some(cc))
+  def setCc(cc: Cc): Email = copy(cc = Some(cc))
 
   /** Add [[Mailbox]] to `cc` .
     */
-  def addCc(mb: Mailbox*): TextEmail = copy(cc = cc |+| Some(Cc(mb*)))
+  def addCc(mb: Mailbox*): Email = copy(cc = cc |+| Some(Cc(mb*)))
 
   /** Combine values from both `cc`.
     */
-  def addCc(cc: Cc): TextEmail = addCc(cc.toList*)
+  def addCc(cc: Cc): Email = addCc(cc.toList*)
 
   /** Combine values from both `cc`.
     */
-  def +(cc: Cc): TextEmail = addCc(cc)
+  def +(cc: Cc): Email = addCc(cc)
 
   /** Replace `bcc` with a new value.
     */
-  def setBcc(bcc: Bcc): TextEmail = copy(bcc = Some(bcc))
+  def setBcc(bcc: Bcc): Email = copy(bcc = Some(bcc))
 
   /** Add [[Mailbox]] to `bcc`.
     */
-  def addBcc(mb: Mailbox*): TextEmail = copy(bcc = bcc |+| Some(Bcc(mb*)))
+  def addBcc(mb: Mailbox*): Email = copy(bcc = bcc |+| Some(Bcc(mb*)))
 
   /** Combine to `bcc`.
     */
-  def addBcc(bcc: Bcc): TextEmail = addBcc(bcc.toList*)
+  def addBcc(bcc: Bcc): Email = addBcc(bcc.toList*)
 
   /** Combine to `bcc`.
     */
   @targetName("+bcc")
-  def +(bcc: Bcc): TextEmail = addBcc(bcc)
+  def +(bcc: Bcc): Email = addBcc(bcc)
 
   /** Set `body` value. Replace existing one with a new one.
     */
-  def setBody(body: Ascii): TextEmail = copy(body = Some(body))
+  def setBody(body: Body): Email = copy(body = Some(body))
 
   /** Set `subject`. Replace existing one with a new one.
     */
-  def setSubject(subject: Subject): TextEmail = copy(subject = Some(subject))
+  def setSubject(subject: Subject): Email = copy(subject = Some(subject))
 
   /** Set `from`. Replace existing one with a new one.
     */
-  def setFrom(from: From): TextEmail = copy(from = from)
+  def setFrom(from: From): Email = copy(from = from)
 
   /** Set `to`. Replace existing one with a new one.
     */
-  def setTo(to: To): TextEmail = copy(to = to)
+  def setTo(to: To): Email = copy(to = to)
 
   /** Add [[Mailbox]] to `to` value.
     */
-  def addTo(to: Mailbox*): TextEmail =
+  def addTo(to: Mailbox*): Email =
     copy(to = this.to + To(to*))
 
   /** Combine `to` values.
     */
-  def addTo(to: To): TextEmail = addTo(to.toList: _*)
+  def addTo(to: To): Email = addTo(to.toList: _*)
 
   /** Combine `to` values.
     */
   @targetName("+to")
-  def +(to: To): TextEmail = addTo(to)
-}
-
-trait MimeEmailOps {
-  self: MimeEmail =>
-
-  /** Add [[Attachment]].
-    */
-  def addAttachment(attachment: Attachment): MimeEmail =
-    copy(attachments = attachments :+ attachment)
-
-  /** Add [[Attachment]].
-    */
-  def +(a: Attachment): MimeEmail = self.addAttachment(a)
-
-  /** Set cc. Replace existing one with a new one.
-    */
-  def setCc(cc: Cc): MimeEmail = copy(cc = Some(cc))
-
-  /** Add [[Mailbox]] to `cc`.
-    */
-  def addCc(mb: Mailbox*): MimeEmail = copy(cc = cc |+| Some(Cc(mb*)))
-
-  /** Combine `cc` values.
-    */
-  def addCc(cc: Cc): MimeEmail = addCc(cc.toList*)
-
-  /** Combine `cc` values.
-    */
-  def +(cc: Cc): MimeEmail = addCc(cc)
-
-  /** Set `bcc`. Replace an existing one with a new one.
-    */
-  def setBcc(bcc: Bcc): MimeEmail = copy(bcc = Some(bcc))
-
-  /** Add [[Mailbox]] to `bcc` value.
-    */
-  def addBcc(mb: Mailbox*): MimeEmail = copy(bcc = bcc |+| Some(Bcc(mb*)))
-
-  /** Combine `bcc` values
-    */
-  def addBcc(bcc: Bcc): MimeEmail = addBcc(bcc.toList*)
-
-  /** Combine `bcc` values
-    */
-  @targetName("+bcc")
-  def +(bcc: Bcc): MimeEmail = addBcc(bcc)
-
-  /** Set `body`. Replace an existing value with a new one.
-    */
-  def setBody(body: Body): MimeEmail = copy(body = Some(body))
-
-  /** Set `subject`. Replace an existing value with a new one.
-    */
-  def setSubject(subject: Subject): MimeEmail = copy(subject = Some(subject))
-
-  /** Set `from`. Replace an existing value with a new one.
-    */
-  def setFrom(from: From): MimeEmail = copy(from = from)
-
-  /** Set `to`. Replace an existing value with a new one.
-    */
-  def setTo(to: To): MimeEmail = copy(to = to)
-
-  /** Add [[Mailbox]] to `to`.
-    */
-  def addTo(to: Mailbox*): MimeEmail = copy(to = this.to |+| To(to: _*))
-
-  /** Combine `to` values.
-    */
-  def addTo(to: To): MimeEmail = addTo(to.toList*)
-
-  /** Combine `to` values.
-    */
-  @targetName("+to")
-  def +(to: To): MimeEmail = addTo(to)
+  def +(to: To): Email = addTo(to)
 
   /** Check if it is multipart.
     *
     * @return
     *   \- `true` it is a mutlipart email.
     */
-  def isMultipart: Boolean = attachments.nonEmpty
+  def isMultipart: Boolean = emailType match
+    case EmailType.Text       => false
+    case EmailType.Mime(_, a) => a.nonEmpty
 
-}
+  def addAttachment(attachment: Attachment): Email = this + attachment
+  def +(attachment: Attachment): Email =
+    this.copy(emailType = emailType + attachment)
+  def attachments: Option[List[Attachment]] = emailType.mime.map(_.attachments)
+  def boundary: Option[Boundary]            = emailType.mime.map(_.boundary)
+  def isMime: Boolean                       = emailType.isMime
+  def isText: Boolean                       = emailType.isText
+
+object Email:
+  /** [[TextEmail]] constructor
+    */
+  def text(from: From, to: To, subject: Subject, body: Ascii): Email =
+    Email(from, to, None, None, Some(subject), Some(body), EmailType.Text)
+
+  /** [[MimeEmail]] constructor
+    */
+  def mime(
+      from: From,
+      to: To,
+      subject: Subject,
+      body: Body,
+      attachments: List[Attachment] = Nil
+  ): Email = {
+    val boundary = Boundary.genFrom(from.mailbox.address)
+    Email(
+      from,
+      to,
+      None,
+      None,
+      Some(subject),
+      Some(body),
+      EmailType.Mime(boundary, attachments)
+    )
+  }

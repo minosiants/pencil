@@ -19,15 +19,17 @@ package data
 
 import java.security.MessageDigest
 
-final case class Boundary(value: String) extends Product with Serializable
+object BoundaryType:
+  opaque type Boundary = String
 
-object Boundary {
-  def genFrom(value: String): Boundary = {
-    val cs = MessageDigest
-      .getInstance("MD5")
-      .digest(value.getBytes("UTF-8"))
-      .map("%02x".format(_))
-      .mkString
-    Boundary(cs)
-  }
-}
+  object Boundary:
+    def apply(v: String): Boundary           = v
+    def unapply(b: Boundary): Option[String] = Some(b)
+    def genFrom(value: String): Boundary = {
+      val cs = MessageDigest
+        .getInstance("MD5")
+        .digest(value.getBytes("UTF-8"))
+        .map("%02x".format(_))
+        .mkString
+      Boundary(cs)
+    }

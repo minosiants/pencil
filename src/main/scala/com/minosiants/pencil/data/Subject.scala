@@ -17,4 +17,13 @@
 package com.minosiants.pencil
 package data
 
-final case class Subject(value: String) extends Product with Serializable
+object SubjectType:
+  opaque type Subject = String
+
+  object Subject:
+    def apply(sub: String): Subject           = sub
+    def unapply(sub: Subject): Option[String] = Some(sub)
+
+  extension (self: Subject)
+    def asString: String = self
+    def toBase64         = self.asString.toBase64
