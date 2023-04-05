@@ -30,6 +30,4 @@ object FromType:
       def mailbox: Mailbox = self
       def address: String  = self.address
 
-    given Show[From] =
-      Mailbox.given_Show_Mailbox
-        // Show.show[From](from => s"${from.mailbox.show}")
+    given Show[From] = Mailbox.given_Show_Mailbox

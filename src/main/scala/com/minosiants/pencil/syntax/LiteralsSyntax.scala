@@ -14,16 +14,12 @@
  * limitations under the License.
  */
 
-package com.minosiants.pencil.syntax
+package com.minosiants.pencil
+package syntax
 
 import java.nio.file.Paths
 import com.minosiants.pencil.data._
 import org.typelevel.literally.Literally
-import FromType.From
-import CcType.Cc
-import ToType.To
-import BccType.Bcc
-import AttachmentType.Attachment
 
 trait LiteralsSyntax {
   extension (inline sc: StringContext)
