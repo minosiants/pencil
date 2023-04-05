@@ -19,8 +19,9 @@ class SmtpIntegrationSpec extends SpecificationLike with LiteralsSyntax {
         from"user1@mydomain.tld",
         to"user1@example.com",
         subject"привет",
-        Body.Utf8("hi there")
-      ) + attachment"files/jpeg-sample.jpg"
+        Body.Utf8("hi there"),
+        List(attachment"files/jpeg-sample.jpg")
+      )
 
       val sendEmail = for {
         tls <- Network[IO].tlsContext.system

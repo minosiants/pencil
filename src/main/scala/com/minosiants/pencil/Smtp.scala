@@ -34,12 +34,7 @@ import fs2.{Chunk, Stream}
 import java.time.format.DateTimeFormatter
 import java.time.{Instant, ZoneId, ZoneOffset}
 import scala.Function.*
-import FromType.From
-import CcType.Cc
-import ToType.To
-import BccType.Bcc
-import AttachmentType.Attachment
-import HostType._
+
 type Smtp[F[_], A] = Kleisli[F, Request[F], A]
 object Smtp {
   // Used for easier type inference
@@ -200,7 +195,7 @@ object Smtp {
 
   def endEmail[F[_]: MonadThrow](): Smtp[F, Replies] =
     email[F].flatMap {
-      case TextEmail(_, _, _, _, _, _) =>
+      case Email(_, _, _, _, _, _, EmailType.Text) =>
         text[F](Command.endEmail).flatMap(_ => read[F])
       case _ =>
         for {
@@ -212,7 +207,7 @@ object Smtp {
 
   def asciiBody[F[_]: MonadThrow](): Smtp[F, Replies] =
     email[F].flatMap {
-      case TextEmail(_, _, _, _, _, Some(Ascii(body))) =>
+      case Email(_, _, _, _, _, Some(Ascii(body)), EmailType.Text) =>
         text(s"$body${Command.end}").flatMap(_ => endEmail[F]())
 
       case _ =>
@@ -221,10 +216,10 @@ object Smtp {
 
   def subjectHeader[F[_]: MonadThrow](): Smtp[F, Unit] =
     email[F].flatMap {
-      case TextEmail(_, _, _, _, Some(Subject(sub)), _) =>
+      case Email(_, _, _, _, Some(Subject(sub)), _, EmailType.Text) =>
         text[F](s"Subject: $sub${Command.end}")
 
-      case MimeEmail(_, _, _, _, Some(Subject(sub)), _, _, _) =>
+      case Email(_, _, _, _, Some(Subject(sub)), _, EmailType.Mime(_, _)) =>
         text[F](s"Subject: =?utf-8?b?${sub.toBase64}?=${Command.end}")
 
       case _ => unit[F]
@@ -289,10 +284,10 @@ object Smtp {
 
   def emptyLine[F[_]: MonadThrow](): Smtp[F, Unit] =
     email[F].flatMap {
-      case e @ MimeEmail(_, _, _, _, _, _, _, _) =>
+      case e @ Email(_, _, _, _, _, _, EmailType.Mime(_, _)) =>
         if e.isMultipart then text[F](Command.end)
         else unit[F]
-      case TextEmail(_, _, _, _, _, _) =>
+      case Email(_, _, _, _, _, _, EmailType.Text) =>
         text[F](Command.end)
     }
 
@@ -308,12 +303,13 @@ object Smtp {
   def boundary[F[_]: MonadThrow](
       isFinal: Boolean = false
   ): Smtp[F, Unit] = email[F].flatMap {
-    case e @ MimeEmail(_, _, _, _, _, _, _, Boundary(b)) =>
+    case e @ Email(_, _, _, _, _, _, EmailType.Mime(Boundary(b), _)) =>
       val end = if isFinal then "--" else ""
       if e.isMultipart then text(s"--$b$end${Command.end}")
       else unit[F]
-
-    case TextEmail(_, _, _, _, _, _) =>
+    case e @ Email(_, _, _, _, _, _, EmailType.Mime(_, _)) =>
+      liftF(Error.smtpError[F, Unit]("should not be here"))
+    case Email(_, _, _, _, _, _, EmailType.Text) =>
       liftF(Error.smtpError[F, Unit]("not mime"))
   }
 
@@ -330,12 +326,13 @@ object Smtp {
 
   def multipart[F[_]: MonadThrow](): Smtp[F, Unit] =
     email[F].flatMap {
-      case m @ MimeEmail(_, _, _, _, _, _, _, Boundary(b)) if m.isMultipart =>
+      case m @ Email(_, _, _, _, _, _, EmailType.Mime(Boundary(b), _))
+          if m.isMultipart =>
         contentTypeHeader(
           `Content-Type`(`multipart/mixed`, Map("boundary" -> b))
         )
 
-      case MimeEmail(_, _, _, _, _, _, _, _) =>
+      case Email(_, _, _, _, _, _, EmailType.Mime(_, _)) =>
         unit[F]
 
       case _ =>
@@ -353,19 +350,19 @@ object Smtp {
 
   def mimeBody[F[_]: MonadThrow](): Smtp[F, Unit] =
     email[F].flatMap {
-      case MimeEmail(_, _, _, _, _, Some(Ascii(body)), _, _) =>
+      case Email(_, _, _, _, _, Some(Ascii(body)), EmailType.Mime(_, _)) =>
         mimePart[F](
           `7bit`,
           `Content-Type`(`text/plain`, Map("charset" -> "US-ASCII"))
         ).flatMap(_ => lines[F](body))
 
-      case MimeEmail(_, _, _, _, _, Some(Html(body)), _, _) =>
+      case Email(_, _, _, _, _, Some(Html(body)), EmailType.Mime(_, _)) =>
         mimePart[F](
           `base64`,
           `Content-Type`(`text/html`, Map("charset" -> "UTF-8"))
         ).flatMap(_ => lines[F](body.toBase64))
 
-      case MimeEmail(_, _, _, _, _, Some(Utf8(body)), _, _) =>
+      case Email(_, _, _, _, _, Some(Utf8(body)), EmailType.Mime(_, _)) =>
         mimePart[F](
           `base64`,
           `Content-Type`(`text/plain`, Map("charset" -> "UTF-8"))
@@ -378,10 +375,10 @@ object Smtp {
   def attachments[F[_]: Async](): Smtp[F, Unit] = {
     Smtp[F] { req =>
       req.email match {
-        case TextEmail(_, _, _, _, _, _) =>
+        case Email(_, _, _, _, _, _, EmailType.Text) =>
           Error.smtpError[F, Unit]("attachments not supported")
 
-        case MimeEmail(_, _, _, _, _, _, attachments, _) =>
+        case Email(_, _, _, _, _, _, EmailType.Mime(_, attachments)) =>
           attachments.traverse_ { a =>
             val attachment = a.file
             for {

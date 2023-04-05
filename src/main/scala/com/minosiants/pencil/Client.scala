@@ -17,7 +17,7 @@
 package com.minosiants.pencil
 import cats.effect.{Async, Concurrent, Resource}
 import com.comcast.ip4s.*
-import com.minosiants.pencil.data.Email.{MimeEmail, TextEmail}
+import com.minosiants.pencil.data.Email
 import com.minosiants.pencil.data.*
 import HostType.{Host as PHost}
 import com.minosiants.pencil.protocol.*
@@ -124,7 +124,7 @@ object Client:
 
       def sender: Smtp[F, Replies] = Smtp.ask[F].flatMap { r =>
         r.email match {
-          case TextEmail(_, _, _, _, _, _) =>
+          case Email(_, _, _, _, _, _, EmailType.Text) =>
             for
               _ <- Smtp.mail[F]()
               _ <- Smtp.rcpt[F]()
@@ -135,7 +135,7 @@ object Client:
               _ <- Smtp.quit[F]()
             yield r
 
-          case MimeEmail(_, _, _, _, _, _, _, _) =>
+          case Email(_, _, _, _, _, _, EmailType.Mime(_, _)) =>
             for
               _ <- Smtp.mail[F]()
               _ <- Smtp.rcpt[F]()
