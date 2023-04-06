@@ -19,58 +19,32 @@ package protocol
 
 import cats.Show
 
-final case class ContentType(mainType: String, subType: String)
-    extends Product
-    with Serializable
+enum ContentType(val mainType: String, val subType: String):
+  case `text/plain` extends ContentType("text", "plain")
+  case `text/html`  extends ContentType("text", "html")
+  case `image/png`  extends ContentType("image", "png")
+  case `image/gif`  extends ContentType("image", "gif")
+  case `image/jpeg` extends ContentType("image", "jpeg")
+  case `audio/mpeg` extends ContentType("audio", "mpeg")
+  case `audio/wav`  extends ContentType("audio", "wav")
+  case `audio/aac`  extends ContentType("audio", "wav")
+  case `video/mpeg` extends ContentType("video", "mpeg")
+  case `video/ogg`  extends ContentType("video", "ogg")
+  case `video/webm` extends ContentType("video", "webm")
+  case `application/octet-stream`
+      extends ContentType("application", "octet-stream")
+  case `application/json`      extends ContentType("application", "json")
+  case `application/pdf`       extends ContentType("application", "pdf")
+  case `multipart/mixed`       extends ContentType("multipart", "mixed")
+  case `multipart/alternative` extends ContentType("multipart", "alternative")
+  case `multipart/digest`      extends ContentType("multipart", "digest")
 
-object ContentType {
-  lazy case `text/plain`: ContentType = ContentType("text", "plain")
-  lazy case `text/html`: ContentType  = ContentType("text", "html")
-  lazy case `image/png`: ContentType  = ContentType("image", "png")
-  lazy case `image/gif`: ContentType  = ContentType("image", "gif")
-  lazy case `image/jpeg`: ContentType = ContentType("image", "jpeg")
-  lazy case `audio/mpeg`: ContentType = ContentType("audio", "mpeg")
-  lazy case `audio/wav`: ContentType  = ContentType("audio", "wav")
-  lazy case `audio/aac`: ContentType  = ContentType("audio", "wav")
-  lazy case `video/mpeg`: ContentType = ContentType("video", "mpeg")
-  lazy case `video/ogg`: ContentType  = ContentType("video", "ogg")
-  lazy case `video/webm`: ContentType = ContentType("video", "webm")
-  lazy case `application/octet-stream`: ContentType =
-    ContentType("application", "octet-stream")
-  lazy case `application/json`: ContentType = ContentType("application", "json")
-  lazy case `application/pdf`: ContentType  = ContentType("application", "pdf")
-  lazy case `multipart/mixed`: ContentType  = ContentType("multipart", "mixed")
-  lazy case `multipart/alternative`: ContentType =
-    ContentType("multipart", "alternative")
-  lazy case `multipart/digest`: ContentType = ContentType("multipart", "digest")
-
-  lazy val allTypes: List[ContentType] = List(
-    `text/plain`,
-    `text/html`,
-    `image/gif`,
-    `image/jpeg`,
-    `image/png`,
-    `audio/aac`,
-    `audio/mpeg`,
-    `audio/wav`,
-    `video/mpeg`,
-    `video/ogg`,
-    `video/webm`,
-    `application/json`,
-    `application/pdf`,
-    `application/octet-stream`,
-    `multipart/alternative`,
-    `multipart/digest`,
-    `multipart/mixed`
-  )
-
+object ContentType:
   def findType(str: String): Option[ContentType] =
     str.split("/") match {
       case Array(main, sub) =>
-        allTypes.find(ct => ct.mainType == main && ct.subType == sub)
+        ContentType.values.find(ct => ct.mainType == main && ct.subType == sub)
       case _ => None
     }
-
-  implicit lazy val contentTypeShow: Show[ContentType] =
+  given Show[ContentType] =
     Show(ct => s"${ct.mainType.toLowerCase}/${ct.subType.toLowerCase}")
-}

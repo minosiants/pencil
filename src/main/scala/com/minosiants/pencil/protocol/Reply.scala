@@ -18,8 +18,8 @@ package com.minosiants.pencil
 package protocol
 
 import cats.Show
-import scodec.codecs._
 import scodec.Codec
+import scodec.codecs.*
 
 final case class Reply(code: Code, sep: String, text: String)
     extends Product
@@ -27,27 +27,25 @@ final case class Reply(code: Code, sep: String, text: String)
 
 final case class Replies(replies: List[Reply])
     extends Product
-    with Serializable {
+    with Serializable:
 
   def success: Boolean             = replies.forall(_.code.success)
   def hasCode(code: Code): Boolean = replies.map(_.code).contains(code)
   def :+(reply: Reply)             = Replies(replies :+ reply)
   def +:(reply: Reply)             = Replies(reply +: replies)
   def ++(replies: Replies)         = Replies(this.replies ++ replies.replies)
-}
 
-object Replies {
+object Replies:
   implicit lazy val RepliesShow: Show[Replies] = Show.fromToString
 
   def apply(replies: Reply): Replies = Replies(List(replies))
 
-  implicit val codec: Codec[Replies] = (
-    ("replies" | DelimiterListCodec(CRLF, Reply.codec))
+  given Codec[Replies] = (
+    ("replies" | DelimiterListCodec(CRLF, summon[Codec[Reply]]))
   ).as[Replies]
-}
 
-object Reply {
-  implicit lazy val ReplyShow: Show[Reply] = Show.fromToString
+object Reply:
+  given Show[Reply] = Show.fromToString
 
   val textCodec: Codec[String] = Codec[String](
     (s: String) => ascii.encode(s + "\r\n"),
@@ -58,9 +56,8 @@ object Reply {
     }
   )
 
-  implicit val codec: Codec[Reply] = (
-    ("code" | Code.codec) ::
+  given Codec[Reply] = (
+    ("code" | summon[Codec[Code]]) ::
       ("sep" | limitedSizeBits(8, ascii)) ::
       ("text" | textCodec)
   ).as[Reply]
-}

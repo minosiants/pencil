@@ -16,22 +16,23 @@
 
 package com.minosiants.pencil
 
-import cats._
+import cats.*
 import cats.effect.Sync
-import cats.implicits._
+import cats.implicits.*
 import com.minosiants.pencil.data.Error
-import com.minosiants.pencil.protocol.Command._
-import com.minosiants.pencil.protocol._
+import com.minosiants.pencil.protocol.Command.*
+import com.minosiants.pencil.protocol.*
 import fs2.Chunk
 import fs2.io.net.Socket
 import org.typelevel.log4cats.Logger
 import scodec.bits.BitVector
-import scodec.codecs._
+import scodec.codecs.*
+import scodec.Codec
 import scodec.{Attempt, DecodeResult}
 
 /** Wraps [[Socket[IO]]] with smtp specific protocol
   */
-trait SmtpSocket[F[_]] {
+trait SmtpSocket[F[_]]:
 
   /** Reads [[Replies]] from smtp server
     */
@@ -40,15 +41,14 @@ trait SmtpSocket[F[_]] {
   /** Send [[Command]] to smtp server
     */
   def write(command: Command): F[Unit]
-}
 
-object SmtpSocket {
+object SmtpSocket:
   def fromSocket[F[_]: Sync](
       s: Socket[F],
       logger: Logger[F]
-  ): SmtpSocket[F] = new SmtpSocket[F] {
+  )(using c: Codec[Replies]): SmtpSocket[F] = new SmtpSocket[F] {
     def bytesToReply(bytes: Array[Byte]): F[Replies] =
-      Replies.codec.decode(BitVector(bytes)) match {
+      c.decode(BitVector(bytes)) match
         case Attempt.Successful(DecodeResult(value, _)) =>
           logger.debug(s"Getting Replies: ${value.show}") *>
             Applicative[F].pure(value)
@@ -56,7 +56,6 @@ object SmtpSocket {
         case Attempt.Failure(cause) =>
           logger.debug(s" Getting Error: ${cause.messageWithContext}") *>
             Error.smtpError[F, Replies](cause.messageWithContext)
-      }
 
     override def read(): F[Replies] =
       s.read(8192).flatMap {
@@ -64,15 +63,13 @@ object SmtpSocket {
         case None        => Error.smtpError[F, Replies]("Nothing to read")
       }
 
-    override def write(command: Command): F[Unit] = {
-      ascii.encode(command.show) match {
+    override def write(command: Command): F[Unit] =
+      ascii.encode(command.show) match
         case Attempt.Successful(value) =>
           logger.debug(s"Sending command: ${command.show}") *>
             s.write(Chunk.array(value.toByteArray))
 
         case Attempt.Failure(cause) =>
           Error.smtpError[F, Unit](cause.messageWithContext)
-      }
-    }
+
   }
-}
