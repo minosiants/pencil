@@ -26,7 +26,7 @@ import cats.effect.{Resource, Sync}
 import com.minosiants.pencil.data.Error
 import Function._
 
-object Files {
+object Files:
 
   def inputStream[F[_]: Sync](file: Path): Resource[F, InputStream] =
     Resource
@@ -67,4 +67,3 @@ object Files {
       }
 
   }
-}

@@ -22,6 +22,7 @@ import com.minosiants.pencil.protocol.Command._
 import scodec.bits.{BitVector, ByteVector}
 import scodec.codecs._
 import scodec.{Attempt, Codec, DecodeResult, SizeBound}
+import cats.Show
 
 final case class CommandCodec() extends Codec[Command] {
 
@@ -66,7 +67,7 @@ final case class CommandCodec() extends Codec[Command] {
   }
 
   override def encode(v: Command): Attempt[BitVector] =
-    Attempt.successful(Command.CommandShow.show(v).toBitVector)
+    Attempt.successful(summon[Show[Command]].show(v).toBitVector)
 
   override def sizeBound: SizeBound = SizeBound.unknown
 
