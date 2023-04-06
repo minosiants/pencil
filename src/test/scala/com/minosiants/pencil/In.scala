@@ -9,10 +9,10 @@ final case class In(raw: BitVector, command: Command)
 object In {
 
   lazy val codec: Codec[In] = Codec[In](
-    (in: In) => Command.codec.encode(in.command),
+    (in: In) => summon[Codec[Command]].encode(in.command),
     (bits: scodec.bits.BitVector) =>
       for {
-        command <- Command.codec.decode(bits)
+        command <- summon[Codec[Command]].decode(bits)
       } yield DecodeResult(In(bits, command.value), BitVector.empty)
   )
 

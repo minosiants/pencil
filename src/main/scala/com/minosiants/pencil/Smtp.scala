@@ -279,8 +279,8 @@ object Smtp {
       _ <- subjectHeader[F]()
     } yield ()
 
-  def mimeHeader[F[_]](): Smtp[F, Unit] =
-    text[F](s"${headerShow.show(`MIME-Version`())}${Command.end}")
+  def mimeHeader[F[_]]()(using sh: Show[Header]): Smtp[F, Unit] =
+    text[F](s"${sh.show(`MIME-Version`())}${Command.end}")
 
   def emptyLine[F[_]: MonadThrow](): Smtp[F, Unit] =
     email[F].flatMap {
@@ -293,11 +293,14 @@ object Smtp {
 
   def contentTypeHeader[F[_]](
       ct: `Content-Type`
-  ): Smtp[F, Unit] = text[F](s"${headerShow.show(ct)}${Command.end}")
+  )(using sh: Show[Header]): Smtp[F, Unit] =
+    text[F](s"${sh.show(ct)}${Command.end}")
 
-  def contentTransferEncoding[F[_]](encoding: Encoding): Smtp[F, Unit] =
+  def contentTransferEncoding[F[_]](encoding: Encoding)(using
+      sh: Show[Header]
+  ): Smtp[F, Unit] =
     text[F](
-      s"${headerShow.show(`Content-Transfer-Encoding`(encoding))}${Command.end}"
+      s"${sh.show(`Content-Transfer-Encoding`(encoding))}${Command.end}"
     )
 
   def boundary[F[_]: MonadThrow](

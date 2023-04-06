@@ -20,22 +20,19 @@ package protocol
 import cats.Show
 import cats.syntax.show._
 
-sealed trait Header extends Product with Serializable
-
-object Header {
-
-  final case class `MIME-Version`(value: String = "1.0") extends Header
-
-  final case class `Content-Type`(
+enum Header:
+  case `MIME-Version`(value: String = "1.0")
+  case `Content-Type`(
       contentType: ContentType,
       params: Map[String, String] = Map.empty
-  ) extends Header
+  )
 
-  final case class `Content-Transfer-Encoding`(
+  case `Content-Transfer-Encoding`(
       mechanism: Encoding
-  ) extends Header
+  )
 
-  implicit lazy val headerShow: Show[Header] = Show.show {
+object Header:
+  given Show[Header] = Show.show {
     case `MIME-Version`(value) =>
       s"MIME-Version: $value"
 
@@ -48,4 +45,3 @@ object Header {
     case `Content-Transfer-Encoding`(mechanism) =>
       s"Content-Transfer-Encoding: ${mechanism.show}"
   }
-}

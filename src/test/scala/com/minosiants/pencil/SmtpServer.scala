@@ -8,7 +8,7 @@ import fs2.Stream
 import fs2.io.net.{Network, Socket}
 import scodec.bits.BitVector
 import fs2.interop.scodec.{StreamDecoder, StreamEncoder}
-
+import scodec.Codec
 final case class SmtpServer(
     state: Ref[IO, List[BitVector]],
     port: Int = 5555
@@ -100,7 +100,7 @@ final case class MessageSocket(socket: Socket[IO])
 
   def writes(stream: Stream[IO, Replies]): Stream[IO, Unit] =
     stream
-      .through(StreamEncoder.many(Replies.codec).toPipeByte)
+      .through(StreamEncoder.many(summon[Codec[Replies]]).toPipeByte)
       .through(socket.writes)
 
   final val decoder: StreamDecoder[List[In]] =
