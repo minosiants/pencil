@@ -24,99 +24,59 @@ import scodec.{Attempt, Codec, DecodeResult, Err}
 
 import scala.util.Try
 
-final case class Code(value: Int, description: String)
-    extends Product
-    with Serializable {
+
+enum Code(value:Int, description: String):
+  case `214` extends Code(214, "Help message")
+  case `211` extends Code(211, "System status, or system help reply")
+  case `220` extends Code(220, "Service ready")
+  case `221` extends Code(221, "Service closing transmission channel")
+  case `235` extends Code(235, "2.7.0 Authentication successful")
+  case `250` extends Code(250, "Requested mail action okay, completed")
+  case `251` extends Code(251, "User not local; will forward to <forward-path>")
+  case `252` extends Code(252, "Cannot VRFY user, but will accept message and attempt delivery")
+  case `334` extends Code(334, "Server challenge response")
+  case `354` extends Code(354, "Start mail input; end with <CRLF>.<CRLF")
+  case `421` extends Code(421, "<domain> Service not available, closing transmission channel")
+  case `450` extends Code(450, "Requested mail action not taken: mailbox unavailable")
+  case `451` extends Code(451, "Requested action aborted: local error in processing")
+  case `452` extends Code(452, "Requested action not taken: insufficient system storage")
+  case `455` extends Code(455, "Server unable to accommodate parameters")
+  case `500` extends Code(500, "Syntax error, command unrecognized")
+  case `501` extends Code(501, "Syntax error in parameters or arguments")
+  case `502` extends Code(502, "Command not implemented")
+  case `503` extends Code(503, "Bad sequence of commands")
+  case `504` extends Code(504, "Command parameter not implemented")
+  case `530` extends Code(530, "SMTP authentication is required")
+  case `534` extends Code(534, "Incorrect authentication data")
+  case `535` extends Code(535, "Incorrect authentication data")
+  case `550` extends Code(550, "Requested action not taken: mailbox unavailable")
+  case `551` extends Code(551, "User not local; please try <forward-path>")
+  case `552` extends Code(552, "Requested mail action aborted: exceeded storage allocation")
+  case `553` extends Code(553, "Requested action not taken: mailbox name not allow")
+  case `554` extends Code(554, "Transaction failed")
+  case `555` extends Code(555, "MAIL FROM/RCPT TO parameters not recognized or not implemented")
   def success: Boolean = value < 400
-}
 
-object Code {
 
-  def code(value: Int): Option[Code] = codes.find(_.value == value)
+object Code:
 
-  val `214`: Code = Code(214, "Help message")
-  val `211`: Code = Code(211, "System status, or system help reply")
-  val `220`: Code = Code(220, "Service ready")
-  val `221`: Code = Code(221, "Service closing transmission channel")
-  val `235`: Code = Code(235, "2.7.0 Authentication successful")
-  val `250`: Code = Code(250, "Requested mail action okay, completed")
-  val `251`: Code = Code(251, "User not local; will forward to <forward-path>")
-  val `252`: Code =
-    Code(252, "Cannot VRFY user, but will accept message and attempt delivery")
-  val `334`: Code = Code(334, "Server challenge response")
-  val `354`: Code = Code(354, "Start mail input; end with <CRLF>.<CRLF")
-  val `421`: Code =
-    Code(421, "<domain> Service not available, closing transmission channel")
-  val `450`: Code =
-    Code(450, "Requested mail action not taken: mailbox unavailable")
-  val `451`: Code =
-    Code(451, "Requested action aborted: local error in processing")
-  val `452`: Code =
-    Code(452, "Requested action not taken: insufficient system storage")
-  val `455`: Code = Code(455, "Server unable to accommodate parameters")
-  val `500`: Code = Code(500, "Syntax error, command unrecognized")
-  val `501`: Code = Code(501, "Syntax error in parameters or arguments")
-  val `502`: Code = Code(502, "Command not implemented")
-  val `503`: Code = Code(503, "Bad sequence of commands")
-  val `504`: Code = Code(504, "Command parameter not implemented")
-  val `530`: Code = Code(530, "SMTP authentication is required")
-  val `534`: Code = Code(534, "Incorrect authentication data")
-  val `535`: Code = Code(535, "Incorrect authentication data")
-  val `550`: Code = Code(550, "Requested action not taken: mailbox unavailable")
-  val `551`: Code = Code(551, "User not local; please try <forward-path>")
-  val `552`: Code =
-    Code(552, "Requested mail action aborted: exceeded storage allocation")
-  val `553`: Code =
-    Code(553, "Requested action not taken: mailbox name not allow")
-  val `554`: Code = Code(554, "Transaction failed")
-  val `555`: Code =
-    Code(555, "MAIL FROM/RCPT TO parameters not recognized or not implemented")
-
-  val codes: List[Code] = List(
-    `214`,
-    `211`,
-    `220`,
-    `221`,
-    `235`,
-    `250`,
-    `251`,
-    `252`,
-    `334`,
-    `354`,
-    `421`,
-    `450`,
-    `451`,
-    `452`,
-    `455`,
-    `500`,
-    `501`,
-    `502`,
-    `503`,
-    `504`,
-    `530`,
-    `534`,
-    `535`,
-    `550`,
-    `551`,
-    `552`,
-    `553`,
-    `554`,
-    `555`
-  )
-
-  implicit lazy val codec: Codec[Code] = Codec[Code](
-    (value: Code) => ascii.encode(value.value.toString),
-    (bits: BitVector) => {
-      limitedSizeBits(3 * 8, ascii).decode(bits) match {
-        case Successful(DecodeResult(code, rest)) =>
-          Attempt.fromOption(
-            Try(code.toInt).toOption
-              .flatMap(Code.code)
-              .map(c => DecodeResult(c, rest)),
-            Err(s"${code} code does not exist")
-          )
-        case Attempt.Failure(cause) => Attempt.failure(cause)
+  val v = Code.values
+    def code(value: Int): Option[Code] = Code.values.find(_.value == value)
+    given Codec[Code] = Codec[Code](
+      (value: Code) => ascii.encode(value.toString),
+      (bits: BitVector) => {
+        limitedSizeBits(3 * 8, ascii).decode(bits) match {
+          case Successful(DecodeResult(code, rest)) =>
+            Attempt.fromOption(
+              Try(code.toInt).toOption
+                .flatMap(Code.code)
+                .map(c => DecodeResult(c, rest)),
+              Err(s"$code code does not exist")
+            )
+          case Attempt.Failure(cause) => Attempt.failure(cause)
+        }
       }
-    }
-  )
-}
+    )
+
+
+

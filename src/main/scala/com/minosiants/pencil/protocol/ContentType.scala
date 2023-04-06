@@ -24,25 +24,25 @@ final case class ContentType(mainType: String, subType: String)
     with Serializable
 
 object ContentType {
-  lazy val `text/plain`: ContentType = ContentType("text", "plain")
-  lazy val `text/html`: ContentType  = ContentType("text", "html")
-  lazy val `image/png`: ContentType  = ContentType("image", "png")
-  lazy val `image/gif`: ContentType  = ContentType("image", "gif")
-  lazy val `image/jpeg`: ContentType = ContentType("image", "jpeg")
-  lazy val `audio/mpeg`: ContentType = ContentType("audio", "mpeg")
-  lazy val `audio/wav`: ContentType  = ContentType("audio", "wav")
-  lazy val `audio/aac`: ContentType  = ContentType("audio", "wav")
-  lazy val `video/mpeg`: ContentType = ContentType("video", "mpeg")
-  lazy val `video/ogg`: ContentType  = ContentType("video", "ogg")
-  lazy val `video/webm`: ContentType = ContentType("video", "webm")
-  lazy val `application/octet-stream`: ContentType =
+  lazy case `text/plain`: ContentType = ContentType("text", "plain")
+  lazy case `text/html`: ContentType  = ContentType("text", "html")
+  lazy case `image/png`: ContentType  = ContentType("image", "png")
+  lazy case `image/gif`: ContentType  = ContentType("image", "gif")
+  lazy case `image/jpeg`: ContentType = ContentType("image", "jpeg")
+  lazy case `audio/mpeg`: ContentType = ContentType("audio", "mpeg")
+  lazy case `audio/wav`: ContentType  = ContentType("audio", "wav")
+  lazy case `audio/aac`: ContentType  = ContentType("audio", "wav")
+  lazy case `video/mpeg`: ContentType = ContentType("video", "mpeg")
+  lazy case `video/ogg`: ContentType  = ContentType("video", "ogg")
+  lazy case `video/webm`: ContentType = ContentType("video", "webm")
+  lazy case `application/octet-stream`: ContentType =
     ContentType("application", "octet-stream")
-  lazy val `application/json`: ContentType = ContentType("application", "json")
-  lazy val `application/pdf`: ContentType  = ContentType("application", "pdf")
-  lazy val `multipart/mixed`: ContentType  = ContentType("multipart", "mixed")
-  lazy val `multipart/alternative`: ContentType =
+  lazy case `application/json`: ContentType = ContentType("application", "json")
+  lazy case `application/pdf`: ContentType  = ContentType("application", "pdf")
+  lazy case `multipart/mixed`: ContentType  = ContentType("multipart", "mixed")
+  lazy case `multipart/alternative`: ContentType =
     ContentType("multipart", "alternative")
-  lazy val `multipart/digest`: ContentType = ContentType("multipart", "digest")
+  lazy case `multipart/digest`: ContentType = ContentType("multipart", "digest")
 
   lazy val allTypes: List[ContentType] = List(
     `text/plain`,
