@@ -21,23 +21,23 @@ import cats.Show
 import com.minosiants.pencil.data.Mailbox
 import scodec.Codec
 
-sealed abstract class Command extends Product with Serializable
+enum Command:
+  case Ehlo(domain: String)
+  case Mail(mailbox: Mailbox)
+  case Rcpt(mailbox: Mailbox)
+  case Vrfy(str: String)
+  case Data
+  case Rset
+  case Noop
+  case Quit
+  case Text(txt: String)
+  case AuthLogin
+  case StartTls
 
-object Command {
-
-  final case class Ehlo(domain: String)   extends Command
-  final case class Mail(mailbox: Mailbox) extends Command
-  final case class Rcpt(mailbox: Mailbox) extends Command
-  final case class Vrfy(str: String)      extends Command
-  case object Data                        extends Command
-  case object Rset                        extends Command
-  case object Noop                        extends Command
-  case object Quit                        extends Command
-  case class Text(txt: String)            extends Command
-  case object AuthLogin                   extends Command
-  case object StartTls                    extends Command
-
-  implicit lazy val CommandShow: Show[Command] = Show.show {
+object Command:
+  val end              = "\r\n"
+  val endEmail: String = s"$end.$end"
+  given Show[Command] = Show.show {
     case Ehlo(domain) => s"EHLO $domain$end"
     case Mail(Mailbox(localPart, domain)) =>
       s"MAIL FROM: <$localPart@$domain>$end"
@@ -51,11 +51,5 @@ object Command {
     case Text(txt) => s"$txt"
     case AuthLogin => s"AUTH LOGIN$end"
     case StartTls  => s"STARTTLS$end"
-
   }
-
-  val end              = "\r\n"
-  val endEmail: String = s"$end.$end"
-
-  lazy implicit val codec: Codec[Command] = CommandCodec()
-}
+  given Codec[Command] = CommandCodec()
