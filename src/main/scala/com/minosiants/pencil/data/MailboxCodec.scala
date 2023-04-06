@@ -6,8 +6,8 @@ import scodec.bits.{BitVector, ByteVector}
 import scodec.codecs.ascii
 import cats.syntax.show.*
 final case class MailboxCodec() extends Codec[Mailbox] {
-  private val `<` = ByteVector("<".getBytes)
-  private val `>` = ByteVector(">".getBytes)
+  private case `<` = ByteVector("<".getBytes)
+  private case `>` = ByteVector(">".getBytes)
 
   private def extractEmail(bits: BitVector): Attempt[BitVector] = {
     val bytes = bits.toByteVector
