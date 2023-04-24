@@ -1,9 +1,9 @@
-package com.minosiants.pencil
+package pencil
 package data
 
 import java.nio.file.{Path, Paths}
 
-import com.minosiants.pencil.data.Email
+import pencil.data.Email
 import org.scalacheck.Gen
 import org.scalacheck.Arbitrary
 
@@ -32,14 +32,14 @@ trait EmailGens {
   } yield domain.mkString
 
   val mailboxGen: Gen[Mailbox] = for {
-    lp     <- localPartGen
+    lp <- localPartGen
     domain <- domainGen
   } yield Mailbox.unsafeFromString(s"$lp@$domain")
 
   given Arbitrary[From] = Arbitrary(mailboxGen.map(From(_)))
-  given Arbitrary[To]   = Arbitrary(Gen.nonEmptyListOf(mailboxGen).map(To(_*)))
-  given Arbitrary[Cc]   = Arbitrary(Gen.nonEmptyListOf(mailboxGen).map(Cc(_*)))
-  given Arbitrary[Bcc]  = Arbitrary(Gen.nonEmptyListOf(mailboxGen).map(Bcc(_*)))
+  given Arbitrary[To] = Arbitrary(Gen.nonEmptyListOf(mailboxGen).map(To(_*)))
+  given Arbitrary[Cc] = Arbitrary(Gen.nonEmptyListOf(mailboxGen).map(Cc(_*)))
+  given Arbitrary[Bcc] = Arbitrary(Gen.nonEmptyListOf(mailboxGen).map(Bcc(_*)))
   given Arbitrary[Subject] = Arbitrary(Gen.asciiPrintableStr.map(Subject.apply))
   given Arbitrary[Body.Ascii] = Arbitrary(
     Gen.asciiPrintableStr.map(Body.Ascii.apply)
@@ -61,7 +61,7 @@ trait EmailGens {
   val emailTypeGen: Gen[EmailType] = {
     val textGen = Gen.const(EmailType.Text)
     val mimeGen = for {
-      boundary    <- Gen.asciiPrintableStr.map(Boundary(_))
+      boundary <- Gen.asciiPrintableStr.map(Boundary(_))
       attachments <- Gen.listOf(Arbitrary.arbitrary[Attachment])
     } yield EmailType.Mime(boundary, attachments)
     Gen.oneOf(textGen, mimeGen)
@@ -69,11 +69,11 @@ trait EmailGens {
 
   given Arbitrary[Email] = Arbitrary {
     for {
-      from      <- Arbitrary.arbitrary[From]
-      to        <- Arbitrary.arbitrary[To]
-      cc        <- Gen.option(Arbitrary.arbitrary[Cc])
-      bcc       <- Gen.option(Arbitrary.arbitrary[Bcc])
-      subject   <- Gen.option(Arbitrary.arbitrary[Subject])
+      from <- Arbitrary.arbitrary[From]
+      to <- Arbitrary.arbitrary[To]
+      cc <- Gen.option(Arbitrary.arbitrary[Cc])
+      bcc <- Gen.option(Arbitrary.arbitrary[Bcc])
+      subject <- Gen.option(Arbitrary.arbitrary[Subject])
       emailType <- emailTypeGen
       body <- emailType.fold(
         Gen.option(Arbitrary.arbitrary[Body.Ascii]),

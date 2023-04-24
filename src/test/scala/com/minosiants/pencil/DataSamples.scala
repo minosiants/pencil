@@ -1,4 +1,4 @@
-package com.minosiants.pencil
+package pencil
 
 import protocol._
 
@@ -15,8 +15,8 @@ object DataSamples {
   )
 
   val `mail.example.com` = Reply(Code.code(250).get, "-", "mail.example.com")
-  val PIPELINING: Reply  = Reply(Code.code(250).get, "-", "PIPELINING")
-  val `8BITMIME`: Reply  = Reply(Code.code(250).get, " ", "8BITMIME")
+  val PIPELINING: Reply = Reply(Code.code(250).get, "-", "PIPELINING")
+  val `8BITMIME`: Reply = Reply(Code.code(250).get, " ", "8BITMIME")
 
   val ehloReplies: Replies = Replies(
     List(`mail.example.com`, PIPELINING, `8BITMIME`)
