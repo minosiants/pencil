@@ -1,4 +1,4 @@
-package com.minosiants.pencil
+package pencil
 package protocol
 import Command._
 import data.EmailGens
@@ -10,14 +10,14 @@ trait ProtocolGens extends EmailGens {
 
   val replyGen: Gen[Reply] = for {
     code <- codeGen
-    sep  <- Gen.oneOf(List("-", " "))
+    sep <- Gen.oneOf(List("-", " "))
     text <- Gen.asciiPrintableStr
   } yield Reply(code, sep, text)
 
   val repliesGen: Gen[Replies] = Gen.nonEmptyListOf(replyGen).map(Replies(_))
 
   val commandGen: Gen[Command] = for {
-    box    <- mailboxGen
+    box <- mailboxGen
     domain <- Gen.asciiPrintableStr
     command <- Gen.oneOf(
       List[Command](

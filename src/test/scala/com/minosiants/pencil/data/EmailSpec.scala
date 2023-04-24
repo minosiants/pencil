@@ -1,4 +1,4 @@
-package com.minosiants.pencil
+package pencil
 package data
 
 import org.specs2.mutable.Specification
@@ -52,8 +52,7 @@ class EmailSpec extends Specification with ScalaCheck with EmailGens:
       email.addTo(to).to ==== (email.to |+| to)
     }
     "addAttachment" in forAll { (email: Email, attachment: Attachment) =>
-      if email.isMime then
-        email.addAttachment(attachment) == (email + attachment)
+      if email.isMime then email.addAttachment(attachment) == (email + attachment)
       else true
     }
   }
