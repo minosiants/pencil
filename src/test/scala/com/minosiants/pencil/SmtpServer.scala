@@ -1,9 +1,9 @@
-package com.minosiants.pencil
+package pencil
 
 import cats.effect.{Deferred, IO, Ref}
 import com.comcast.ip4s._
-import com.minosiants.pencil.protocol.Command._
-import com.minosiants.pencil.protocol._
+import pencil.protocol.Command._
+import pencil.protocol._
 import fs2.Stream
 import fs2.io.net.{Network, Socket}
 import scodec.bits.BitVector
@@ -16,7 +16,7 @@ final case class SmtpServer(
 
   def start(
       localBindAddress: Deferred[IO, SocketAddress[Host]]
-  ): IO[Unit] = {
+  ): IO[Unit] =
     Stream
       .resource(
         Network[IO].serverResource(Some(ip"127.0.0.1"), Port.fromInt(port))
@@ -33,10 +33,7 @@ final case class SmtpServer(
       .compile
       .drain
 
-  }
-
-  def processCommand(stream: Stream[IO, In]): Stream[IO, Replies] = {
-
+  def processCommand(stream: Stream[IO, In]): Stream[IO, Replies] =
     stream.flatMap {
       case In(raw, Ehlo(_)) =>
         Stream.eval(state.tryUpdate(_ :+ raw)).drain ++
@@ -83,12 +80,9 @@ final case class SmtpServer(
         ???
     }
 
-  }
 }
 
-final case class MessageSocket(socket: Socket[IO])
-    extends Product
-    with Serializable {
+final case class MessageSocket(socket: Socket[IO]) extends Product with Serializable {
   def read: Stream[IO, In] =
     socket.reads
       .through(decoder.toPipeByte[IO])

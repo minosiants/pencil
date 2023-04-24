@@ -1,16 +1,16 @@
-package com.minosiants.pencil
+package pencil
 
 import cats.effect.*
 import cats.effect.unsafe.implicits.global
 import cats.instances.list.*
 import cats.syntax.traverse.*
 import com.comcast.ip4s.{Host, SocketAddress}
-import com.minosiants.pencil.data.{Email, Error}
-import com.minosiants.pencil.data.HostType.{Host as PHost}
-import com.minosiants.pencil.syntax.LiteralsSyntax
+import pencil.data.{Email, Error}
+import pencil.data.HostType.Host as PHost
 import fs2.io.net.Network
 import org.specs2.mutable.SpecificationLike
 import org.typelevel.log4cats.slf4j.Slf4jLogger
+import pencil.syntax.LiteralsSyntax
 import scodec.bits.BitVector
 import scodec.{Codec, DecodeResult}
 
@@ -19,11 +19,11 @@ import java.util.UUID
 import scala.concurrent.duration.*
 trait SmtpBaseSpec extends SpecificationLike with LiteralsSyntax {
 
-  val logger    = Slf4jLogger.getLogger[IO]
+  val logger = Slf4jLogger.getLogger[IO]
   val timestamp = Instant.now()
-  val clock     = Clock.fixed(timestamp, ZoneId.from(ZoneOffset.UTC))
-  val host      = PHost.local()
-  val uuid      = UUID.randomUUID().toString
+  val clock = Clock.fixed(timestamp, ZoneId.from(ZoneOffset.UTC))
+  val host = PHost.local()
+  val uuid = UUID.randomUUID().toString
 
   def socket(
       address: SocketAddress[Host]
@@ -44,11 +44,11 @@ trait SmtpBaseSpec extends SpecificationLike with LiteralsSyntax {
       .unit[IO]
       .use { _ =>
         for {
-          state   <- Ref[IO].of(List.empty[BitVector])
-          f       <- SmtpServer(state).start(localBindAddress).start
+          state <- Ref[IO].of(List.empty[BitVector])
+          f <- SmtpServer(state).start(localBindAddress).start
           address <- localBindAddress.get
-          r       <- socket(address).use(s => run(s, state))
-          _       <- f.cancel
+          r <- socket(address).use(s => run(s, state))
+          _ <- f.cancel
         } yield r
       }
   }
@@ -57,7 +57,7 @@ trait SmtpBaseSpec extends SpecificationLike with LiteralsSyntax {
       command: Smtp[IO, A],
       email: Email,
       codec: Codec[B]
-  ): Either[Throwable, (A, List[B])] = {
+  ): Either[Throwable, (A, List[B])] =
     withSocket { (s, state) =>
       (for {
         _ <- Smtp.init[IO]()
@@ -69,7 +69,7 @@ trait SmtpBaseSpec extends SpecificationLike with LiteralsSyntax {
           raw.traverse(bits =>
             codec.decode(bits).toEither match {
               case Right(DecodeResult(value, _)) => IO(value)
-              case Left(err) => Error.smtpError[IO, B](err.message)
+              case Left(err)                     => Error.smtpError[IO, B](err.message)
             }
           )
         )
@@ -85,5 +85,4 @@ trait SmtpBaseSpec extends SpecificationLike with LiteralsSyntax {
         )
     }.attempt.unsafeRunSync()
 
-  }
 }

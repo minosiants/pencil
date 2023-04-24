@@ -1,9 +1,9 @@
-package com.minosiants.pencil
+package pencil
 
 import cats.effect.unsafe.implicits.global
 import cats.effect.IO
-import com.minosiants.pencil.data.*
-import com.minosiants.pencil.syntax.*
+import pencil.data.*
+import pencil.syntax.*
 import fs2.io.net.Network
 import org.specs2.execute.Pending
 import org.specs2.mutable.SpecificationLike

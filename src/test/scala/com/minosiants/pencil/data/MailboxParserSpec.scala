@@ -1,4 +1,4 @@
-package com.minosiants.pencil
+package pencil
 package data
 
 import org.specs2.mutable.Specification

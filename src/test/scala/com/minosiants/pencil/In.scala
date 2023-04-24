@@ -1,6 +1,6 @@
-package com.minosiants.pencil
+package pencil
 
-import com.minosiants.pencil.protocol.Command
+import pencil.protocol.Command
 import scodec.{Attempt, Codec, DecodeResult, Decoder}
 import scodec.bits.{BitVector, ByteVector}
 
@@ -18,11 +18,11 @@ object In {
 
   val inListDecoder: inListDecoder = new inListDecoder
   class inListDecoder extends Decoder[List[In]]() {
-    val delimiter    = CRLF
+    val delimiter = CRLF
     val endEmailBits = Command.endEmail.toByteVector
     override def decode(bits: BitVector): Attempt[DecodeResult[List[In]]] = {
 
-      def go(vec: ByteVector): Attempt[List[In]] = {
+      def go(vec: ByteVector): Attempt[List[In]] =
         if vec === endEmailBits then
           In.codec
             .decode(vec.bits)
@@ -37,7 +37,6 @@ object In {
                 go(tail.drop(delimiter.size)).map(v => a :: v)
               case Attempt.Failure(cause) => Attempt.Failure(cause)
             }
-      }
 
       go(bits.toByteVector).map(DecodeResult(_, BitVector.empty))
     }

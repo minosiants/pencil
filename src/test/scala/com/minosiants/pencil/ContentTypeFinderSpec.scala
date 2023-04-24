@@ -1,10 +1,10 @@
-package com.minosiants.pencil
+package pencil
 import java.nio.file.{Path, Paths}
 
 import cats.effect.IO
-import com.minosiants.pencil.data._
-import com.minosiants.pencil.protocol.ContentType
-import com.minosiants.pencil.protocol.ContentType._
+import pencil.data._
+import pencil.protocol.ContentType
+import pencil.protocol.ContentType._
 import org.scalacheck.Prop.forAll
 import org.scalacheck._
 import org.specs2.ScalaCheck
@@ -36,21 +36,18 @@ class ContentTypeFinderSpec extends Specification with ScalaCheck {
 }
 
 object ContentTypeFinderSpec {
-  def path(filename: String): Path = {
+  def path(filename: String): Path =
     Paths.get(getClass.getClassLoader.getResource(filename).toURI)
-  }
 
   def findContentType(
       path: Path
-  ): IO[ContentType] = {
+  ): IO[ContentType] =
     Files
       .inputStream[IO](path)
       .use { is =>
         ContentTypeFinder
           .findType[IO](is)
       }
-
-  }
 
   val files = List(
     ("files/ascii-sample.txt", `text/plain`),

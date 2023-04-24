@@ -1,3 +1,4 @@
+
 val catsVersion         = "2.9.0"
 val catsEffectVersion   = "3.4.8"
 val fs2Version          = "3.6.1"
@@ -33,8 +34,8 @@ lazy val root = (project in file("."))
       "co.fs2"          %% "fs2-core"          % fs2Version,
       "co.fs2"          %% "fs2-io"            % fs2Version,
       "co.fs2"          %% "fs2-scodec"            % fs2Version %  "test",
-      "org.scodec"      %% "scodec-bits"       % scodecBitsVersion,
       "org.scodec"      %% "scodec-core"       % scodecCoreVersion,
+      "org.scodec"      %% "scodec-bits"       % scodecBitsVersion,
       "org.typelevel"   %% "log4cats-core"     % log4catsVersion,
       "org.apache.tika" % "tika-core"          % tikaVersion,
       "org.scalacheck"  %% "scalacheck"        % scalacheckVersion % "test",
