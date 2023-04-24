@@ -1,19 +1,20 @@
-package com.minosiants.pencil
+package pencil
 
 import SmtpSpec._
 import cats.effect.IO
 import cats.syntax.show.*
-import com.minosiants.pencil.data.Body.{Ascii, Html, Utf8}
-import com.minosiants.pencil.data.Email.*
-import com.minosiants.pencil.data.*
-import com.minosiants.pencil.protocol.ContentType.`application/pdf`
-import com.minosiants.pencil.protocol.Encoding.`base64`
-import com.minosiants.pencil.protocol.Header.`Content-Type`
-import com.minosiants.pencil.protocol.*
+import pencil.data.Body.{Ascii, Html, Utf8}
+import pencil.data.Email.*
+import pencil.data.*
+import pencil.protocol.ContentType.`application/pdf`
+import pencil.protocol.Encoding.`base64`
+import pencil.protocol.Header.`Content-Type`
+import pencil.protocol.*
 import scodec.codecs
 import cats.effect.Resource
 import cats.effect.unsafe.implicits.global
-import com.minosiants.pencil.syntax.LiteralsSyntax
+import pencil.syntax.LiteralsSyntax
+
 class SmtpSpec extends SmtpBaseSpec {
 
   sequential
@@ -21,7 +22,7 @@ class SmtpSpec extends SmtpBaseSpec {
   "Smtp" should {
 
     "get response on EHLO" in {
-      val host   = Host.local()
+      val host = Host.local()
       val result = testCommand(Smtp.ehlo(), SmtpSpec.mime, codecs.ascii)
       result.map(_._1) must beRight(DataSamples.ehloReplies)
       result.map(_._2) must beRight(
@@ -30,7 +31,7 @@ class SmtpSpec extends SmtpBaseSpec {
     }
 
     "get response on RCPT" in {
-      val email  = SmtpSpec.mime
+      val email = SmtpSpec.mime
       val result = testCommand(Smtp.rcpt(), email, codecs.ascii)
       val rcpts = email.recipients
         .map(box => s"RCPT TO: ${box.show}${Command.end}")
@@ -44,7 +45,7 @@ class SmtpSpec extends SmtpBaseSpec {
 
     "get response on MAIL" in {
       val result = testCommand(Smtp.mail(), SmtpSpec.mime, codecs.ascii)
-      val from   = SmtpSpec.mime.from.mailbox
+      val from = SmtpSpec.mime.from.mailbox
       result.map(_._1) must beRight(DataSamples.`250 OK`)
       result.map(_._2) must beRight(
         beEqualTo(List(s"MAIL FROM: ${from.show}${Command.end}"))
@@ -73,7 +74,7 @@ class SmtpSpec extends SmtpBaseSpec {
     }
 
     "send endEmail" in {
-      val email  = SmtpSpec.mime
+      val email = SmtpSpec.mime
       val result = testCommand(Smtp.endEmail(), email, codecs.ascii)
 
       result.map(_._1) must beRight(DataSamples.`250 OK`)
@@ -88,7 +89,7 @@ class SmtpSpec extends SmtpBaseSpec {
     }
 
     "send asciiBody" in {
-      val email  = SmtpSpec.text
+      val email = SmtpSpec.text
       val result = testCommand(Smtp.asciiBody(), email, codecs.ascii)
 
       result.map(_._1) must beRight(DataSamples.`250 OK`)
@@ -103,7 +104,7 @@ class SmtpSpec extends SmtpBaseSpec {
     }
 
     "send subjectHeader in ascii mail" in {
-      val email  = SmtpSpec.text
+      val email = SmtpSpec.text
       val result = testCommand(Smtp.subjectHeader(), email, codecs.ascii)
       result.map(_._2) must beRight(
         beEqualTo(
@@ -114,7 +115,7 @@ class SmtpSpec extends SmtpBaseSpec {
       )
     }
     "send subjectHeader in mime mail" in {
-      val email  = SmtpSpec.mime
+      val email = SmtpSpec.mime
       val result = testCommand(Smtp.subjectHeader(), email, codecs.ascii)
       result.map(_._2) must beRight(
         beEqualTo(
@@ -126,7 +127,7 @@ class SmtpSpec extends SmtpBaseSpec {
     }
 
     "send fromHeader" in {
-      val email  = SmtpSpec.text
+      val email = SmtpSpec.text
       val result = testCommand(Smtp.fromHeader(), email, codecs.ascii)
       result.map(_._2) must beRight(
         beEqualTo(
@@ -137,7 +138,7 @@ class SmtpSpec extends SmtpBaseSpec {
       )
     }
     "send toHeader" in {
-      val email  = SmtpSpec.text
+      val email = SmtpSpec.text
       val result = testCommand(Smtp.toHeader(), email, codecs.ascii)
       result.map(_._2) must beRight(
         beEqualTo(
@@ -149,7 +150,7 @@ class SmtpSpec extends SmtpBaseSpec {
     }
 
     "send ccHeader" in {
-      val email  = SmtpSpec.mime
+      val email = SmtpSpec.mime
       val result = testCommand(Smtp.ccHeader(), email, codecs.ascii)
       result.map(_._2) must beRight(
         beEqualTo(
@@ -160,7 +161,7 @@ class SmtpSpec extends SmtpBaseSpec {
       )
     }
     "send bccHeader" in {
-      val email  = SmtpSpec.mime
+      val email = SmtpSpec.mime
       val result = testCommand(Smtp.bccHeader(), email, codecs.ascii)
       result.map(_._2) must beRight(
         beEqualTo(
@@ -171,7 +172,7 @@ class SmtpSpec extends SmtpBaseSpec {
       )
     }
     "send mainHeaders" in {
-      val email  = SmtpSpec.mime
+      val email = SmtpSpec.mime
       val result = testCommand(Smtp.mainHeaders(), email, codecs.ascii)
       result.map(_._2.size) must beRight(7)
       // TODO refactor to test all headers
@@ -192,7 +193,7 @@ class SmtpSpec extends SmtpBaseSpec {
   }
 
   "send mimeHeader" in {
-    val email  = SmtpSpec.mime
+    val email = SmtpSpec.mime
     val result = testCommand(Smtp.mimeHeader(), email, codecs.ascii)
     result.map(_._2) must beRight(
       beEqualTo(
@@ -238,7 +239,7 @@ class SmtpSpec extends SmtpBaseSpec {
   }
 
   "send boundary" in {
-    val email  = SmtpSpec.mime
+    val email = SmtpSpec.mime
     val result = testCommand(Smtp.boundary(), email, codecs.ascii)
     result.map(_._2) must beRight(
       beEqualTo(
@@ -250,7 +251,7 @@ class SmtpSpec extends SmtpBaseSpec {
   }
 
   "send final boundary" in {
-    val email  = SmtpSpec.mime
+    val email = SmtpSpec.mime
     val result = testCommand(Smtp.boundary(true), email, codecs.ascii)
     result.map(_._2) must beRight(
       beEqualTo(
@@ -262,7 +263,7 @@ class SmtpSpec extends SmtpBaseSpec {
   }
 
   "send multipart" in {
-    val email  = SmtpSpec.mime
+    val email = SmtpSpec.mime
     val result = testCommand(Smtp.multipart(), email, codecs.ascii)
     result.map(_._2) must beRight(
       beEqualTo(
@@ -274,7 +275,7 @@ class SmtpSpec extends SmtpBaseSpec {
   }
 
   "send mime utf body" in {
-    val email  = SmtpSpec.mime
+    val email = SmtpSpec.mime
     val result = testCommand(Smtp.mimeBody(), email, codecs.ascii)
     result.map(_._2) must beRight(
       beEqualTo(
@@ -291,7 +292,7 @@ class SmtpSpec extends SmtpBaseSpec {
   }
 
   "send mime html body" in {
-    val email  = SmtpSpec.mime.setBody(Html("<h1>hello</h1>"))
+    val email = SmtpSpec.mime.setBody(Html("<h1>hello</h1>"))
     val result = testCommand(Smtp.mimeBody(), email, codecs.ascii)
     result.map(_._2) must beRight(
       beEqualTo(
@@ -308,7 +309,7 @@ class SmtpSpec extends SmtpBaseSpec {
   }
 
   "send mime ascii body" in {
-    val email  = SmtpSpec.mime.setBody(Ascii("hello"))
+    val email = SmtpSpec.mime.setBody(Ascii("hello"))
     val result = testCommand(Smtp.mimeBody(), email, codecs.ascii)
     result.map(_._2) must beRight(
       beEqualTo(
@@ -325,9 +326,9 @@ class SmtpSpec extends SmtpBaseSpec {
   }
 
   "send attachments" in {
-    val email      = SmtpSpec.mime
+    val email = SmtpSpec.mime
     val attachment = email.attachments.map(_.head).get
-    val result     = testCommand(Smtp.attachments(), email, codecs.ascii)
+    val result = testCommand(Smtp.attachments(), email, codecs.ascii)
 
     val encodedFile = Resource
       .unit[IO]
@@ -366,20 +367,18 @@ object SmtpSpec extends LiteralsSyntax {
 
   def body(
       value: Option[Body]
-  )(pf: PartialFunction[Body, String]): List[String] = {
+  )(pf: PartialFunction[Body, String]): List[String] =
     value.map(pf).getOrElse("") match {
       case ""  => List.empty
       case str => lines(str)
     }
-  }
-  val text: Email = {
+  val text: Email =
     Email.text(
       From(mailbox"user1@mydomain.tld"),
       To(mailbox"user1@example.com"),
       subject"first email",
       Body.Ascii("hello")
     )
-  }
 
   val mime: Email =
     Email
