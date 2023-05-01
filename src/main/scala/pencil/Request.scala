@@ -1,9 +1,7 @@
 package pencil
 
 import java.time.Instant
-
-import pencil.data.Email
-import pencil.data.HostType.Host
+import data.*
 final case class Request[F[_]](
     email: Email,
     socket: SmtpSocket[F],

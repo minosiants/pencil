@@ -19,9 +19,6 @@ package pencil
 import cats.*
 import cats.effect.Sync
 import cats.implicits.*
-import pencil.data.Error
-import protocol.Command.*
-import protocol.*
 import fs2.Chunk
 import fs2.io.net.Socket
 import org.typelevel.log4cats.Logger
@@ -29,6 +26,8 @@ import scodec.bits.BitVector
 import scodec.codecs.*
 import scodec.Codec
 import scodec.{Attempt, DecodeResult}
+import protocol.*
+import pencil.data.Error
 
 /** Wraps [[Socket[IO]]] with smtp specific protocol
   */

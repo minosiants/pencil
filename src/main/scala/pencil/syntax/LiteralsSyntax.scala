@@ -16,10 +16,9 @@
 
 package pencil
 package syntax
-
+import data._
 import java.nio.file.Paths
 import org.typelevel.literally.Literally
-import pencil.data.Mailbox
 
 trait LiteralsSyntax {
   extension (inline sc: StringContext)

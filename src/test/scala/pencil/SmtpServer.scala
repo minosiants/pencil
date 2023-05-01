@@ -1,14 +1,14 @@
 package pencil
 
+import protocol.*
+import protocol.Command.*
 import cats.effect.{Deferred, IO, Ref}
-import com.comcast.ip4s._
-import pencil.protocol.Command._
-import pencil.protocol._
+import com.comcast.ip4s.*
 import fs2.Stream
-import fs2.io.net.{Network, Socket}
-import scodec.bits.BitVector
 import fs2.interop.scodec.{StreamDecoder, StreamEncoder}
+import fs2.io.net.{Network, Socket}
 import scodec.Codec
+import scodec.bits.BitVector
 final case class SmtpServer(
     state: Ref[IO, List[BitVector]],
     port: Int = 5555

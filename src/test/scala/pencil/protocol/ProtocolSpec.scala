@@ -1,7 +1,6 @@
 package pencil
 package protocol
-
-import pencil.data.Mailbox
+import data._
 import org.scalacheck.Prop.forAll
 import org.specs2.ScalaCheck
 import org.specs2.mutable.Specification

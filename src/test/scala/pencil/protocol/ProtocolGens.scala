@@ -1,9 +1,8 @@
 package pencil
 package protocol
-import Command._
-import data.EmailGens
+import Command.*
 import org.scalacheck.Gen
-
+import data.*
 trait ProtocolGens extends EmailGens {
 
   val codeGen: Gen[Code] = Gen.oneOf(Code.values)

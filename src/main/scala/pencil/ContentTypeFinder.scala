@@ -17,12 +17,11 @@
 package pencil
 
 import java.io.InputStream
-import protocol.*
-import data.*
 import cats.implicits.*
 import cats.effect.Sync
 import org.apache.tika.Tika
-
+import protocol._
+import data._
 import java.lang
 
 object ContentTypeFinder:

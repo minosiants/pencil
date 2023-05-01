@@ -22,14 +22,13 @@ import scodec.bits.{BitVector, ByteVector}
 
 val CRLF: ByteVector = ByteVector("\r\n".getBytes)
 
-
 trait StrOps:
-  extension (str:String)
+  extension (str: String)
     def toBase64: String = toBitVector.toBase64
     def toBitVector: BitVector = BitVector(str.getBytes(StandardCharsets.UTF_8))
     def toByteVector: ByteVector = toBitVector.bytes
 
-given  strOps: StrOps()
+given strOps: StrOps()
 
 type To = pencil.data.ToType.To
 val To = pencil.data.ToType.To
@@ -50,5 +49,3 @@ val Boundary = pencil.data.BoundaryType.Boundary
 type Username = pencil.data.UsernameType.Username
 val Username = pencil.data.UsernameType.Username
 type Password = pencil.data.PasswordType.Password
-
-

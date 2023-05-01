@@ -1,13 +1,13 @@
 package pencil
 
-import cats.effect.unsafe.implicits.global
+import data.*
 import cats.effect.IO
-import pencil.data.*
-import pencil.syntax.*
+import cats.effect.unsafe.implicits.global
 import fs2.io.net.Network
 import org.specs2.execute.Pending
 import org.specs2.mutable.SpecificationLike
 import org.typelevel.log4cats.slf4j.Slf4jLogger
+import pencil.syntax.*
 
 class SmtpIntegrationSpec extends SpecificationLike with LiteralsSyntax {
   val logger = Slf4jLogger.getLogger[IO]
