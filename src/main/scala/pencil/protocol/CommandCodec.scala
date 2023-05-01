@@ -17,12 +17,12 @@
 package pencil
 package protocol
 
-import pencil.data.Mailbox
-import pencil.protocol.Command._
 import scodec.bits.{BitVector, ByteVector}
-import scodec.codecs._
+import scodec.codecs.*
 import scodec.{Attempt, Codec, DecodeResult, SizeBound}
 import cats.Show
+import data.*
+import Command.*
 
 final case class CommandCodec() extends Codec[Command] {
 

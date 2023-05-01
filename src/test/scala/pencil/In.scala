@@ -1,8 +1,9 @@
 package pencil
 
-import pencil.protocol.Command
-import scodec.{Attempt, Codec, DecodeResult, Decoder}
+import protocol.*
+import data.*
 import scodec.bits.{BitVector, ByteVector}
+import scodec.{Attempt, Codec, DecodeResult, Decoder}
 
 final case class In(raw: BitVector, command: Command)
 

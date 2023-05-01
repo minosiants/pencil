@@ -16,16 +16,6 @@
 
 package pencil.data
 
-sealed trait Body1 extends Product with Serializable
-
-object Body1 {
-
-  final case class Ascii(value: String) extends Body1
-  final case class Html(value: String) extends Body1
-  final case class Utf8(value: String) extends Body1
-
-}
-
 enum Body:
   def value: String
   case Ascii(value: String)

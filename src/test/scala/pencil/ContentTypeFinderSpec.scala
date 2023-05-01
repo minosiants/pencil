@@ -1,18 +1,18 @@
 package pencil
-import java.nio.file.{Path, Paths}
-
+import data.*
+import protocol.*
+import ContentType.*
 import cats.effect.IO
-import pencil.data._
-import pencil.protocol.ContentType
-import pencil.protocol.ContentType._
+import cats.effect.unsafe.implicits.global
+import org.scalacheck.*
 import org.scalacheck.Prop.forAll
-import org.scalacheck._
 import org.specs2.ScalaCheck
 import org.specs2.mutable.Specification
-import cats.effect.unsafe.implicits.global
+
+import java.nio.file.{Path, Paths}
 
 class ContentTypeFinderSpec extends Specification with ScalaCheck {
-  import ContentTypeFinderSpec._
+  import ContentTypeFinderSpec.*
 
   "ContentTypeFinder" should {
 

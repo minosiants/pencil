@@ -3,7 +3,6 @@ package data
 
 import java.nio.file.{Path, Paths}
 
-import pencil.data.Email
 import org.scalacheck.Gen
 import org.scalacheck.Arbitrary
 

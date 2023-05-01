@@ -18,19 +18,16 @@ package pencil
 
 import cats.effect.{Async, Concurrent, Resource}
 import com.comcast.ip4s.*
-import pencil.data.Email
-import pencil.data.*
-import pencil.protocol.*
 import fs2.io.net.tls.TLSContext
 import fs2.io.net.{Network, Socket}
 import org.typelevel.log4cats.Logger
-import pencil.data.{Credentials, Email}
-import pencil.protocol.Replies
 import pencil.{Host => PHost}
 
 import java.time.Instant
 import java.util.UUID
 import scala.Function.const
+import data.*
+import protocol.*
 
 /** Smtp client
   */

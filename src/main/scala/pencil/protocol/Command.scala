@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package pencil.protocol
-
+package pencil
+package protocol
+import data.*
 import cats.Show
-import pencil.data.Mailbox
 import scodec.Codec
 
 enum Command:
