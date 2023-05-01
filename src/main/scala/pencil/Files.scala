@@ -23,9 +23,8 @@ import java.nio.file.{Path, Paths, Files => JFiles}
 import cats.MonadError
 import cats.MonadThrow
 import cats.effect.{Resource, Sync}
-import pencil.data.Error
 import Function._
-
+import data._
 object Files:
   def inputStream[F[_]: Sync](file: Path): Resource[F, InputStream] =
     Resource

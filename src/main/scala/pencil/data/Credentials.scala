@@ -22,16 +22,15 @@ import cats.Show
 object UsernameType:
   opaque type Username = String
   object Username:
-    def apply(username:String):Username = username
+    def apply(username: String): Username = username
     given Show[Username] = Show.show[Username](identity)
 object PasswordType:
   opaque type Password = String
 
   object Password:
-    def apply(password:Password):Password = password
+    def apply(password: Password): Password = password
     given Show[Password] = Show.show[Password](identity)
 
 final case class Credentials(username: UsernameType.Username, password: PasswordType.Password)
     extends Product
     with Serializable
-

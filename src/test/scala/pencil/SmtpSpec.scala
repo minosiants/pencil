@@ -1,19 +1,17 @@
 package pencil
 
-import SmtpSpec._
-import cats.effect.IO
-import cats.syntax.show.*
-import pencil.data.Body.{Ascii, Html, Utf8}
-import pencil.data.Email.*
-import pencil.data.*
-import pencil.protocol.ContentType.`application/pdf`
-import pencil.protocol.Encoding.`base64`
-import pencil.protocol.Header.`Content-Type`
-import pencil.protocol.*
-import scodec.codecs
-import cats.effect.Resource
+import protocol.*
+import data.*
+import ContentType.*
+import Header.*
+import Encoding.*
+import Body.*
 import cats.effect.unsafe.implicits.global
+import cats.effect.{IO, Resource}
+import cats.syntax.show.*
+import pencil.SmtpSpec.*
 import pencil.syntax.LiteralsSyntax
+import scodec.codecs
 
 class SmtpSpec extends SmtpBaseSpec {
 

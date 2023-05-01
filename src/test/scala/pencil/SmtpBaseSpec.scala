@@ -1,12 +1,12 @@
 package pencil
 
+import data.*
+import pencil.Host as PHost
 import cats.effect.*
 import cats.effect.unsafe.implicits.global
 import cats.instances.list.*
 import cats.syntax.traverse.*
 import com.comcast.ip4s.{Host, SocketAddress}
-import pencil.data.{Email, Error}
-import pencil.data.HostType.Host as PHost
 import fs2.io.net.Network
 import org.specs2.mutable.SpecificationLike
 import org.typelevel.log4cats.slf4j.Slf4jLogger

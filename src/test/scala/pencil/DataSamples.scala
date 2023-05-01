@@ -1,7 +1,6 @@
 package pencil
 
-import protocol._
-
+import protocol.*
 object DataSamples {
 
   val `220 Greeting` = Replies(

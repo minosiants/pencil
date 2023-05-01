@@ -16,19 +16,18 @@
 
 package pencil
 
-import cats._
+import data.*
+import protocol.*
+import Command.*
+import Code.*
+import ContentType.*
+import Header.*
+import Encoding.*
+import Body.*
+import cats.{data, *}
 import cats.data.Kleisli
 import cats.effect.Async
-import cats.implicits._
-import pencil.data.Body.{Ascii, Html, Utf8}
-import pencil.data.Email._
-import pencil.data.{Email, Mailbox, *}
-import pencil.protocol.Code.*
-import pencil.protocol.Command.*
-import pencil.protocol.ContentType.*
-import pencil.protocol.Encoding.{`7bit`, `base64`}
-import pencil.protocol.Header.*
-import pencil.protocol.*
+import cats.implicits.*
 import fs2.{Chunk, Stream}
 
 import java.time.format.DateTimeFormatter
