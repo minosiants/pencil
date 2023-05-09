@@ -5,10 +5,10 @@
             <pattern>[%thread] %highlight(%-5level) %cyan(%logger{15}) - %msg %n</pattern>
         </encoder>
     </appender>
-    <!--<logger name="pencil" level="DEBUG" >
+    <logger name="pencil" level="DEBUG" >
         <appender-ref ref="STDOUT" />
-     </logger>-->
-    <root level="INFO">
+     </logger>
+    <root level="info">
         <appender-ref ref="STDOUT" />
     </root>
 </configuration>

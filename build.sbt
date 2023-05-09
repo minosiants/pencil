@@ -8,7 +8,7 @@ val specs2Version = "4.19.2"
 val tikaVersion = "2.7.0"
 val scalacheckVersion = "1.15.4"
 val log4catsVersion = "2.5.0"
-val logbackVersion = "1.2.3"
+val logbackVersion = "1.4.7"
 val literallyVersion = "1.1.0"
 
 ThisBuild / scalafixScalaBinaryVersion := (ThisBuild / scalaBinaryVersion).value
@@ -42,7 +42,8 @@ lazy val root = (project in file("."))
       "org.typelevel" %% "log4cats-slf4j" % log4catsVersion % Test,
       "org.specs2" %% "specs2-core" % specs2Version % Test,
       "org.specs2" %% "specs2-scalacheck" % specs2Version % Test,
-      "org.testcontainers" % "testcontainers" % "1.18.0" % Test
+      "org.testcontainers" % "testcontainers" % "1.18.0" % Test,
+      "org.fusesource.jansi" % "jansi" % "2.3.4" % Test
     ),
     publishTo := sonatypePublishToBundle.value
   )
