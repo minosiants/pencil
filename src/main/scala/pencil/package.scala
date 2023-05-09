@@ -49,3 +49,4 @@ val Boundary = pencil.data.BoundaryType.Boundary
 type Username = pencil.data.UsernameType.Username
 val Username = pencil.data.UsernameType.Username
 type Password = pencil.data.PasswordType.Password
+val Password = pencil.data.PasswordType.Password

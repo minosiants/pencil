@@ -28,7 +28,7 @@ object PasswordType:
   opaque type Password = String
 
   object Password:
-    def apply(password: Password): Password = password
+    def apply(password: String): Password = password
     given Show[Password] = Show.show[Password](identity)
 
 final case class Credentials(username: UsernameType.Username, password: PasswordType.Password)
