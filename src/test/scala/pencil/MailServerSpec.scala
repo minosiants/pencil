@@ -14,7 +14,7 @@ import cats.syntax.show.*
 import cats.syntax.flatMap.*
 import pencil.protocol.{Replies, Code}
 import cats.syntax.either.*
-class MailServerSpec extends SpecificationLike with LiteralsSyntax with BeforeAll with AfterAll:
+trait MailServerSpec extends SpecificationLike with LiteralsSyntax with BeforeAll with AfterAll:
   val logger = Slf4jLogger.getLogger[IO]
   val container = MailServerContainer.mk()
 
