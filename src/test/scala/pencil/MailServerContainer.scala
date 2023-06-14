@@ -13,11 +13,11 @@ import scala.jdk.CollectionConverters.*
 trait MailServerContainer:
   def start(): Unit
   def stop(): Unit
-  def smtpPort:Int
-  def httpPort:Int
+  def smtpPort: Int
+  def httpPort: Int
   def socketAddress() = SocketAddress(host"localhost", Port.fromInt(smtpPort).get)
 
-  def credentials:Credentials
+  def credentials: Credentials
 object MailServerContainer:
   def mk() =
     val username = Username("pencil")
@@ -28,9 +28,9 @@ object MailServerContainer:
     val container = GenericContainer(DockerImageName.parse("axllent/mailpit"))
     container.withClasspathResourceMapping("certs", "/data", BindMode.READ_ONLY)
     container.addExposedPorts(smtp, http)
-    //container.addExposedPorts(httpPort, httpPort)
-    container.addEnv("MP_SMTP_AUTH_FILE","/data/pass.txt")
-    container.addEnv("MP_SMTP_TLS_CERT","/data/certificate.crt")
+    // container.addExposedPorts(httpPort, httpPort)
+    container.addEnv("MP_SMTP_AUTH_FILE", "/data/pass.txt")
+    container.addEnv("MP_SMTP_TLS_CERT", "/data/certificate.crt")
     container.addEnv("MP_SMTP_TLS_KEY", "/data/keyfile.key")
     container.addEnv("MP_SMTP_AUTH_ALLOW_INSECURE", "true")
 

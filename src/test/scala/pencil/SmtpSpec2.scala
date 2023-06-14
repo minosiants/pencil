@@ -40,7 +40,7 @@ class SmtpSpec2 extends MailServerSpec {
 }
 
 object SmtpSpec2 extends LiteralsSyntax:
-  given mimeEmail:Email =  Email.mime(
+  given mimeEmail: Email = Email.mime(
     from"user1@mydomain.tld",
     to"pencil@mail.pencil.com",
     subject"привет",
