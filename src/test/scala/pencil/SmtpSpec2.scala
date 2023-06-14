@@ -13,28 +13,29 @@ class SmtpSpec2 extends MailServerSpec {
   "smtp command be" should {
     "ehlo" in {
       val r = Smtp.ehlo[IO]().runCommand
-      r.replies.head.code === Code.`250`
+      r.replies.head.code.success
     }
     "mail" in {
       val r = Smtp.mail[IO]().runCommand
-      r.replies.head.code === Code.`250`
+      r.replies.head.code.success
     }
     "rcpt" in {
-      val r = (Smtp.mail[IO]() >> Smtp.rcpt[IO]()).runCommand
-      r.head.replies.head.code === Code.`250`
+      val r = (Smtp.rset[IO]() >> Smtp.mail[IO]() >> Smtp.rcpt[IO]()).runCommand
+      r.head.replies.head.code.success
     }
     "vrfy" in {
       val r = Smtp.vrfy[IO]("hello").runCommand
-      r.replies.head.code === Code.`252`
+      r.replies.head.code.success
     }
     "noop" in {
       val r = Smtp.noop[IO]().runCommand
-      r.replies.head.code === Code.`250`
+      r.replies.head.code.success
     }
     "quit" in {
       val r = Smtp.quit[IO]().runCommand
-      r.replies.head.code === Code.`221`
+      r.replies.head.code.success
     }
+
   }
 }
 

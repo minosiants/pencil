@@ -10,6 +10,8 @@ val scalacheckVersion = "1.15.4"
 val log4catsVersion = "2.5.0"
 val logbackVersion = "1.4.7"
 val literallyVersion = "1.1.0"
+val http4sVersion = "0.23.19"
+val circeVersion = "0.14.1"
 
 ThisBuild / scalafixScalaBinaryVersion := (ThisBuild / scalaBinaryVersion).value
 ThisBuild / semanticdbEnabled := true
@@ -43,7 +45,14 @@ lazy val root = (project in file("."))
       "org.specs2" %% "specs2-core" % specs2Version % Test,
       "org.specs2" %% "specs2-scalacheck" % specs2Version % Test,
       "org.testcontainers" % "testcontainers" % "1.18.0" % Test,
-      "org.fusesource.jansi" % "jansi" % "2.3.4" % Test
+      "org.fusesource.jansi" % "jansi" % "2.3.4" % Test,
+      "org.http4s" %% "http4s-ember-client" % http4sVersion % Test,
+      "org.http4s" %% "http4s-dsl" % http4sVersion % Test,
+      "org.http4s" %% "http4s-circe" % http4sVersion % Test,
+      "io.circe" %% "circe-core" % circeVersion % Test,
+      "io.circe" %% "circe-generic" % circeVersion % Test,
+      "io.circe" %% "circe-parser" % circeVersion % Test
+
     ),
     publishTo := sonatypePublishToBundle.value
   )
