@@ -1,6 +1,6 @@
 val catsVersion = "2.9.0"
 val catsEffectVersion = "3.4.8"
-val fs2Version = "3.6.1"
+val fs2Version = "3.7.0"
 val scodecBitsVersion = "1.1.37"
 val scodecCoreVersion = "2.2.1"
 val scodecStreamVersion = "3.0.1"
@@ -52,7 +52,6 @@ lazy val root = (project in file("."))
       "io.circe" %% "circe-core" % circeVersion % Test,
       "io.circe" %% "circe-generic" % circeVersion % Test,
       "io.circe" %% "circe-parser" % circeVersion % Test
-
     ),
     publishTo := sonatypePublishToBundle.value
   )
