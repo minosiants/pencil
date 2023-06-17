@@ -32,7 +32,7 @@ class SmtpSpec extends SmtpBaseSpec {
       val email = SmtpSpec.mime
       val result = testCommand(Smtp.rcpt(), email, codecs.ascii)
       val rcpts = email.recipients
-        .map(box => s"RCPT TO: ${box.show}${Command.end}")
+        .map(box => s"RCPT TO: <${box.address}>${Command.end}")
         .toList
 
       result.map(_._1) must beRight(
@@ -46,7 +46,7 @@ class SmtpSpec extends SmtpBaseSpec {
       val from = SmtpSpec.mime.from.mailbox
       result.map(_._1) must beRight(DataSamples.`250 OK`)
       result.map(_._2) must beRight(
-        beEqualTo(List(s"MAIL FROM: ${from.show}${Command.end}"))
+        beEqualTo(List(s"MAIL FROM: <${from.address}>${Command.end}"))
       )
     }
 

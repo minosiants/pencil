@@ -4,10 +4,10 @@ package data
 import org.specs2.mutable.Specification
 
 import org.specs2.ScalaCheck
-import org.scalacheck._
-import org.scalacheck.Prop._
-import cats.syntax.semigroup._
-import cats.instances.option._
+import org.scalacheck.*
+import org.scalacheck.Prop.*
+import cats.syntax.semigroup.*
+import cats.instances.option.*
 
 class EmailSpec extends Specification with ScalaCheck with EmailGens:
 

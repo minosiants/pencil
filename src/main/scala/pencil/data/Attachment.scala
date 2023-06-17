@@ -18,7 +18,7 @@ package pencil
 package data
 
 import java.nio.file.Path
-import cats.implicits._
+import cats.implicits.*
 import cats.effect.Sync
 
 object AttachmentType:

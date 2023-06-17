@@ -18,7 +18,7 @@ package pencil
 package data
 
 import cats.Show
-import cats.syntax.show._
+import cats.syntax.show.*
 import cats.data.NonEmptyList
 import cats.kernel.Semigroup
 object CcType:

@@ -45,7 +45,7 @@ libraryDependencies += "com.minosiants" %% "pencil" % "1.2.0"
 
 ```scala
 val email = Email.text(
-      from"user1@mydomain.tld",
+      from"user name <user1@mydomain.tld>",
       to"user1@example.com",
       subject"first email",
       Body.Ascii("hello")

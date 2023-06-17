@@ -17,7 +17,7 @@
 package pencil.protocol
 
 import cats.Show
-import cats.syntax.show._
+import cats.syntax.show.*
 
 enum Header:
   case `MIME-Version`(value: String = "1.0")

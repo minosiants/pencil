@@ -14,7 +14,7 @@ final case class MailboxCodec() extends Codec[Mailbox]:
     val from = bytes.indexOfSlice(`<`)
     val to = bytes.indexOfSlice(`>`)
     if from < 0 || to < 0 then Attempt.failure(Err("email does not included into '<' '>'"))
-    else Attempt.successful(bytes.slice(from + `<`.size, to).bits)
+    else Attempt.successful(bits)
 
   }
 

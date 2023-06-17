@@ -21,7 +21,7 @@ import com.comcast.ip4s.*
 import fs2.io.net.tls.TLSContext
 import fs2.io.net.{Network, Socket}
 import org.typelevel.log4cats.Logger
-import pencil.{Host => PHost}
+import pencil.Host as PHost
 
 import java.time.Instant
 import java.util.UUID

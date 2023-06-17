@@ -17,7 +17,7 @@ import scodec.{Codec, DecodeResult}
 import java.time.{Clock, Instant, ZoneId, ZoneOffset}
 import java.util.UUID
 import scala.concurrent.duration.*
-trait SmtpBaseSpec extends SpecificationLike with LiteralsSyntax {
+trait SmtpBaseSpec extends SpecificationLike with LiteralsSyntax:
 
   val logger = Slf4jLogger.getLogger[IO]
   val timestamp = Instant.now()
@@ -85,4 +85,4 @@ trait SmtpBaseSpec extends SpecificationLike with LiteralsSyntax {
         )
     }.attempt.unsafeRunSync()
 
-}
+

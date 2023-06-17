@@ -2,19 +2,21 @@ package pencil
 package data
 
 import org.specs2.mutable.Specification
-import org.scalacheck._
+import org.scalacheck.*
+import org.scalacheck.Prop.forAll
 import org.specs2.ScalaCheck
 
 class MailboxParserSpec extends Specification with ScalaCheck {
-  import MailboxParserSpec._
+  import MailboxParserSpec.*
 
   "MailboxParser" should {
+    "parse" in Prop.forAll(localPartGen, domainGen, nameGen) { (lp, domain, name) =>
+      val email = s"$lp@$domain"
+      val result = MailboxParser.parse(name.map(n => s"$n<$email>").getOrElse(email))
+      val r = Right(Mailbox(lp, domain, name.map(Name(_))))
+      result == r
 
-    "parse" in Prop.forAll(localPartGen, domainGen) { (lp, domain) =>
-      val result = MailboxParser.parse(s"$lp@$domain")
-      result == Right(Mailbox(lp, domain))
     }
-
     "parse with invalid localPart" in Prop.forAll(
       invalidLocalPartGen,
       domainGen

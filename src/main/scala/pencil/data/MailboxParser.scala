@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-package pencil.data
+package pencil
+package data
 
 import scala.util.matching.Regex
 import cats.syntax.either.*
@@ -76,7 +77,7 @@ object MailboxParser {
     else Right(box)
 
   private def split(box: String): Either[Error, (LocalPart, Domain)] =
-    box.split("@").toList match {
+    box.split("@").toList match
       case Nil      => Left(Error.InvalidMailBox(s" '$box' does not have '@'"))
       case _ :: Nil => Left(Error.InvalidMailBox(s" '$box' does not have '@'"))
       case lp :: _ if lp.isBlank =>
@@ -84,14 +85,36 @@ object MailboxParser {
       case _ :: d if d.mkString.isBlank =>
         Left(Error.InvalidMailBox(s" '$box' does not have domain"))
       case lp :: d => Right((lp, d.mkString))
-    }
+
+  val mailboxPattern: Regex = """(.*)<(.*)>""".r
+  def extractName(mailbox: String): (Option[Name], String) =
+    def toName(str: String): Option[Name] =
+      val inValid = str.isBlank || str.foldLeft(false) { case (acc, r) =>
+        acc || special.contains(r)
+      }
+      Option.when(!inValid)(Name(str.trim))
+
+    mailboxPattern
+      .findFirstMatchIn(mailbox)
+      .map { v =>
+        (toName(v.group(1)), v.group(2))
+      }
+      .getOrElse((None, mailbox))
 
   def parse(mailbox: String): Either[Error, Mailbox] =
     for
       _ <- verifyLength(mailbox)
-      parts <- split(mailbox)
-      lp <- verifyLocalPart(parts._1)
-      dom <- verifyDomain(parts._2)
-    yield Mailbox(lp, dom)
+      (name, box) = extractName(mailbox)
+      (l, d) <- split(box)
+      lp <- verifyLocalPart(l)
+      dom <- verifyDomain(d)
+    yield Mailbox(lp, dom, name)
 
+}
+
+object A {
+  def main(args: Array[String]): Unit = {
+    val r = MailboxParser.extractName("hello<may@d.com>")
+    println(r)
+  }
 }

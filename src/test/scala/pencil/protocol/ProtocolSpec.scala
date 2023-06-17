@@ -1,12 +1,12 @@
 package pencil
 package protocol
-import data._
+import data.*
 import org.scalacheck.Prop.forAll
 import org.specs2.ScalaCheck
 import org.specs2.mutable.Specification
 import scodec.{Attempt, Codec, DecodeResult}
-import scodec.bits._
-import scodec.codecs._
+import scodec.bits.*
+import scodec.codecs.*
 
 import scala.io.Source
 import org.specs2.matcher.MatchResult
