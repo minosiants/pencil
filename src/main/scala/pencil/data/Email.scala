@@ -117,7 +117,7 @@ final case class Email(
 
   /** Combine `to` values.
     */
-  def addTo(to: To): Email = addTo(to.toList: _*)
+  def addTo(to: To): Email = addTo(to.toList*)
 
   /** Combine `to` values.
     */

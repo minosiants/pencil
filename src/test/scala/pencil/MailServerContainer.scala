@@ -38,6 +38,7 @@ object MailServerContainer:
       override def start(): Unit =
         container.start()
         container.waitingFor(Wait.forListeningPort())
+        println(s"http port:$httpPort")
 
       override def stop(): Unit = container.stop()
 

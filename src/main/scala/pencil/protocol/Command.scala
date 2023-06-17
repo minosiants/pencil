@@ -38,9 +38,9 @@ object Command:
   val endEmail: String = s"$end.$end"
   given Show[Command] = Show.show {
     case Ehlo(domain) => s"EHLO $domain$end"
-    case Mail(Mailbox(localPart, domain)) =>
+    case Mail(Mailbox(localPart, domain, name)) =>
       s"MAIL FROM: <$localPart@$domain>$end"
-    case Rcpt(Mailbox(localPart, domain)) =>
+    case Rcpt(Mailbox(localPart, domain, name)) =>
       s"RCPT TO: <$localPart@$domain>$end"
     case Data      => s"DATA$end"
     case Rset      => s"RSET$end"

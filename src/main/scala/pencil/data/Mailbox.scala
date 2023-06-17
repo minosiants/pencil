@@ -14,12 +14,15 @@
  * limitations under the License.
  */
 
-package pencil.data
+package pencil
+package data
 
 import cats.Show
 import scodec.Codec
 
-final case class Mailbox(localPart: String, domain: String) extends Product with Serializable:
+final case class Mailbox(localPart: String, domain: String, name: Option[Name] = None)
+    extends Product
+    with Serializable:
 
   def address: String = s"$localPart@$domain"
 
@@ -31,6 +34,6 @@ object Mailbox:
     fromString(mailbox).fold(throw _, identity)
 
   given Show[Mailbox] =
-    Show.show[Mailbox](mb => s"<${mb.address}>")
+    Show.show[Mailbox](mb => s"${mb.name.getOrElse("")} <${mb.address}>")
 
   given Codec[Mailbox] = MailboxCodec()

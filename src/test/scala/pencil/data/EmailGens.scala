@@ -14,7 +14,7 @@ trait EmailGens {
 
   val localPartGen: Gen[String] = Gen
     .nonEmptyListOf(localPartCharGen)
-    .map(_.take(200).mkString)
+    .map(_.take(180).mkString)
     .retryUntil(v => !v.contains(".."))
 
   val domainGen: Gen[String] = for {
@@ -30,10 +30,21 @@ trait EmailGens {
     domain = (ch :: d) :+ ch
   } yield domain.mkString
 
-  val mailboxGen: Gen[Mailbox] = for {
+  val nameGen: Gen[Option[String]] = Gen.option(
+    Gen
+      .nonEmptyListOf(localPartCharGen)
+      .map(_.take(20).mkString)
+  )
+
+  val mailboxGen: Gen[Mailbox] = for
     lp <- localPartGen
     domain <- domainGen
-  } yield Mailbox.unsafeFromString(s"$lp@$domain")
+    name <- nameGen
+    email = s"$lp@$domain"
+    mb = name match
+      case Some(name) if name.trim.nonEmpty => s"$name<$email>"
+      case _                                => email
+  yield Mailbox.unsafeFromString(mb)
 
   given Arbitrary[From] = Arbitrary(mailboxGen.map(From(_)))
   given Arbitrary[To] = Arbitrary(Gen.nonEmptyListOf(mailboxGen).map(To(_*)))

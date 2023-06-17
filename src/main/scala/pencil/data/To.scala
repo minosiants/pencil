@@ -19,7 +19,7 @@ package pencil.data
 import cats.Show
 import cats.data.NonEmptyList
 import cats.kernel.Semigroup
-import cats.syntax.show._
+import cats.syntax.show.*
 object ToType:
 
   opaque type To = NonEmptyList[Mailbox]

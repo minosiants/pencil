@@ -17,6 +17,7 @@ ThisBuild / scalafixScalaBinaryVersion := (ThisBuild / scalaBinaryVersion).value
 ThisBuild / semanticdbEnabled := true
 ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
 
+
 lazy val root = (project in file("."))
   .settings(
     organization := "com.minosiants",
@@ -25,7 +26,10 @@ lazy val root = (project in file("."))
     scalacOptions ++= Seq(
       "-language:experimental.macros",
       "-new-syntax",
-      "-indent"
+      "-indent",
+      "-source:future",
+      "-deprecation",
+      "-feature"
     ),
     javacOptions ++= Seq("-source", "1.17", "-target", "1.17"),
     libraryDependencies ++= Seq(

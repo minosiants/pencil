@@ -20,8 +20,8 @@ import java.io.InputStream
 import cats.implicits.*
 import cats.effect.Sync
 import org.apache.tika.Tika
-import protocol._
-import data._
+import protocol.*
+import data.*
 import java.lang
 
 object ContentTypeFinder:

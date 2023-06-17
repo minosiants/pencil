@@ -16,15 +16,15 @@
 
 package pencil
 
-import cats.implicits._
+import cats.implicits.*
 import java.io.InputStream
-import java.nio.file.{Path, Paths, Files => JFiles}
+import java.nio.file.{Path, Paths, Files as JFiles}
 
 import cats.MonadError
 import cats.MonadThrow
 import cats.effect.{Resource, Sync}
-import Function._
-import data._
+import Function.*
+import data.*
 object Files:
   def inputStream[F[_]: Sync](file: Path): Resource[F, InputStream] =
     Resource

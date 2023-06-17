@@ -50,3 +50,5 @@ type Username = pencil.data.UsernameType.Username
 val Username = pencil.data.UsernameType.Username
 type Password = pencil.data.PasswordType.Password
 val Password = pencil.data.PasswordType.Password
+type Name = pencil.data.NameType.Name
+val Name = pencil.data.NameType.Name

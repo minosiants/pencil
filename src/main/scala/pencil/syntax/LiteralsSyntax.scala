@@ -16,7 +16,7 @@
 
 package pencil
 package syntax
-import data._
+import data.*
 import java.nio.file.Paths
 import org.typelevel.literally.Literally
 

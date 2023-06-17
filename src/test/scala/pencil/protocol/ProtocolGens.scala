@@ -21,8 +21,8 @@ trait ProtocolGens extends EmailGens {
     command <- Gen.oneOf(
       List[Command](
         Ehlo(domain),
-        Mail(box),
-        Rcpt(box),
+        Mail(box.copy(name=None)),
+        Rcpt(box.copy(name=None)),
         Vrfy(domain),
         Data,
         Rset,
