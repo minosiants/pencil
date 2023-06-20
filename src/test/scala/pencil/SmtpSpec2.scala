@@ -32,6 +32,6 @@ object SmtpSpec2 extends LiteralsSyntax:
     from"kaspar minosyants<user1@mydomain.tld>",
     to"pencil <pencil@mail.pencil.com>",
     subject"привет",
-    Body.Utf8("hi there")
-    //  List(attachment"files/jpeg-sample.jpg")
+    Body.Utf8("hi there"),
+    List(attachment"/home/kaspar/stuff/sources/pencil/src/test/resources/files/jpeg-sample.jpg")
   )

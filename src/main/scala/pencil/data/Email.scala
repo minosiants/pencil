@@ -129,7 +129,9 @@ final case class Email(
     * @return
     *   \- `true` it is a mutlipart email.
     */
-  def isMultipart: Boolean = emailType match
+  def isMultipart: Boolean = hasAttachmets || body.exists(_.isAlternative)
+
+  def hasAttachmets: Boolean = emailType match
     case EmailType.Text       => false
     case EmailType.Mime(_, a) => a.nonEmpty
 

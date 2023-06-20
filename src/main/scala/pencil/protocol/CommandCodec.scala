@@ -34,7 +34,7 @@ final case class CommandCodec() extends Codec[Command] {
             DecodeResult(Ehlo(domain), BitVector.empty)
           }
         case "MAIL" =>
-          summon[Codec[Mailbox]].decode(rest.drop(6*8)).map { case DecodeResult(email, _) =>
+          summon[Codec[Mailbox]].decode(rest.drop(6 * 8)).map { case DecodeResult(email, _) =>
             DecodeResult(Mail(email), BitVector.empty)
           }
         case "RCPT" =>

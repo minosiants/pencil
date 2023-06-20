@@ -84,5 +84,3 @@ trait SmtpBaseSpec extends SpecificationLike with LiteralsSyntax:
           )
         )
     }.attempt.unsafeRunSync()
-
-

@@ -94,7 +94,7 @@ class SmtpSpec extends SmtpBaseSpec {
       result.map(_._2) must beRight(
         beEqualTo(
           List(
-            s"${email.body.get.value}${Command.end}",
+            s"${email.body.flatMap(_.body).get}${Command.end}",
             s"${Command.endEmail}"
           )
         )

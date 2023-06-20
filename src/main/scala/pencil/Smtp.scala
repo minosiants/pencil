@@ -328,11 +328,15 @@ object Smtp {
 
   def multipart[F[_]: MonadThrow](): Smtp[F, Unit] =
     email[F].flatMap {
+      case m @ Email(_, _, _, _, _, _, EmailType.Mime(Boundary(b), _))
+          if m.body.exists(_.isAlternative) =>
+        contentTypeHeader(
+          `Content-Type`(`multipart/alternative`, Map("boundary" -> b))
+        )
       case m @ Email(_, _, _, _, _, _, EmailType.Mime(Boundary(b), _)) if m.isMultipart =>
         contentTypeHeader(
           `Content-Type`(`multipart/mixed`, Map("boundary" -> b))
         )
-
       case Email(_, _, _, _, _, _, EmailType.Mime(_, _)) =>
         unit[F]
 
@@ -349,26 +353,31 @@ object Smtp {
       }
   }
 
+  def sendBody[F[_]: MonadThrow](body: Body): Smtp[F, Unit] = body match
+    case Ascii(value) =>
+      mimePart[F](
+        `7bit`,
+        `Content-Type`(`text/plain`, Map("charset" -> "US-ASCII"))
+      ).flatMap(_ => lines[F](value))
+
+    case Html(value) =>
+      mimePart[F](
+        `base64`,
+        `Content-Type`(`text/html`, Map("charset" -> "UTF-8"))
+      ).flatMap(_ => lines[F](value.toBase64))
+
+    case Utf8(value) =>
+      mimePart[F](
+        `base64`,
+        `Content-Type`(`text/plain`, Map("charset" -> "UTF-8"))
+      ).flatMap(_ => lines[F](value.toBase64))
+
+    case Body.Alternative(bodies) => bodies.traverse_(sendBody(_))
+
   def mimeBody[F[_]: MonadThrow](): Smtp[F, Unit] =
     email[F].flatMap {
-      case Email(_, _, _, _, _, Some(Ascii(body)), EmailType.Mime(_, _)) =>
-        mimePart[F](
-          `7bit`,
-          `Content-Type`(`text/plain`, Map("charset" -> "US-ASCII"))
-        ).flatMap(_ => lines[F](body))
-
-      case Email(_, _, _, _, _, Some(Html(body)), EmailType.Mime(_, _)) =>
-        mimePart[F](
-          `base64`,
-          `Content-Type`(`text/html`, Map("charset" -> "UTF-8"))
-        ).flatMap(_ => lines[F](body.toBase64))
-
-      case Email(_, _, _, _, _, Some(Utf8(body)), EmailType.Mime(_, _)) =>
-        mimePart[F](
-          `base64`,
-          `Content-Type`(`text/plain`, Map("charset" -> "UTF-8"))
-        ).flatMap(_ => lines[F](body.toBase64))
-
+      case Email(_, _, _, _, _, Some(body), EmailType.Mime(_, _)) =>
+        sendBody(body)
       case _ =>
         liftF(Error.smtpError[F, Unit]("not mime email"))
     }
