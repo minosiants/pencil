@@ -14,6 +14,8 @@ import pencil.data.{Email, Mailbox}
 import org.http4s.circe.*
 import org.specs2.execute.Pending
 import pencil.protocol.Replies
+import pencil.syntax.*
+import pencil.data.*
 class SendEmailSpec extends MailServerSpec {
   sequential
   "email" should {
@@ -24,7 +26,7 @@ class SendEmailSpec extends MailServerSpec {
         .build
         .use { httpClient =>
           for
-            _ <- sendEmail(SmtpSpec2.mimeEmail)
+            _ <- sendEmail(SendEmailSpec.mimeEmail)
             messages <- httpClient.expect[Messages](
               s"""http://localhost:${container.httpPort}/api/v1/messages"""
             )
@@ -43,9 +45,9 @@ class SendEmailSpec extends MailServerSpec {
       message.From.Address ==== email.from.address
       Name(message.From.Name) ==== email.from.mailbox.name.get
       message.Subject ==== email.subject.get.asString
-      message.Text ==== email.body.get.value
+      message.Text ==== email.body.flatMap(_.body).get
     }
-    Pending("this is integration test")
+    //  Pending("this is integration test")
   }
 
   def sendEmail(email: Email): IO[Replies] = for
@@ -54,8 +56,6 @@ class SendEmailSpec extends MailServerSpec {
     response <- smtpClient.send(email)
   yield response
 }
-
-object SendEmailSpec {}
 
 final case class MailBox(Name: String, Address: String)
 
@@ -90,4 +90,20 @@ object Message:
 final case class Messages(messages: List[Message])
 object Messages:
   given EntityDecoder[IO, Messages] = jsonOf[IO, Messages]
+
+object SendEmailSpec extends LiteralsSyntax:
+  val mimeEmail: Email = Email.mime(
+    from"kaspar minosyants<user1@mydomain.tld>",
+    to"pencil <pencil@mail.pencil.com>",
+    subject"привет",
+    Body.Alternative(List(Body.Utf8("hi there3"), Body.Ascii("hi there2")))
+    /// List(attachment"/home/kaspar/stuff/sources/pencil/src/test/resources/files/jpeg-sample.jpg")
+  )
+  val mimeEmail2: Email = Email.mime(
+    from"kaspar minosyants<user1@mydomain.tld>",
+    to"pencil <pencil@mail.pencil.com>",
+    subject"привет",
+    Body.Ascii("hi there2"),
+    List(attachment"/home/kaspar/stuff/sources/pencil/src/test/resources/files/jpeg-sample.jpg")
+  )
 */
