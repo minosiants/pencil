@@ -1,4 +1,3 @@
-/*
 package pencil
 
 import cats.effect.IO
@@ -20,13 +19,13 @@ class SendEmailSpec extends MailServerSpec {
   sequential
   "email" should {
     "send mime email" in {
-      val email = SmtpSpec2.mimeEmail
+      val email = SendEmailSpec.mimeEmail2
       val message = EmberClientBuilder
         .default[IO]
         .build
         .use { httpClient =>
           for
-            _ <- sendEmail(SendEmailSpec.mimeEmail)
+            _ <- sendEmail(SendEmailSpec.mimeEmail2)
             messages <- httpClient.expect[Messages](
               s"""http://localhost:${container.httpPort}/api/v1/messages"""
             )
@@ -45,7 +44,7 @@ class SendEmailSpec extends MailServerSpec {
       message.From.Address ==== email.from.address
       Name(message.From.Name) ==== email.from.mailbox.name.get
       message.Subject ==== email.subject.get.asString
-      message.Text ==== email.body.flatMap(_.body).get
+      message.Text.trim ==== email.body.flatMap(_.body).get
     }
     //  Pending("this is integration test")
   }
@@ -103,7 +102,6 @@ object SendEmailSpec extends LiteralsSyntax:
     from"kaspar minosyants<user1@mydomain.tld>",
     to"pencil <pencil@mail.pencil.com>",
     subject"привет",
-    Body.Ascii("hi there2"),
-    List(attachment"/home/kaspar/stuff/sources/pencil/src/test/resources/files/jpeg-sample.jpg")
+    Body.Ascii("hi there2")
+  //  List(attachment"/home/kaspar/stuff/sources/pencil/src/test/resources/files/jpeg-sample.jpg")
   )
-*/
