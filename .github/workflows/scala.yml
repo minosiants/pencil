@@ -14,10 +14,13 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Set up JDK 1.11
-      uses: actions/setup-java@v1
+    - name: Set up JDK 17
+      uses: actions/setup-java@v2
       with:
-        java-version: 11
+        distribution: 'zulu'
+        java-version: 17
+    - name: Import cert
+      run: keytool -import -trustcacerts -keystore /opt/hostedtoolcache/Java_Zulu_jdk/17.0.7-7/x64/lib/security/cacerts -storepass changeit -noprompt -alias pencil -file src/test/resources/certs/certificate.crt
     - name: Run tests
       run: sbt +test
       
