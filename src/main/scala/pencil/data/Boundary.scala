@@ -19,11 +19,11 @@ package pencil.data
 import java.security.MessageDigest
 
 object BoundaryType:
-  opaque type Boundary = String
+  opaque type Boundary <: Matchable = String
 
   object Boundary:
     def apply(v: String): Boundary = v
-    def unapply(b: Boundary): Option[String] = Some(b)
+    def unapply(b: Boundary): Option[String & Matchable] = Some(b)
     def genFrom(value: String): Boundary = {
       val cs = MessageDigest
         .getInstance("MD5")
