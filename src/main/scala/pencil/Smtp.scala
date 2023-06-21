@@ -28,6 +28,7 @@ import cats.{data, *}
 import cats.data.Kleisli
 import cats.effect.Async
 import cats.implicits.*
+import fs2.io.file.Path
 import fs2.{Chunk, Stream}
 
 import java.time.format.DateTimeFormatter
@@ -406,7 +407,7 @@ object Smtp {
               ).run(req)
               _ <- fs2.io.file
                 .Files[F]
-                .readAll(attachment, 1024)
+                .readAll(Path.fromNioPath(attachment))
                 .through(fs2.text.base64.encode)
                 .flatMap(s => Stream.chunk(Chunk.array(s.toCharArray)))
                 .chunkN(n = 76)

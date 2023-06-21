@@ -18,11 +18,11 @@ package pencil
 package data
 
 object SubjectType:
-  opaque type Subject = String
+  opaque type Subject <: Matchable = String
 
   object Subject:
     def apply(sub: String): Subject = sub
-    def unapply(sub: Subject): Option[String] = Some(sub)
+    def unapply(sub: Subject): Option[String & Matchable] = Some(sub)
 
   extension (self: Subject)
     def asString: String = self
