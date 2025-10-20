@@ -1,17 +1,17 @@
-val catsVersion = "2.9.0"
-val catsEffectVersion = "3.4.8"
-val fs2Version = "3.7.0"
-val scodecBitsVersion = "1.1.37"
-val scodecCoreVersion = "2.2.1"
+val catsVersion = "2.13.0"
+val catsEffectVersion = "3.6.3"
+val fs2Version = "3.12.2"
+val scodecBitsVersion = "1.2.4"
+val scodecCoreVersion = "2.3.3"
 val scodecStreamVersion = "3.0.1"
-val specs2Version = "4.19.2"
-val tikaVersion = "2.7.0"
-val scalacheckVersion = "1.15.4"
-val log4catsVersion = "2.5.0"
-val logbackVersion = "1.4.7"
-val literallyVersion = "1.1.0"
-val http4sVersion = "0.23.19"
-val circeVersion = "0.14.1"
+val specs2Version = "5.6.4"
+val tikaVersion = "3.2.3"
+val scalacheckVersion = "1.19.0"
+val log4catsVersion = "2.7.1"
+val logbackVersion = "1.5.13"
+val literallyVersion = "1.2.0"
+val http4sVersion = "0.23.32"
+val circeVersion = "0.14.15"
 
 ThisBuild / scalafixScalaBinaryVersion := (ThisBuild / scalaBinaryVersion).value
 ThisBuild / semanticdbEnabled := true
@@ -22,7 +22,7 @@ lazy val root = (project in file("."))
   .settings(
     organization := "com.minosiants",
     name := "pencil",
-    scalaVersion := "3.2.2",
+    scalaVersion := "3.3.6",
     scalacOptions ++= Seq(
       "-language:experimental.macros",
       "-new-syntax",
@@ -48,8 +48,8 @@ lazy val root = (project in file("."))
       "org.typelevel" %% "log4cats-slf4j" % log4catsVersion % Test,
       "org.specs2" %% "specs2-core" % specs2Version % Test,
       "org.specs2" %% "specs2-scalacheck" % specs2Version % Test,
-      "org.testcontainers" % "testcontainers" % "1.18.0" % Test,
-      "org.fusesource.jansi" % "jansi" % "2.3.4" % Test,
+      "org.testcontainers" % "testcontainers" % "2.0.0" % Test,
+      "org.fusesource.jansi" % "jansi" % "2.4.2" % Test,
       "org.http4s" %% "http4s-ember-client" % http4sVersion % Test,
       "org.http4s" %% "http4s-dsl" % http4sVersion % Test,
       "org.http4s" %% "http4s-circe" % http4sVersion % Test,
