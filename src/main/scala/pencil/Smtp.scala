@@ -406,7 +406,7 @@ object Smtp {
                 )
               ).run(req)
               _ <- fs2.io.file
-                .Files[F]
+                .Files.forAsync[F]
                 .readAll(Path.fromNioPath(attachment))
                 .through(fs2.text.base64.encode)
                 .flatMap(s => Stream.chunk(Chunk.array(s.toCharArray)))
