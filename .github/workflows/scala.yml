@@ -2,37 +2,36 @@ name: build
 
 on:
   pull_request:
-    branches: ['*']
+    branches: ["*"]
   push:
-    branches: ['master']
+    branches: ["master"]
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v5
-    - name: Set up JDK 17
-      uses: actions/setup-java@v5
-      with:
-        distribution: 'zulu'
-        java-version: 17
-        cache: sbt
-    - name: Import cert
-      run: keytool -import -trustcacerts -keystore /opt/hostedtoolcache/Java_Zulu_jdk/17.0.16-8/x64/lib/security/cacerts -storepass changeit -noprompt -alias pencil -file src/test/resources/certs/certificate.crt
-    - name: Cache SBT ivy cache
-      uses: actions/cache@v4
-      with:
-        path: ~/.ivy2/cache
-        key: ${{ runner.os }}-sbt-ivy-cache-${{ hashFiles('**/build.sbt') }}
-    - name: Cache SBT
-      uses: actions/cache@v4
-      with:
-        path: ~/.sbt
-        key: ${{ runner.os }}-sbt-${{ hashFiles('**/build.sbt') }}
-    - name: Set up sbt
-      uses: sbt/setup-sbt@v1
-    - name: Run tests
-      run: sbt +test
+      - uses: actions/checkout@v5
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: "zulu"
+          java-version: 17.0.16+8
+          cache: sbt
+      - name: Import cert
+        run: keytool -import -trustcacerts -keystore /opt/hostedtoolcache/Java_Zulu_jdk/17.0.16-8/x64/lib/security/cacerts -storepass changeit -noprompt -alias pencil -file src/test/resources/certs/certificate.crt
+      - name: Cache SBT ivy cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.ivy2/cache
+          key: ${{ runner.os }}-sbt-ivy-cache-${{ hashFiles('**/build.sbt') }}
+      - name: Cache SBT
+        uses: actions/cache@v4
+        with:
+          path: ~/.sbt
+          key: ${{ runner.os }}-sbt-${{ hashFiles('**/build.sbt') }}
+      - name: Set up sbt
+        uses: sbt/setup-sbt@v1
+      - name: Run tests
+        run: sbt +test
