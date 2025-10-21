@@ -38,8 +38,8 @@ class SendEmailSpec extends MailServerSpec {
         .unsafeRunSync()
 
       println(message)
-      message.Bcc.map(_.Address) === email.bcc.toList.flatMap(_.toList.map(_.address))
-      message.Cc.map(_.Address) === email.cc.toList.flatMap(_.toList.map(_.address))
+      message.Bcc.toList.flatMap(_.map(_.Address)) === email.bcc.toList.flatMap(_.toList.map(_.address))
+      message.Cc.toList.flatMap(_.map(_.Address)) === email.cc.toList.flatMap(_.toList.map(_.address))
       message.To.map(_.Address) === email.to.toList.map(_.address)
       message.From.Address === email.from.address
       Name(message.From.Name) === email.from.mailbox.name.get
