@@ -62,8 +62,8 @@ final case class Message(
     ID: String,
     From: MailBox,
     To: List[MailBox],
-    Cc: List[MailBox],
-    Bcc: List[MailBox],
+    Cc: Option[List[MailBox]],
+    Bcc: Option[List[MailBox]],
     Subject: String,
     Attachments: Int
 )
@@ -71,8 +71,8 @@ final case class Message2(
     ID: String,
     From: MailBox,
     To: List[MailBox],
-    Cc: List[MailBox],
-    Bcc: List[MailBox],
+    Cc: Option[List[MailBox]],
+    Bcc: Option[List[MailBox]],
     Subject: String,
     Text: String,
     HTML: String
