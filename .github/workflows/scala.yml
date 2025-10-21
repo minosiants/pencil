@@ -19,7 +19,7 @@ jobs:
           distribution: "zulu"
           java-version: 17
       - name: Import cert
-        run: keytool -import -trustcacerts -keystore /opt/hostedtoolcache/Java_Zulu_jdk/17.0.7-7/x64/lib/security/cacerts -storepass changeit -noprompt -alias pencil -file src/test/resources/certs/certificate.crt
+        run: keytool -import -trustcacerts -keystore /opt/hostedtoolcache/Java_Zulu_jdk/17.0.16-8/x64/lib/security/cacerts -storepass changeit -noprompt -alias pencil -file src/test/resources/certs/certificate.crt
       - name: Run tests
         run: sbt +test
 
