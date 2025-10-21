@@ -19,11 +19,9 @@ jobs:
       with:
         distribution: 'zulu'
         java-version: 17
+        cache: sbt
     - name: Import cert
       run: keytool -import -trustcacerts -keystore /opt/hostedtoolcache/Java_Zulu_jdk/17.0.16-8/x64/lib/security/cacerts -storepass changeit -noprompt -alias pencil -file src/test/resources/certs/certificate.crt
-    - name: Run tests
-      run: sbt +test
-      
     - name: Cache SBT ivy cache
       uses: actions/cache@v4
       with:
@@ -33,6 +31,8 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ~/.sbt
-        key: ${{ runner.os }}-sbt-${{ hashFiles('**/build.sbt') }}     
-
-
+        key: ${{ runner.os }}-sbt-${{ hashFiles('**/build.sbt') }}
+    - name: Set up sbt
+      uses: sbt/setup-sbt@v1
+    - name: Run tests
+      run: sbt +test
